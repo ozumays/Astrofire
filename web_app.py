@@ -22,7 +22,7 @@ import swisseph as swe
 from astro_core import ASTRO_MOTOR_NESNESİ, get_relative_degree 
 import user_manager
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='.')
 app.secret_key = 'super_secret_astro_key_for_session' 
 app.jinja_env.add_extension('jinja2.ext.do')
 
@@ -1735,3 +1735,4 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
