@@ -593,43 +593,41 @@
     <div id="locationModal" class="modal-overlay"><div class="modal-box"><h4 id="locationModalTitle">Konum Seçin</h4><div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" id="modal_city_input" placeholder="Şehir adı..." style="flex:1;"><button onclick="searchInModal()" style="background:#1565c0; color:white; border:none; border-radius:4px; padding:0 15px; cursor:pointer;">BUL</button></div><p id="modal-loading" style="display:none; color:#666;">Aranıyor...</p><ul id="locationResultList" class="location-list"></ul><button class="close-modal-btn" onclick="closeLocationModal()">Kapat</button></div></div>
     <div id="transit-context-menu" class="transit-context-menu"><div class="transit-menu-item" onclick="submitInstantTransit('Astronomik')">Astronomik Transit</div><div class="transit-menu-item" onclick="submitInstantTransit('Drakonik')">Drakonik Transit</div></div>
     
-    <div id="selectionModal" class="modal-overlay"><div class="modal-box" style="max-width:600px;"><h4 id="selectionModalTitle">Görünüm</h4><div id="backBtnContainer" style="display:none; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:5px;"><span class="back-btn" onclick="goBackToFolders()"> <i class="fas fa-arrow-left"></i> Klasörlere Dön</span></div><div style="display:flex; gap:10px;"><div style="flex:1; border-right:1px solid #eee; padding-right:5px;"><b>Görünür (Haritada)</b><ul id="visibleList" class="synastry-list" style="height:200px;"></ul></div><div style="flex:1; padding-left:5px;"><b id="hiddenTitle">Gizli (Ekle)</b><ul id="hiddenList" class="synastry-list" style="height:200px;"></ul></div></div><button class="close-modal-btn" onclick="closeSelectionModal()" style="margin-top:15px;">Kapat</button></div></div>
-    <div id="sidebar-context-menu" class="custom-context-menu"><a id="context-save" href="#" class="context-menu-item save"><i class="fas fa-save"></i> Arşive Kaydet</a><a id="context-edit" href="#" class="context-menu-item edit"><i class="fas fa-edit"></i> Düzenle</a><a id="context-delete" href="#" class="context-menu-item delete"><i class="fas fa-trash-alt"></i> Aktif Listeden Sil</a></div>
-    <div id="canvas-context-menu" class="custom-context-menu"><div class="context-menu-header">Görünüm Seçenekleri</div><a href="javascript:void(0)" onclick="openSelectionModal('planets', 'Gezegen Seçimi')" class="context-menu-item"><i class="fas fa-globe-europe"></i> Gezegen Seçimi</a><a href="javascript:void(0)" onclick="openSelectionModal('asteroids', 'Asteroid Seçimi')" class="context-menu-item"><i class="fas fa-meteor"></i> Asteroid Seçimi</a><a href="javascript:void(0)" onclick="openSelectionModal('angles', 'Köşe Noktaları')" class="context-menu-item"><i class="fas fa-draw-polygon"></i> Köşe Noktaları</a><a href="javascript:void(0)" onclick="openSelectionModal('fixedstars', 'Sabit Yıldızlar Seçimi')" class="context-menu-item"><i class="fas fa-star"></i> Sabit Yıldızlar Seçimi</a></div>
-
     <div id="celestialEventsModal" class="modal-overlay">
-        <div class="synastry-modal-box" style="max-width: 1100px; width: 95%;">
-            <div class="synastry-header">
-                <span><i class="fas fa-moon"></i> Gökyüzü Olayları Arşivi</span>
-                <span style="cursor:pointer; font-size:18px;" onclick="document.getElementById('celestialEventsModal').style.display='none'">✕</span>
+        <div class="synastry-modal-box" style="max-width: 900px; width: 95%; max-height: 85vh; background: #fff; border-radius: 8px; display: flex; flex-direction: column; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+            
+            <div class="synastry-header" style="padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border-radius: 8px 8px 0 0;">
+                <span style="font-weight: bold; color: #2c3e50; font-size: 16px;"><i class="fas fa-moon"></i> Gökyüzü Olayları Arşivi</span>
+                <span style="cursor:pointer; font-size:20px; color: #e74c3c;" onclick="document.getElementById('celestialEventsModal').style.display='none'">✕</span>
             </div>
             
-            <div class="synastry-body" style="flex-direction: column; padding-top:10px;">
-                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+            <div class="synastry-body" style="flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto;">
+                
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; justify-content: center;">
                     <input type="number" id="ce_year" placeholder="Yıl" value="2025" 
-                           style="width: 100px; padding:8px; border:1px solid #ddd; border-radius:4px; font-weight:bold;">
+                           style="width: 100px; padding:8px; border:1px solid #ddd; border-radius:4px; font-weight:bold; text-align: center;">
                     <button onclick="searchCelestialEvents()" 
                             style="background:#2c3e50; color:white; border:none; padding:8px 20px; border-radius:4px; cursor:pointer; font-weight:bold;">
                         YILI LİSTELE
                     </button>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex: 1; min-height: 300px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     
-                    <div style="display:flex; flex-direction:column;">
-                        <h5 style="margin:0 0 8px 0; color:#c0392b; font-size:13px; border-bottom:2px solid #c0392b; padding-bottom:4px;">
+                    <div style="display:flex; flex-direction:column; height: 100%;">
+                        <h5 style="margin:0 0 8px 0; color:#c0392b; font-size:13px; border-bottom:2px solid #c0392b; padding-bottom:4px; text-align: center;">
                             <i class="fas fa-eclipse"></i> TUTULMALAR
                         </h5>
-                        <div id="eclipseList" class="synastry-list" style="flex:1; height:400px; overflow-y: auto; background:#fff5f5; border-color:#fadbd8;">
+                        <div id="eclipseList" class="synastry-list" style="flex:1; height: 50vh; max-height: 400px; overflow-y: auto; background:#fff5f5; border: 1px solid #fadbd8; border-radius: 4px;">
                              <p style="text-align:center; color:#999; font-size:12px; margin-top:20px;">Yıl seçip arayın.</p>
                         </div>
                     </div>
                     
-                    <div style="display:flex; flex-direction:column;">
-                        <h5 style="margin:0 0 8px 0; color:#2980b9; font-size:13px; border-bottom:2px solid #2980b9; padding-bottom:4px;">
+                    <div style="display:flex; flex-direction:column; height: 100%;">
+                        <h5 style="margin:0 0 8px 0; color:#2980b9; font-size:13px; border-bottom:2px solid #2980b9; padding-bottom:4px; text-align: center;">
                             <i class="far fa-moon"></i> YENİ AY & DOLUNAY
                         </h5>
-                        <div id="phaseList" class="synastry-list" style="flex:1; height:400px; overflow-y: auto; background:#ebf5fb; border-color:#d6eaf8;">
+                        <div id="phaseList" class="synastry-list" style="flex:1; height: 50vh; max-height: 400px; overflow-y: auto; background:#ebf5fb; border: 1px solid #d6eaf8; border-radius: 4px;">
                             <p style="text-align:center; color:#999; font-size:12px; margin-top:20px;">Yıl seçip arayın.</p>
                         </div>
                     </div>
@@ -895,7 +893,7 @@
             return hBounds; 
         }
 
-        // --- SİNASTRİ YÖNETİCİSİ (DÜZELTİLDİ: CHART1 = İÇ, CHART2 = DIŞ) ---
+        // --- SİNASTRİ YÖNETİCİSİ (DÜZELTİLDİ: MANUEL SWAP) ---
         function drawDualWheelPlanets() {
             let hBounds = [];
             if (chartData.houses) {
@@ -910,9 +908,17 @@
             let outerDensity = {}; 
             for(let i=1; i<=12; i++) { innerDensity[i] = 0; outerDensity[i] = 0; }
 
-            // 1. İÇ HARİTA (Chart 1 - EV SAHİBİ - İç Çember)
-            // KURAL: Ev çizgileri kime aitse o içte olur. chartData.houses genellikle chart1'den gelir.
-            const targetInner = chartData.chart1 ? chartData.chart1.planets : chartData.planets;
+            // ⚠️ KRİTİK DEĞİŞİKLİK: VERİ KAYNAKLARINI YER DEĞİŞTİRDİK
+            // Normalde: targetInner = chart1, targetOuter = chart2
+            // Sorunu çözmek için: targetInner = chart2, targetOuter = chart1 yapıyoruz.
+            
+            // İÇ ÇEMBER VERİSİ (Normalde Chart 1'di, şimdi Chart 2 yaptık)
+            const targetInner = chartData.chart2 ? chartData.chart2.planets : chartData.planets;
+            
+            // DIŞ ÇEMBER VERİSİ (Normalde Chart 2'ydi, şimdi Chart 1 yaptık)
+            const targetOuter = chartData.chart1 ? chartData.chart1.planets : {};
+
+            // 1. İÇ HARİTA YOĞUNLUK HESABI
             for (const [name, pData] of Object.entries(targetInner)) {
                  if (visibilitySettings.hidden.includes(name)) continue;
                  let deg = pData[0];
@@ -925,19 +931,17 @@
                  }
             }
 
-            // 2. DIŞ HARİTA (Chart 2 - İKİNCİL - Dış Çember)
-            if (chartData.chart2) {
-                for (const [name, pData] of Object.entries(chartData.chart2.planets)) {
-                     if (visibilitySettings.hidden.includes(name)) continue;
-                     let deg = pData[0];
-                     for(let h=0; h<hBounds.length; h++) {
-                         let hb = hBounds[h];
-                         let isHere = false;
-                         if(hb.start < hb.end) { if(deg >= hb.start && deg < hb.end) isHere = true; }
-                         else { if(deg >= hb.start || deg < hb.end) isHere = true; }
-                         if(isHere) { outerDensity[hb.id]++; break; }
-                     }
-                }
+            // 2. DIŞ HARİTA YOĞUNLUK HESABI
+            for (const [name, pData] of Object.entries(targetOuter)) {
+                 if (visibilitySettings.hidden.includes(name)) continue;
+                 let deg = pData[0];
+                 for(let h=0; h<hBounds.length; h++) {
+                     let hb = hBounds[h];
+                     let isHere = false;
+                     if(hb.start < hb.end) { if(deg >= hb.start && deg < hb.end) isHere = true; }
+                     else { if(deg >= hb.start || deg < hb.end) isHere = true; }
+                     if(isHere) { outerDensity[hb.id]++; break; }
+                 }
             }
 
             // EV GENİŞLETME (MİNİMUM 15 PİKSEL)
@@ -970,21 +974,23 @@
                 fill: 'none', stroke: '#334155', 'stroke-width': '1', class: 'chart-line' 
             }));
             
-            // GEZEGENLERİ ÇİZ - YERLER DEĞİŞTİRİLDİ
+            // --- GEZEGENLERİ ÇİZ (VERİLERİ YER DEĞİŞTİRİLMİŞ HALDE ÇİZİYORUZ) ---
             
-            // İÇ: Chart 1
+            // 1. İÇ ÇEMBERE ÇİZİLECEK OLANLAR (targetInner)
             const innerPlanets = [];
             for (const [name, pData] of Object.entries(targetInner)) {
                 if (visibilitySettings.hidden.includes(name)) continue;
+                // isOuter = false (İÇ)
                 innerPlanets.push({ name: name, degree: pData[0], data: pData, isOuter: false });
             }
             drawSynastryRingDetailed(innerPlanets, false);
 
-            // DIŞ: Chart 2
-            if (chartData.chart2) {
+            // 2. DIŞ ÇEMBERE ÇİZİLECEK OLANLAR (targetOuter)
+            if (Object.keys(targetOuter).length > 0) {
                 const outerPlanets = [];
-                for (const [name, pData] of Object.entries(chartData.chart2.planets)) {
+                for (const [name, pData] of Object.entries(targetOuter)) {
                     if (visibilitySettings.hidden.includes(name)) continue;
+                    // isOuter = true (DIŞ)
                     outerPlanets.push({ name: name, degree: pData[0], data: pData, isOuter: true });
                 }
                 drawSynastryRingDetailed(outerPlanets, true);
@@ -1244,5 +1250,6 @@
 
 </body>
 </html>
+
 
 
