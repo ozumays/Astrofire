@@ -2068,22 +2068,36 @@ def set_active_chart(index):
 @app.route('/delete_active_chart/<int:index>')
 def delete_active_chart(index):
     active_charts = session.get('active_charts', [])
+    
     if 0 <= index < len(active_charts):
+        # 1. Listeden sil
         del active_charts[index]
-        session['active_charts'] = active_charts
         
-        # Eğer silinen harita aktif haritaysa, ilk haritayı aktif yap
+        # 2. Session'ı güncelle
+        session['active_charts'] = active_charts
+        session.modified = True 
+        
+        # --- KRİTİK EKLEME: VERİTABANINA KAYDET ---
+        # Bu satır sayesinde silme işlemi kalıcı olur.
+        sync_active_charts_to_db()
+        # ------------------------------------------
+        
+        # Eğer silinen harita aktif haritaysa veya liste kısaldıysa indeksleri düzelt
         current_index = session.get('current_chart_index', 0)
+        
+        # Eğer şu anki indeks, yeni listenin boyunu aşıyorsa (örn: sonuncuyu sildik)
         if current_index >= len(active_charts):
             session['current_chart_index'] = max(0, len(active_charts) - 1)
         
-        # Eğer liste boşaldıysa, session'ı temizle
+        # Eğer liste tamamen boşaldıysa, ekrandaki haritayı temizle
         if len(active_charts) == 0:
             session.pop('last_chart', None)
             session.pop('last_report', None)
             session.pop('current_chart_data', None)
+            
+        # Eğer silinen harita, tam olarak ekranda açık olan haritaysa
         elif current_index == index:
-            # Silinen harita aktifse, yeni aktif haritayı yükle
+            # Yeni aktif haritayı (veya yerine geçeni) yükle ki ekran boş kalmasın
             new_index = min(index, len(active_charts) - 1)
             if new_index >= 0:
                 return redirect(url_for('set_active_chart', index=new_index))
@@ -2133,6 +2147,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
