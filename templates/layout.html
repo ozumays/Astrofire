@@ -631,6 +631,57 @@
                             <p style="text-align:center; color:#999; font-size:12px; margin-top:20px;">Yıl seçip arayın.</p>
                         </div>
                     </div>
+
+                    <div id="canvas-context-menu" class="transit-context-menu" style="width: 200px;">
+    <div class="transit-menu-item" onclick="openSelectionModal('planets', 'Gezegen Seçimi')">
+        <i class="fas fa-globe" style="color:#3498db; width:20px;"></i> Gezegenleri Seç
+    </div>
+    <div class="transit-menu-item" onclick="openSelectionModal('asteroids', 'Asteroid Seçimi')">
+        <i class="fas fa-meteor" style="color:#9b59b6; width:20px;"></i> Asteroidleri Seç
+    </div>
+    <div class="transit-menu-item" onclick="openSelectionModal('fixedstars', 'Sabit Yıldız Seçimi')">
+        <i class="fas fa-star" style="color:#f1c40f; width:20px;"></i> Sabit Yıldızları Seç
+    </div>
+    <div class="transit-menu-item" onclick="openSelectionModal('angles', 'Köşe Noktaları')">
+        <i class="fas fa-compass" style="color:#e74c3c; width:20px;"></i> Köşe Noktaları
+    </div>
+</div>
+                    <div id="sidebar-context-menu" class="transit-context-menu" style="width: 150px;">
+    <a id="context-save" class="transit-menu-item" href="#">
+        <i class="fas fa-save" style="color:#27ae60; width:20px;"></i> Arşive Kaydet
+    </a>
+    <a id="context-edit" class="transit-menu-item" href="#">
+        <i class="fas fa-edit" style="color:#f39c12; width:20px;"></i> Düzenle
+    </a>
+    <a id="context-delete" class="transit-menu-item" href="#" onclick="return confirm('Bu haritayı silmek istediğinize emin misiniz?')">
+        <i class="fas fa-trash" style="color:#c0392b; width:20px;"></i> Sil
+    </a>
+</div>
+                    <div id="selectionModal" class="modal-overlay">
+    <div class="modal-box" style="width: 450px; height: 500px;">
+        <h4 id="selectionModalTitle">Görünürlük Ayarları</h4>
+        
+        <div id="backBtnContainer" style="display:none; margin-bottom:10px;">
+            <span class="back-btn" onclick="goBackToFolders()"><i class="fas fa-chevron-left"></i> Kategorilere Dön</span>
+        </div>
+
+        <div style="display:flex; gap:15px; flex:1; overflow:hidden;">
+            <div style="flex:1; display:flex; flex-direction:column;">
+                <span style="font-size:11px; font-weight:bold; color:#27ae60; margin-bottom:5px; border-bottom:1px solid #eee;">GÖZÜKENLER</span>
+                <ul id="visibleList" class="synastry-list" style="flex:1;"></ul>
+            </div>
+            
+            <div style="width:1px; background:#eee;"></div>
+
+            <div style="flex:1; display:flex; flex-direction:column;">
+                <span id="hiddenTitle" style="font-size:11px; font-weight:bold; color:#c0392b; margin-bottom:5px; border-bottom:1px solid #eee;">GİZLENENLER</span>
+                <ul id="hiddenList" class="synastry-list" style="flex:1;"></ul>
+            </div>
+        </div>
+
+        <button class="close-modal-btn" onclick="closeSelectionModal()" style="margin-top:15px; width:100%;">KAPAT VE UYGULA</button>
+    </div>
+</div>
                     
                 </div>
             </div>
@@ -1250,6 +1301,7 @@
 
 </body>
 </html>
+
 
 
 
