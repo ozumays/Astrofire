@@ -431,33 +431,53 @@ def admin_delete_user(email):
 # ============================================================================
 # 🔑 LOGIN / REGISTER ROTALARI
 # ============================================================================
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
         
-        success, user_data_or_msg = user_manager.validate_login(email, password)
+        # 1. Giriş Doğrulama (Hata korumalı)
+        # user_manager bazen sadece True/False, bazen (True, "Mesaj") dönebilir.
+        # İkisini de kapsayacak güvenli kod:
+        login_result = user_manager.validate_login(email, password)
+        
+        success = False
+        error_msg = "Email veya şifre hatalı."
+        
+        if isinstance(login_result, tuple):
+            # Eğer (True, "Giriş Başarılı") gibi gelirse
+            success = login_result[0]
+            error_msg = login_result[1]
+        else:
+            # Eğer sadece True veya False gelirse
+            success = login_result
         
         if success:
-            user_data = user_data_or_msg # validate_login başarılıysa data döner
+            # 2. Kullanıcı Verisini Çek
+            # validate_login data dönmüyorsa, datayı ayrıca çekiyoruz (En garantisi)
+            user_data = user_manager.get_user_data_by_email(email)
             
+            if not user_data:
+                return render_template('login.html', error="Kullanıcı verisi alınamadı.")
+
             session['logged_in'] = True
             session['logged_in_email'] = email
             session['display_name'] = user_data.get('name', 'Kullanıcı')
             
-            # --- AKTİF HARİTALARI GERİ YÜKLE ---
+            # --- 3. AKTİF HARİTALARI GERİ YÜKLE ---
             saved_active = user_data.get('active_charts', [])
+            
+            # Eğer gelen veri liste değilse (hata önlemi) boş liste yap
+            if not isinstance(saved_active, list):
+                saved_active = []
+                
             session['active_charts'] = saved_active
-            if not saved_active:
-                session['active_charts'] = []
             # -----------------------------------
             
             return redirect(url_for('home'))
         else:
-            # Hata mesajı döner
-            return render_template('login.html', error=user_data_or_msg)
+            return render_template('login.html', error=error_msg)
 
     return render_template('login.html')
 
@@ -1023,3 +1043,4 @@ def delete_active_chart(index):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
