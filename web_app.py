@@ -83,9 +83,11 @@ os.makedirs(UPLOAD_FOLDER_COURSES, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER_CONTACT, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER_CHARTS, exist_ok=True)
 
-# Buradaki e-postayı KÜÇÜK harflerle yaz.
+# ============================================================================
+# 🔐 YÖNETİCİ AYARLARI
+# ============================================================================
 ADMIN_EMAILS = ["astrozumaay@hotmail.com"] 
-ADMIN_PASSWORD = "123"
+ADMIN_PASSWORD = "123"  # Şimdilik 123 yapalım, girince değiştirirsin.
 
 DATA_FILE = 'data_public_charts.json'       
 COURSES_FILE = 'data_courses.json'
@@ -297,13 +299,33 @@ def find_annual_celestial_events(year):
 
 @app.route('/yonetim', methods=['GET', 'POST'])
 def admin_login_page():
-    if session.get('admin_access') == True: return redirect(url_for('admin_dashboard'))
+    # Zaten giriş yapmışsa direkt panele at
+    if session.get('admin_access') == True:
+        return redirect(url_for('admin_dashboard'))
+
     if request.method == 'POST':
-        if request.form.get('email') in ADMIN_EMAILS:
-            success, _ = user_manager.try_login(request.form.get('email'), request.form.get('password'), False)
-            if success: session['admin_access'] = True; return redirect(url_for('admin_dashboard'))
-            else: return render_template('admin_login.html', error="Hatalı şifre!")
-        else: return render_template('admin_login.html', error="Yetkisiz erişim!")
+        # Formdan gelenleri al, boşlukları temizle ve email'i küçült
+        form_email = request.form.get('email', '').strip().lower()
+        form_password = request.form.get('password', '').strip()
+        
+        # --- HATA AYIKLAMA (DEBUG) MESAJI ---
+        # Bu mesajı ekrana basacağız ki sunucu ne görüyor anlayalım.
+        beklenen_email = ADMIN_EMAILS[0]
+        debug_info = f" (Sunucuya Gelen: '{form_email}' | '{form_password}') vs (Beklenen: '{beklenen_email}' | '{ADMIN_PASSWORD}')"
+
+        # 1. Email Kontrolü
+        if form_email in ADMIN_EMAILS:
+            # 2. Şifre Kontrolü
+            if form_password == ADMIN_PASSWORD:
+                session['admin_access'] = True
+                return redirect(url_for('admin_dashboard'))
+            else:
+                # Şifre yanlışsa ekranda ne beklediğini gösterelim
+                return render_template('admin_login.html', error=f"Şifre Hatalı! {debug_info}")
+        else:
+            # Email yanlışsa ekranda ne beklediğini gösterelim
+            return render_template('admin_login.html', error=f"Email Listede Yok! {debug_info}")
+
     return render_template('admin_login.html')
 
 @app.route('/yonetim/dashboard')
@@ -1828,6 +1850,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
