@@ -122,6 +122,21 @@ def get_common_context():
         'analiz_sorulari': ANALIZ_SORULARI
     }
 
+# ========================================================
+# 💾 YARDIMCI FONKSİYON: AKTİF HARİTALARI KAYDET
+# ========================================================
+def sync_active_charts_to_db():
+    """Session'daki aktif haritaları users.json dosyasına yazar."""
+    if 'logged_in_email' in session:
+        email = session['logged_in_email']
+        user_data = user_manager.get_user_data_by_email(email)
+        
+        if user_data:
+            # Session'daki listeyi al, veritabanına koy
+            user_data['active_charts'] = session.get('active_charts', [])
+            user_manager.save_user_data(email, user_data)
+            print(f"💾 [SYNC] {email} için aktif haritalar veritabanına kaydedildi.")
+
 # ============================================================================
 # 🔮 TRANSİT TAHMİN MOTORU (DÜZELTİLMİŞ)
 # ============================================================================
@@ -2108,6 +2123,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
