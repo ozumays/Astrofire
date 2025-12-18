@@ -84,6 +84,7 @@ os.makedirs(UPLOAD_FOLDER_CONTACT, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER_CHARTS, exist_ok=True)
 
 ADMIN_EMAILS = ["astrozumaay@hotmail.com"] 
+ADMIN_PASSWORD = "Ckv12wj1G.."  # <-- BURAYI KENDİNE GÖRE DEĞİŞTİR
 DATA_FILE = 'data_public_charts.json'       
 COURSES_FILE = 'data_courses.json'
 CONTACT_FILE = 'data_contact.json'
@@ -1783,6 +1784,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
