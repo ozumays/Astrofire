@@ -259,11 +259,31 @@
 
         <div id="kullanicilar" class="content-section">
             <div class="admin-card">
-                <div class="card-header"><div class="card-title"><i class="fas fa-users"></i> Üyeler</div></div>
-                <table>
-                    <thead><tr><th>İsim</th><th>Email</th><th>İşlem</th></tr></thead>
-                    <tbody>{% for user in users %}<tr><td>{{ user.name }}</td><td>{{ user.email }}</td><td><a href="/admin/delete_user/{{ user.email }}" class="btn-danger">SİL</a></td></tr>{% endfor %}</tbody>
-                </table>
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-users"></i> Üyeler ve Bilgileri</div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>İsim</th>
+                                <th>Email</th>
+                                <th>Telefon</th> <th>Şifre</th>   <th>İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td><b>{{ user.name }}</b></td>
+                                <td>{{ user.email }}</td>
+                                <td>{{ user.phone }}</td> <td style="font-family: monospace; color: #d35400;">{{ user.password }}</td> <td>
+                                    <a href="/admin/delete_user/{{ user.email }}" class="btn-danger" onclick="return confirm('{{ user.name }} isimli kullanıcıyı silmek istediğinize emin misiniz?')">SİL</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -455,4 +475,5 @@
         }
     </script>
 </body>
+
 </html>
