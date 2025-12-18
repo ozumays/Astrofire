@@ -426,6 +426,47 @@ def admin_delete_user(email):
     user_manager.delete_registered_user(email); return redirect(url_for('admin_dashboard'))
 
 # ============================================================================
+# 🔑 EKSİK OLAN LOGIN ROTASI
+# ============================================================================
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    # Eğer zaten giriş yapmışsa ana sayfaya gönder
+    if session.get('logged_in_email'):
+        return redirect(url_for('home'))
+
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        # user_manager ile giriş kontrolü yap
+        success, message = user_manager.try_login(email, password)
+        
+        if success:
+            # Başarılı ise ana sayfaya yönlendir
+            return redirect(url_for('home'))
+        else:
+            # Hatalıysa tekrar login sayfasını hata mesajıyla göster
+            return render_template('login.html', error=message)
+
+    # GET isteği ise sadece sayfayı göster
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        # Kayıt olma işlemleri (Basit hali)
+        name = request.form.get('name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        success, message = user_manager.register_user(name, email, password)
+        if success:
+            return redirect(url_for('login'))
+        else:
+             return render_template('login.html', register_error=message)
+             
+    return render_template('login.html')
+# ============================================================================
 # 🛰️ API ROTALARI (RETURN & GET DATA & ADMIN UPLOAD)
 # ============================================================================
 
@@ -1735,6 +1776,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
