@@ -85,7 +85,7 @@ os.makedirs(UPLOAD_FOLDER_CHARTS, exist_ok=True)
 
 # Buradaki e-postayı KÜÇÜK harflerle yaz.
 ADMIN_EMAILS = ["astrozumaay@hotmail.com"] 
-ADMIN_PASSWORD = ["Ozumay123"]
+ADMIN_PASSWORD = "123"
 
 DATA_FILE = 'data_public_charts.json'       
 COURSES_FILE = 'data_courses.json'
@@ -1828,6 +1828,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
