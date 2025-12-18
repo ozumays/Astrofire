@@ -1,0 +1,289 @@
+<div id="returnModal" class="modal-overlay" style="display:none; align-items:center; justify-content:center; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999;">
+    <div class="synastry-modal-box" style="width: 900px; height: 580px; max-width: 95%; display:flex; flex-direction:column; background:white; border-radius:8px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.2); font-family: 'Segoe UI', sans-serif;">
+        
+        <div class="synastry-header" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); padding:12px 15px; color:white; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:700; font-size:13px; letter-spacing:0.5px;"><i class="fas fa-history"></i> Return (Dönüş) Hesaplayıcı</span>
+            <span style="cursor:pointer; font-size:16px;" onclick="closeReturnModal()">✕</span>
+        </div>
+
+        <div class="synastry-body" style="display:flex; flex:1; padding:15px; gap:15px; overflow:hidden;">
+            
+            <div style="width: 280px; min-width: 280px; display:flex; flex-direction:column; border-right:1px solid #eee; padding-right:10px;">
+                <h4 style="font-size:11px; color:#1565c0; margin:0 0 8px 0; font-weight:800; text-transform:uppercase; letter-spacing:0.5px;">Kişi Listesi</h4>
+                
+                <div style="display:grid; grid-template-columns: 2fr 1.2fr 0.8fr; padding:0 8px 5px 8px; border-bottom:1px solid #eee; margin-bottom:5px;">
+                    <span style="font-size:9px; font-weight:bold; color:#999;">İSİM</span>
+                    <span style="font-size:9px; font-weight:bold; color:#999;">TARİH</span>
+                    <span style="font-size:9px; font-weight:bold; color:#999; ">TİP</span>
+                </div>
+
+                <div class="synastry-list" style="flex:1; overflow-y:auto; border:1px solid #cce0f5; background-color: #f8fbff; border-radius:4px; padding:2px;">
+                    {% if active_charts %}
+                        {% for chart in active_charts %}
+                            <div class="chart-select-item" 
+                                 onclick="selectReturnBaseChart(this, {{ loop.index0 }}, {{ chart.year }})" 
+                                 style="
+                                    display:grid; 
+                                    grid-template-columns: 2fr 1.2fr 0.8fr; 
+                                    align-items:center;
+                                    padding:6px 8px; 
+                                    margin-bottom:2px; 
+                                    border-bottom:1px solid rgba(0,0,0,0.03); 
+                                    cursor:pointer; 
+                                    transition:0.1s;
+                                 ">
+                                
+                                <div style="font-weight:700; font-size:11px; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:5px;">
+                                    {{ chart.name }}
+                                </div>
+                                
+                                <div style="font-size:10px; color:#666; text-align:center;">
+                                    {{ chart.day }}.{{ chart.month }}.{{ chart.year }}
+                                </div>
+                                
+                                <div style="text-align:center;">
+                                    <span class="zodiac-badge" style="font-size:9px; background:#fff; border:1px solid #bfdbfe; color:#1e40af; padding:0px 4px; border-radius:3px; font-weight:600; display:inline-block;">
+                                        {{ chart.zodiac_type|truncate(4, True, '') }}
+                                    </span>
+                                </div>
+
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div style="padding:20px; text-align:center; color:#777; font-size:11px;">Aktif harita yok.</div>
+                    {% endif %}
+                </div>
+                <input type="hidden" id="return_base_chart_id">
+                <input type="hidden" id="return_base_birth_year">
+            </div>
+
+            <div style="flex:1; display:flex; flex-direction:column; gap:10px;">
+                
+                <div style="background:#f8fafc; padding:12px; border-radius:6px; border:1px solid #e2e8f0;">
+                    
+                    <div style="display:flex; gap:10px; margin-bottom:8px;">
+                        <div style="flex:1;">
+                            <label style="font-size:10px; font-weight:bold; color:#475569; display:block; margin-bottom:2px;">Dönüş Gezegeni</label>
+                            <select id="return_planet" style="width:100%; padding:4px; border:1px solid #cbd5e1; border-radius:3px; font-size:11px; background:white;">
+                                <option value="Güneş">☉ Güneş (Solar Return)</option>
+                                <option value="Ay">☽ Ay (Lunar Return)</option>
+                                <option value="Merkür">☿ Merkür Dönüşü</option>
+                                <option value="Venüs">♀ Venüs Dönüşü</option>
+                                <option value="Mars">♂ Mars Dönüşü</option>
+                                <option value="Jüpiter">♃ Jüpiter Dönüşü</option>
+                                <option value="Satürn">♄ Satürn Dönüşü</option>
+                            </select>
+                        </div>
+                        <div style="flex:1;">
+                            <label style="font-size:10px; font-weight:bold; color:#475569; display:block; margin-bottom:2px;">Dönüş Zodyak Tipi</label>
+                            <select id="return_zodiac_type" style="width:100%; padding:4px; border:1px solid #cbd5e1; border-radius:3px; font-size:11px; background:white;">
+                                <option value="Astronomik" selected>Astronomik </option>
+                                <option value="Drakonik">Drakonik</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:10px; align-items:flex-end;">
+                        <div style="flex:4;">
+                            <label style="font-size:10px; font-weight:bold; color:#475569; display:block; margin-bottom:2px;">Başlangıç Yılı</label>
+                            <input type="number" id="return_start_year" class="w-full p-1 border rounded text-xs" style="width:100%; font-size:11px; padding:4px; border:1px solid #cbd5e1; border-radius:3px;">
+                        </div>
+                        
+                        <div style="flex:4;">
+                            <label style="font-size:10px; font-weight:bold; color:#475569; display:block; margin-bottom:2px;">Bitiş Yılı</label>
+                            <input type="number" id="return_end_year" class="w-full p-1 border rounded text-xs" style="width:100%; font-size:11px; padding:4px; border:1px solid #cbd5e1; border-radius:3px;">
+                        </div>
+                        
+                        <div style="flex:1;">
+                             <button onclick="calculateReturns()" class="btn-primary" style="width:100%; padding:5px 0px; font-size:11px; background:#2563eb; color:white; border:none; border-radius:3px; cursor:pointer; font-weight:bold; height:26px;">
+                                LİSTELE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+                    <h4 style="font-size:11px; color:#555; margin:0 0 5px 0; font-weight:bold;">SONUÇLAR</h4>
+                    <div id="returnResultList" class="synastry-list" style="flex:1; overflow-y:auto; background:#fff; border:1px solid #eee; border-radius:4px; padding:5px;">
+                        <p style="text-align:center; color:#999; font-size:11px; margin-top:40px;">Listelemek için aralık seçip butona basın.</p>
+                    </div>
+                </div>
+
+                <form id="loadReturnForm" method="POST" action="/load_return_chart" style="display:none;">
+                    <input type="hidden" name="r_year" id="r_year">
+                    <input type="hidden" name="r_month" id="r_month">
+                    <input type="hidden" name="r_day" id="r_day">
+                    <input type="hidden" name="r_hour" id="r_hour">
+                    <input type="hidden" name="r_minute" id="r_minute">
+                    <input type="hidden" name="r_lat" id="r_lat">
+                    <input type="hidden" name="r_lon" id="r_lon">
+                    <input type="hidden" name="r_tz" id="r_tz">
+                    <input type="hidden" name="r_loc_name" id="r_loc_name">
+                    <input type="hidden" name="planet_name" id="r_planet_name">
+                    <input type="hidden" name="r_zodiac_type" id="r_form_zodiac_type">
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedReturnData = null;
+
+    function openReturnModal() {
+        document.getElementById('returnModal').style.display = 'flex';
+        document.getElementById('return_end_year').value = new Date().getFullYear() + 1;
+    }
+
+    function closeReturnModal() {
+        document.getElementById('returnModal').style.display = 'none';
+        selectedReturnData = null;
+    }
+
+    function selectReturnBaseChart(el, id, birthYear) {
+        // Tüm satırları sıfırla
+        document.querySelectorAll('#returnModal .chart-select-item').forEach(div => {
+            div.style.backgroundColor = 'transparent';
+            div.style.color = '#333';
+            div.children[0].style.color = '#333';
+            div.children[1].style.color = '#666';
+
+            const badge = div.querySelector('.zodiac-badge');
+            if(badge) {
+                badge.style.backgroundColor = '#fff';
+                badge.style.color = '#1e40af';
+                badge.style.borderColor = '#bfdbfe';
+            }
+        });
+        
+        // Seçileni vurgula
+        el.style.backgroundColor = '#2563eb';
+        el.children[0].style.color = '#fff'; 
+        el.children[1].style.color = '#bfdbfe';
+
+        const selectedBadge = el.querySelector('.zodiac-badge');
+        if(selectedBadge) {
+            selectedBadge.style.backgroundColor = '#dbeafe'; 
+            selectedBadge.style.color = '#1e3a8a';        
+            selectedBadge.style.borderColor = 'transparent';    
+        }
+
+        document.getElementById('return_base_chart_id').value = id;
+        document.getElementById('return_base_birth_year').value = birthYear;
+        
+        const currentYear = new Date().getFullYear();
+        document.getElementById('return_start_year').value = birthYear;
+        document.getElementById('return_end_year').value = currentYear + 1;
+    }
+
+    function calculateReturns() {
+        const chartId = document.getElementById('return_base_chart_id').value;
+        const startY = document.getElementById('return_start_year').value;
+        const endY = document.getElementById('return_end_year').value;
+        const planet = document.getElementById('return_planet').value;
+        const zodiac = document.getElementById('return_zodiac_type').value;
+        const list = document.getElementById('returnResultList');
+
+        if (!chartId) { alert("Lütfen bir kişi seçin!"); return; }
+        if (!startY || !endY) { alert("Lütfen yılları girin!"); return; }
+
+        list.innerHTML = '<div class="text-center p-4 text-blue-600" style="font-size:11px;"><i class="fas fa-spinner fa-spin"></i> Hesaplanıyor...</div>';
+
+        fetch('/api/calculate_returns', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                natal_chart_id: chartId,
+                start_year: startY,
+                end_year: endY,
+                planet_name: planet,
+                zodiac_type: zodiac 
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            list.innerHTML = '';
+            if(data.success) {
+                if(data.returns.length === 0) {
+                    list.innerHTML = '<p class="text-center text-gray-400 mt-4" style="font-size:11px;">Dönüş bulunamadı.</p>';
+                    return;
+                }
+                
+                const birthY = parseInt(document.getElementById('return_base_birth_year').value);
+
+                data.returns.forEach(ret => {
+                    const age = ret.year - birthY;
+                    const item = document.createElement('div');
+                    
+                    item.className = "return-result-item";
+                    item.style.padding = "10px 12px";
+                    item.style.marginBottom = "5px"; // Kutular arası boşluk
+                    item.style.backgroundColor = "#f0f9ff"; // MAVİ ARKA PLAN
+                    item.style.border = "1px solid #e0f2fe";
+                    item.style.borderRadius = "4px";
+                    item.style.cursor = "pointer";
+                    item.style.display = "flex";
+                    item.style.justifyContent = "space-between";
+                    item.style.alignItems = "center";
+                    item.style.transition = "all 0.2s";
+
+                    item.innerHTML = `
+                        <div>
+                            <span style="font-weight:800; color:#1e40af; font-size:12px;">${ret.year} <span style="font-weight:600; color:#64748b; font-size:11px;">(${age >= 0 ? age + ' Yaş' : 'Doğum Öncesi'})</span></span>
+                            <div style="font-size:11px; color:#475569; margin-top:3px; font-weight:500;"><i class="far fa-clock"></i> ${ret.date_str}</div>
+                        </div>
+                        <div>
+                            <span style="font-size:10px; font-weight:bold; color:#fff; background:#3b82f6; padding:3px 8px; border-radius:3px; box-shadow:0 1px 2px rgba(0,0,0,0.1);">HARİTA AÇ</span>
+                        </div>
+                    `;
+                    
+                    item.onmouseover = () => { 
+                        item.style.backgroundColor = "#dbeafe"; 
+                        item.style.borderColor = "#bfdbfe";
+                    };
+                    item.onmouseout = () => { 
+                        item.style.backgroundColor = "#f0f9ff"; 
+                        item.style.borderColor = "#e0f2fe";
+                    };
+
+                    item.onclick = () => {
+                        item.style.backgroundColor = "#bfdbfe";
+                        item.innerHTML = `<div style="text-align:center; width:100%; color:#1e3a8a; font-weight:bold; font-size:11px;"><i class="fas fa-circle-notch fa-spin"></i> Yükleniyor...</div>`;
+                        
+                        selectedReturnData = ret;
+                        selectedReturnData.planet = planet;
+                        selectedReturnData.zodiac = zodiac;
+                        
+                        submitReturnForm();
+                    };
+
+                    list.appendChild(item);
+                });
+            } else {
+                list.innerHTML = `<p class="text-red-500 text-center mt-4" style="font-size:11px;">Hata: ${data.error}</p>`;
+            }
+        })
+        .catch(e => list.innerHTML = `<p class="text-red-500 text-center" style="font-size:11px;">Bağlantı Hatası</p>`);
+    }
+
+    function submitReturnForm() {
+        if(!selectedReturnData) return;
+        
+        document.getElementById('r_year').value = selectedReturnData.year;
+        document.getElementById('r_month').value = selectedReturnData.month;
+        document.getElementById('r_day').value = selectedReturnData.day;
+        document.getElementById('r_hour').value = selectedReturnData.hour;
+        document.getElementById('r_minute').value = selectedReturnData.minute;
+        
+        document.getElementById('r_planet_name').value = selectedReturnData.planet;
+        document.getElementById('r_form_zodiac_type').value = selectedReturnData.zodiac;
+
+        document.getElementById('r_lat').value = 41.0082;
+        document.getElementById('r_lon').value = 28.9784;
+        document.getElementById('r_tz').value = 3.0;
+        document.getElementById('r_loc_name').value = "Return Konumu (İstanbul)";
+
+        document.getElementById('loadReturnForm').submit();
+    }
+</script>

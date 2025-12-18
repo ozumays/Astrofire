@@ -1,0 +1,252 @@
+<style>
+    /* Validasyon Renkleri */
+    .valid-utc {
+        border: 2px solid #27ae60 !important;
+        background-color: #eafaf1 !important;
+        color: #27ae60 !important;
+        font-weight: bold;
+    }
+    .invalid-utc {
+        border: 2px solid #c0392b !important;
+        background-color: #f9e79f !important; 
+        color: #c0392b !important;
+        font-weight: bold;
+    }
+    .utc-error-text {
+        display: none;
+        font-size: 9px;
+        color: #c0392b;
+        font-weight: bold;
+        margin-top: 2px;
+    }
+    
+    /* Modal (Açılır Pencere) Stili */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 400px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .location-item {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .location-item:hover {
+        background-color: #f0f8ff;
+    }
+    .location-item:last-child {
+        border-bottom: none;
+    }
+    .badge-tz {
+        background: #3498db;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        margin-left: 5px;
+    }
+</style>
+
+<div class="form-group">
+    <label for="name">İsim (Örn: Atatürk)</label>
+    <input type="text" id="name" name="name" value="{{ current_chart_data.name if current_chart_data else 'Misafir' }}" required>
+</div>
+
+<div class="form-row three-col">
+    <div class="form-group">
+        <label for="day">Gün</label>
+        <input type="number" id="day" name="day" min="1" max="31" value="{{ current_chart_data.day if current_chart_data else '19' }}" required>
+    </div>
+    <div class="form-group">
+        <label for="month">Ay</label>
+        <input type="number" id="month" name="month" min="1" max="12" value="{{ current_chart_data.month if current_chart_data else '5' }}" required>
+    </div>
+    <div class="form-group">
+        <label for="year">Yıl</label>
+        <input type="number" id="year" name="year" min="-4000" max="3000" value="{{ current_chart_data.year if current_chart_data else '1881' }}" required placeholder="YYYY">
+    </div>
+</div>
+
+<div class="form-row two-col">
+    <div class="form-group">
+        <label for="hour">Saat</label>
+        <input type="number" id="hour" name="hour" min="0" max="23" value="{{ current_chart_data.hour if current_chart_data else '12' }}" required>
+    </div>
+    <div class="form-group">
+        <label for="minute">Dakika</label>
+        <input type="number" id="minute" name="minute" min="0" max="59" value="{{ current_chart_data.minute if current_chart_data else '0' }}" required>
+    </div>
+</div>
+
+<div class="form-group" style="background: #e8f6f3; padding: 8px; border-radius: 4px; border: 1px solid #d4efdf;">
+    <label style="color: #16a085; font-weight: bold; font-size: 11px;">🌍 Konum ve Saat Dilimi Bulucu</label>
+    
+    <div style="display: flex; align-items: center; gap: 6px;">
+        <input type="text" id="city_search_input" placeholder="Şehir adı (Örn: Berlin)..." 
+               style="flex-grow: 1; margin-bottom: 0; height: 38px;">
+        
+        <button type="button" onclick="searchLocationAndTZ()" 
+                style="width: auto; height: 15px; white-space: nowrap; background: #16a085; color: white; border: none; border-radius: 4px; padding: 0 10px; cursor: pointer; font-weight: bold; font-size: 10px; line-height: 15px;">
+            BUL <i class="fas fa-search"></i>
+        </button>
+    </div>
+    
+    <small class="form-text text-muted" style="font-size: 9px;">Şehri bulunca Enlem, Boylam ve UTC otomatik dolar.</small>
+    
+    <div id="selected_location_display" style="font-size: 9px; color: #27ae60; margin-top: 5px; font-weight: bold; min-height: 15px;">
+        {% if current_chart_data and current_chart_data.location_name %}
+            <i class="fas fa-check-circle"></i> {{ current_chart_data.location_name }}
+        {% endif %}
+    </div>
+</div>
+
+<div class="form-row three-col" style="background-color: #f8f9fa; padding: 8px; border: 1px solid #eee; border-radius: 4px; margin-bottom: 10px;">
+    <div class="form-group">
+        <label for="lat" style="font-size: 10px;">Enlem</label>
+        <input type="number" step="any" id="lat" name="lat" placeholder="Lat" value="{{ current_chart_data.lat if current_chart_data else '' }}" required style="background: #fff; font-size: 11px;">
+    </div>
+    <div class="form-group">
+        <label for="lon" style="font-size: 10px;">Boylam</label>
+        <input type="number" step="any" id="lon" name="lon" placeholder="Lon" value="{{ current_chart_data.lon if current_chart_data else '' }}" required style="background: #fff; font-size: 11px;">
+    </div>
+    
+    <div class="form-group">
+        <label for="tz_offset" style="font-size: 10px; color: #d35400; font-weight: bold;">UTC </label>
+        <input type="number" step="0.01" id="tz_offset" name="tz_offset" placeholder="Örn: 3.0" 
+               value="{{ current_chart_data.tz_offset if current_chart_data else '' }}" required 
+               oninput="validateUtcInput(this)"
+               style="background: #fff; border: 1px solid #bdc3c7;">
+        <span id="utc_error" class="utc-error-text">Hatalı Değer!</span>
+    </div>
+</div>
+
+<input type="hidden" id="location_name" name="location_name" value="{{ current_chart_data.location_name if current_chart_data else '' }}">
+
+<div class="form-row two-col">
+    <div class="form-group">
+        <label for="zodiac_type">Zodyak Tipi</label>
+        <select id="zodiac_type" name="zodiac_type" class="form-select">
+            <option value="Tropical" {% if not current_chart_data or current_chart_data.zodiac_type == 'Tropical' %}selected{% endif %}>Tropikal (Batı)</option>
+            
+            <option value="Astronomik" {% if current_chart_data and current_chart_data.zodiac_type == 'Astronomik' %}selected{% endif %}>Astronomik (Gerçek Gökyüzü)</option>
+            
+            <option value="Drakonik 0" {% if current_chart_data and current_chart_data.zodiac_type == 'Drakonik 0' %}selected{% endif %}>Drakonik (Klasik - 0° Koç)</option>
+            
+            <option value="Drakonik 28" {% if current_chart_data and current_chart_data.zodiac_type == 'Drakonik 28' %}selected{% endif %}>Drakonik (Yıldızsal - 29° Koç)</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="house_system_name">Ev Sistemi</label>
+        <select id="house_system_name" name="house_system_name" class="form-select">
+            {% for hs_name in motor.HOUSE_SYSTEMS.keys() %}
+                <option value="{{ hs_name }}" {% if current_chart_data and current_chart_data.house_system == hs_name %}selected{% endif %}>
+                    {{ hs_name }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<div id="locationModal" class="modal-overlay">
+    <div class="modal-content">
+        <h4 style="margin-top:0;">Sonuçlar</h4>
+        <div id="locationResultsList"></div>
+        <button type="button" onclick="closeLocationModal()" style="margin-top:15px; width:100%; padding:10px; background:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer;">Kapat</button>
+    </div>
+</div>
+
+<script>
+    // UTC Değerini Doğrulama
+    function validateUtcInput(input) {
+        if (input.value.includes(',')) input.value = input.value.replace(',', '.');
+        const val = parseFloat(input.value);
+        const errorMsg = document.getElementById('utc_error');
+        if (!isNaN(val) && val >= -14 && val <= 14) {
+            input.classList.remove('invalid-utc'); input.classList.add('valid-utc');
+            if(errorMsg) errorMsg.style.display = 'none';
+        } else {
+            input.classList.remove('valid-utc'); input.classList.add('invalid-utc');
+            if(errorMsg) errorMsg.style.display = 'block';
+        }
+    }
+
+    // Modal Fonksiyonları
+    function closeLocationModal() { document.getElementById('locationModal').style.display = 'none'; }
+
+    // Backend'e gidip Şehri ve UTC'yi soran fonksiyon
+    function searchLocationAndTZ() {
+        const city = document.getElementById('city_search_input').value;
+        const year = document.getElementById('year').value || new Date().getFullYear();
+        const month = document.getElementById('month').value || new Date().getMonth() + 1;
+        const day = document.getElementById('day').value || new Date().getDate();
+
+        if (city.length < 3) { alert("Lütfen en az 3 harf girin."); return; }
+
+        const btn = document.querySelector('#city_search_btn');
+        // İkonu yükleniyor yapabiliriz ama basit kalsın
+        
+        fetch('/api/search_location', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ city: city, year: year, month: month, day: day })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.results.length > 0) {
+                const list = document.getElementById('locationResultsList');
+                list.innerHTML = '';
+                data.results.forEach(loc => {
+                    const div = document.createElement('div');
+                    div.className = 'location-item';
+                    const tzSign = loc.tz_offset >= 0 ? '+' : '';
+                    div.innerHTML = `<strong>${loc.address}</strong> <br> 
+                                     <span class="badge-tz">UTC ${tzSign}${loc.tz_offset}</span> 
+                                     <span style="font-size:0.8em; color:#666;">(Lat: ${loc.lat.toFixed(2)}, Lon: ${loc.lon.toFixed(2)})</span>`;
+                    
+                    div.onclick = function() {
+                        document.getElementById('lat').value = loc.lat;
+                        document.getElementById('lon').value = loc.lon;
+                        document.getElementById('location_name').value = loc.address;
+                        document.getElementById('tz_offset').value = loc.tz_offset;
+                        document.getElementById('selected_location_display').innerHTML = `<i class="fas fa-check-circle"></i> ${loc.address}`;
+                        validateUtcInput(document.getElementById('tz_offset'));
+                        closeLocationModal();
+                    };
+                    list.appendChild(div);
+                });
+                document.getElementById('locationModal').style.display = 'flex';
+            } else {
+                alert("Konum bulunamadı!");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Bir hata oluştu.");
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const utcInput = document.getElementById('tz_offset');
+        if(utcInput && utcInput.value !== "") {
+            validateUtcInput(utcInput);
+        }
+    });
+</script>

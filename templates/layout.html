@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astro-Fire Web (Flask)</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_modern.css') }}" onerror="this.remove()">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+<style>
+    /* --- ASTRO SHARP THEME (USER EDITS + 3PX BOTTOM GAP) --- */
+
+    /* 1. SIFIRLAMA VE TEMEL AYARLAR */
+    * { box-sizing: border-box; }
+
+    .video-overlay { display: none; }
+
+    html, body { 
+        margin: 0 !important; 
+        padding: 0 !important;
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        font-family: 'Segoe UI', sans-serif; 
+        
+        /* Arka Plan */
+        background-image: url("{{ url_for('static', filename='images/backgrounds/bg-main.svg') }}");
+        background-color: #f1f5f9;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        color: #1e293b;
+    }
+
+    /* 2. HEADER (Üst Menü - Yükseklik: 50px) */
+    .main-header { 
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: 50px; 
+        background: #ffffff;
+        border-bottom: 1px solid #e2e8f0; 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+        padding: 0 15px; 
+        z-index: 20;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .logo-container { display: flex; align-items: center; }
+    .logo-svg { height: 30px; width: 30px; margin-right: 10px; }
+    .logo-text-wrapper { display: flex; flex-direction: column; justify-content: center; }
+    .logo-title { line-height: 1.1; font-weight: bold; color: #1565c0; font-size: 18px; }
+    .logo-subtitle { font-family: 'Garamond', serif; font-size: 11px; color: #64748b; padding-top: 2px; }
+    
+    .main-nav { padding-top: 5px; }
+    .nav-link { margin-left: 13px; text-decoration: none; color: #475569; font-size: 11px; font-weight: 500; transition: all 0.3s; }
+    .nav-link:hover { color: #1565c0; }
+    .nav-link.active { color: #1565c0; border-bottom: 2px solid #1565c0; padding-bottom: 14px; font-weight: 700; }
+
+    /* 3. MAIN CONTAINER (HASSAS AYARLI BOŞLUKLAR) */
+    .main-container { 
+        position: absolute;
+        
+        /* Senin manuel ayarladığın Üst Boşluk */
+        top: 40px; 
+        
+        /* SOL: 10px */
+        left: 10px;  
+        
+        /* SAĞ: 15px */
+        right: 15px; 
+        
+        /* ALT BOŞLUK BURADA GÜNCELLENDİ: 3px */
+        bottom: 3px;
+        
+        display: flex; 
+        align-items: stretch; 
+        
+        /* Sol-Orta-Sağ Paneller Arası Boşluk */
+        gap: 10px; 
+        
+        overflow: hidden;
+        z-index: 10;
+        padding: 0;
+    }
+
+    /* SOL PANEL (KÖŞELİ) */
+    .sidebar-left { 
+        width: 220px; 
+        background: #ffffff; 
+        border: 1px solid #e2e8f0;
+        border-radius: 0px !important; 
+        padding: 10px; 
+        display: flex; 
+        flex-direction: column; 
+        flex-shrink: 0; 
+        overflow-y: auto; 
+        height: 100%; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+    }
+    
+    /* ORTA ALAN */
+    .chart-content { 
+        flex: 1; 
+        padding: 0; 
+        overflow-y: auto; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        background-color: transparent; 
+        position: relative; 
+    }
+    
+    /* SAĞ PANEL (KÖŞELİ) */
+    .right-sidebar-wrapper { display: flex; flex-direction: row; align-items: flex-start; height: 100%; flex-shrink: 0; }
+    
+    .sidebar-form-card { 
+        width: 220px; 
+        height: 100%; 
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 0px !important; 
+        padding: 10px; 
+        overflow-y: auto; 
+        transition: width 0.3s ease; 
+        color: #1e293b;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .right-sidebar-wrapper.collapsed .sidebar-form-card { width: 0px !important; padding: 0px !important; border: none !important; overflow: hidden; }
+    
+    /* Panel Açma/Kapama Butonu (KÖŞELİ) */
+    #right-panel-toggle { 
+        width: 20px; height: 50px; 
+        background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; 
+        border-radius: 0px; 
+        display: flex; align-items: center; justify-content: center; cursor: pointer; margin-top: 40vh; z-index: 100; box-shadow: -2px 0 4px rgba(0,0,0,0.1); 
+    }
+
+    /* --- KARTLAR VE BİLEŞENLER (KÖŞELİ) --- */
+    
+    .time-control-card { 
+        background-color: #fff; 
+        border: 1px solid #e1e8ed; 
+        border-radius: 0px; 
+        padding: 10px; 
+        margin-bottom: 15px; 
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+    }
+
+    .sidebar-info-card { 
+        background-color: #f0f7ff; 
+        border: 1px solid #cce0f5; 
+        border-radius: 0px; 
+        padding: 10px; 
+        margin-bottom: 10px; 
+        font-size: 11px; 
+        color: #556677; 
+    }
+
+    .chart-info-overlay { 
+        width: 100%; 
+        background: #ffffff; 
+        border: 1px solid #e2e8f0;
+        border-radius: 0px; 
+        padding: 12px 20px; 
+        display: flex; align-items: center; gap: 20px; flex-shrink: 0; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .chart-info-name { font-size: 13px; font-weight: 800; color: #1565c0; text-transform: uppercase; }
+    .chart-info-details-group { display: flex; align-items: center; gap: 13px; font-size: 11px; color: #334155; }
+    .chart-info-item i { color: #4a90e2; width: 12px; margin-right: 5px; }
+
+    /* --- FORM ELEMANLARI --- */
+    .form-group label { font-size: 10px; margin-bottom: 2px; font-weight: 600; color: #556677; text-transform: uppercase; }
+
+    .form-group input, .form-group select, .date-jump-input, .time-select { 
+        padding: 4px 6px; 
+        border: 1px solid #cce0f5; 
+        border-radius: 0px; 
+        font-size: 11px; 
+        height: 28px; 
+        background-color: #f0f7ff; 
+        color: #333; 
+        transition: all 0.2s; 
+    }
+    
+    .form-group input:focus, .form-group select:focus, .date-jump-input:focus { 
+        border-color: #4a90e2; 
+        background-color: #ffffff; 
+        outline: none; 
+    }
+
+    .btn-jump { height: 28px; background-color: #27ae60; color: white; border: none; border-radius: 0px; padding: 0 10px; font-size: 10px; font-weight: bold; cursor: pointer; }
+    .btn-jump:hover { background-color: #219150; }
+    
+    .time-btn { background-color: #4a90e2; color: white; border: none; border-radius: 0px; width: 28px; height: 28px; cursor: pointer; display:flex; align-items:center; justify-content:center; }
+
+    .info-row i { width: 16px; color: #4a90e2; text-align: center; margin-right: 5px; } 
+
+    /* --- DİĞER BİLEŞENLER --- */
+
+    .chart-wheel-placeholder { 
+        width: 100%; 
+        height: calc(100% - 60px); 
+        margin: 5px auto; 
+        display: flex; justify-content: center; align-items: center; 
+        filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2)); 
+    }
+    #astroChart { width: 100%; height: 100%; }
+
+    .chart-line, .house-cusp, .asc-line { stroke: #334155 !important; stroke-width: 1px; fill: none; }
+    .house-cusp-stepped { stroke: #1565c0; stroke-width: 1.5px; fill: none; stroke-dasharray: 3,2; }
+/* DERECE (Büyük ve Kalın) */
+    .cusp-degree, .planet-degree { 
+        font-size: 15px; 
+        font-weight: 500; /* Kalın */
+        fill: #1e293b !important; 
+        font-family: Helvetica, Arial, sans-serif; 
+    } 
+    
+    /* DAKİKA (Küçük ve İnce) */
+    .cusp-minute, .planet-minute { 
+        font-size: 13px; /* Daha küçük */
+        font-weight: 400; /* Normal */
+        fill: #64748b !important; 
+        font-family: Helvetica, Arial, sans-serif; 
+    }
+    .house-label { font-size: 10px; fill: #1565c0 !important; font-weight: bold; } 
+    .planet-retrograde { font-size: 12px; fill: #dc2626; font-weight: bold; } 
+
+    .chart-list-item { display: block; padding: 10px; margin-bottom: 6px; background-color: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 0px; text-decoration: none; color: #334155; transition: all 0.2s; cursor: pointer; } 
+    .chart-list-item:hover { background-color: #e3f2fd; color: #1565c0; } 
+    .chart-list-item.selected { background-color: #fff !important; border: 1px solid #1565c0; border-left: 5px solid #1565c0; color: #1565c0; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .chart-list-name { font-size: 13px; display: block; } 
+    .chart-list-date { font-size: 11px; color: #94a3b8; display: block; margin-top: 2px; }
+
+    .sidebar-title { font-size: 12px; font-weight: 700; color: #1565c0; text-transform: uppercase; margin: 10px 0; }
+    .sidebar-link { display: block; padding: 8px 0; color: #475569; text-decoration: none; font-size: 11px; font-weight: 500; margin-bottom: 8px; transition: all 0.3s; cursor: pointer; border-left: 2px solid transparent; padding-left: 8px; } 
+    .sidebar-link:hover { color: #1565c0; background-color: rgba(21, 101, 192, 0.05); } 
+    .sidebar-link.active { color: #1565c0; border-left: 2px solid #1565c0; font-weight: 700; background-color: rgba(21, 101, 192, 0.08); }
+
+    /* --- SCROLLBAR (12PX & KÖŞELİ) --- */
+    ::-webkit-scrollbar { 
+        width: 12px; 
+    }
+    ::-webkit-scrollbar-track { 
+        background: #f1f5f9; 
+    }
+    ::-webkit-scrollbar-thumb { 
+        background: #cbd5e1; 
+        border-radius: 0px; 
+        border: 2px solid #f1f5f9; 
+    }
+    ::-webkit-scrollbar-thumb:hover { 
+        background: #94a3b8; 
+    }
+
+    /* Yardımcılar */
+    .form-row { display: flex; gap: 5px; margin-bottom: 8px; } 
+    .form-group { display: flex; flex-direction: column; margin-bottom: 8px; width: 100%; }
+    .date-jump-row { display: flex; gap: 5px; margin-bottom: 8px; align-items: center; }
+    .time-control-row { display: flex; align-items: center; justify-content: space-between; gap: 3px; }
+    .top-info-bar { display:none; } 
+    .modal-overlay { display: none; }
+
+    /* --- MODAL (SEÇİM KUTUSU) TASARIMI --- */
+    
+    /* 1. Ekranı Kaplayan Karartma Katmanı */
+    .modal-overlay {
+        display: none; /* JS ile açılacak */
+        position: fixed; /* Ekrana sabitle */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5); /* Yarı saydam siyah arka plan */
+        z-index: 20000; /* En üst katmanlarda olsun */
+        align-items: center; /* Dikey ortala */
+        justify-content: center; /* Yatay ortala */
+        backdrop-filter: blur(2px); /* Arkadaki haritayı hafif buzla */
+    }
+
+    /* 2. Beyaz Seçim Kutusu */
+    .modal-box {
+        background-color: #ffffff !important; /* ARKA PLAN BEYAZ (Zorunlu) */
+        width: 90%;
+        max-width: 600px; /* Genişlik sınırı */
+        max-height: 85vh; /* Ekran boyunu taşmasın */
+        border-radius: 8px; /* Köşeleri yuvarla */
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); /* Derin gölge */
+        padding: 20px;
+        position: relative;
+        overflow-y: auto; /* İçerik uzunsa scroll çıksın */
+        display: flex;
+        flex-direction: column;
+        color: #334155;
+        border: 1px solid #e2e8f0;
+    }
+
+    /* Modal Başlığı */
+    .modal-box h4 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        font-size: 16px;
+        color: #1565c0;
+        border-bottom: 2px solid #f1f5f9;
+        padding-bottom: 10px;
+        text-transform: uppercase;
+        font-weight: 800;
+    }
+
+    /* Liste Elemanları (Gezegen isimleri) */
+    .synastry-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        overflow-y: auto;
+        background-color: #f8fafc;
+    }
+
+    .chart-select-item {
+        padding: 10px;
+        border-bottom: 1px solid #e2e8f0;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+        background-color: #ffffff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chart-select-item:last-child {
+        border-bottom: none;
+    }
+
+    .chart-select-item:hover {
+        background-color: #e0f2fe; /* Üzerine gelince mavi */
+        color: #0284c7;
+        padding-left: 15px; /* Kayma efekti */
+    }
+
+    /* Kapat Butonu */
+    .close-modal-btn {
+        margin-top: 15px;
+        padding: 8px 15px;
+        background-color: #ef4444; /* Kırmızı */
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        align-self: flex-end; /* Sağa yasla */
+        transition: background 0.2s;
+    }
+
+    .close-modal-btn:hover {
+        background-color: #dc2626;
+    }
+    
+    /* Geri Dön Butonu */
+    .back-btn {
+        cursor: pointer;
+        color: #1565c0;
+        font-size: 12px;
+        font-weight: bold;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .back-btn:hover {
+        text-decoration: underline;
+    }
+</style>
+</head>
+<body>
+    <video autoplay muted loop playsinline id="bg-video">
+        <source src="{{ url_for('static', filename='videos/space.mp4') }}" type="video/mp4">
+    </video>
+    
+    <div class="video-overlay"></div>
+
+    <header class="main-header">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" class="logo-svg" onerror="this.style.display='none'">
+            <div class="logo-text-wrapper">
+                <span class="logo-title">ASTROFIRE</span>
+                <span class="logo-subtitle">Özümay Akademi</span>
+            </div>
+        </div>
+        
+        <nav class="main-nav">
+            <a href="{{ url_for('page_data') }}" class="nav-link {% if active_page == 'data' %}active{% endif %}">DATA</a>
+            <a href="{{ url_for('home') }}" class="nav-link {% if not active_page %}active{% endif %}">Harita Aç</a>
+            <a href="{{ url_for('kayitli_haritalar') }}" class="nav-link {% if request.endpoint == 'kayitli_haritalar' %}active{% endif %}">Kayıtlı Haritalar</a>
+            <a href="{{ url_for('page_education') }}" class="nav-link {% if active_page == 'egitimler' %}active{% endif %}">Eğitimler</a>
+            <a href="{{ url_for('page_contact') }}" class="nav-link {% if active_page == 'iletisim' %}active{% endif %}">İletişim</a>
+        </nav>
+        
+        <div class="user-area">
+            {% if is_logged_in %} 
+                <span class="user-display-name" style="font-size:13px; font-weight:bold; margin-right:10px;">👤 {{ display_name }}</span> 
+                {% if is_admin and is_admin() %}
+                    <a href="{{ url_for('admin_dashboard') }}" style="color:#e67e22; text-decoration:none; font-size:11px; margin-right:10px; font-weight:bold;">YÖNETİM</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="btn-logout" style="font-size:11px; color:red; text-decoration:none;">Çıkış</a>
+            {% else %} 
+                <a href="{{ url_for('login') }}" class="btn-login" style="font-size:12px; font-weight:bold; color:#1565c0; text-decoration:none;">GİRİŞ YAP</a> 
+            {% endif %}
+        </div>
+    </header>
+
+    {% block content %}
+    <div class="main-container">
+        <aside class="sidebar-left" style="background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; display: flex; flex-direction: column; gap: 5px; overflow: hidden;">
+    
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; flex-shrink: 0; display: flex; flex-direction: column;">
+                
+                <form action="/set_active_time" method="POST" class="date-jump-row" style="margin-bottom: 8px;">
+                    {% if current_chart_data %}
+                        <input type="datetime-local" name="target_date" class="date-jump-input" required value="{{ current_chart_data.year }}-{{ '%02d'|format(current_chart_data.month) }}-{{ '%02d'|format(current_chart_data.day) }}T{{ '%02d'|format(current_chart_data.hour) }}:{{ '%02d'|format(current_chart_data.minute) }}" style="width: 100%;">
+                    {% else %}
+                        <input type="datetime-local" name="target_date" class="date-jump-input" style="width: 100%;">
+                    {% endif %}
+                    <button type="submit" class="btn-jump">GİT</button>
+                </form>
+
+                <div class="time-control-row">
+                    <button class="time-btn" onclick="adjustTime(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <select id="timeStepSelect" class="time-select" onchange="saveTimeStep()" style="flex: 1; text-align: center;">
+                        <option value="minute">Dakika</option>
+                        <option value="hour">Saat</option>
+                        <option value="day">Gün</option>
+                        <option value="week">Hafta</option>
+                        <option value="month">Ay</option>
+                        <option value="year">Yıl</option>
+                    </select>
+                    <button class="time-btn" onclick="adjustTime(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                
+                {# ESKİ DEĞİŞTİR BUTONU BURADAYDI - SİLİNDİ #}
+            </div>
+
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; flex: 1; display: flex; flex-direction: column; overflow-y: auto;">
+                
+                <div class="sidebar-info-card" style="margin-bottom: 15px;">
+                    <div class="info-row" title="Anlık Zaman"><i class="far fa-clock"></i><span id="bar_datetime">...</span></div>
+                    <div class="info-row" title="Konum"><i class="fas fa-map-marker-alt"></i><span id="bar_location_display" class="info-clickable" onclick="openSidebarLocationSearch()">İstanbul</span></div>
+                    <div class="info-row" title="ASC"><i class="fas fa-arrow-up"></i><span>ASC: <b id="bar_asc_degree">--</b></span></div>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <a href="javascript:void(0)" onclick="openProgressionModal()" class="sidebar-link">İlerletilmiş</a>
+                    <a href="javascript:void(0)" onclick="openReturnModal()" class="sidebar-link">Return</a>
+                    <a href="javascript:void(0)" onclick="openTransitMenu(event)" class="sidebar-link {% if active_tab == 'instant_transit' %}active{% endif %}">Transit</a>
+                    <a href="javascript:void(0)" onclick="openCelestialModal()" class="sidebar-link">Tutulma/Ay</a>
+                    <a href="javascript:void(0)" onclick="openSynastryModal()" class="sidebar-link {% if active_tab == 'sinastri' %}active{% endif %}">Sinastri</a>
+                </div>
+            </div>
+
+        </aside>
+
+        <main class="chart-content">
+            {% if not is_logged_in %}
+                <div style="margin-top:50px; text-align:center;"><h2>Hoş Geldiniz</h2><p>Lütfen devam etmek için giriş yapın veya kayıt olun.</p></div>
+            {% else %}
+                {% if current_chart_data %}
+                <div class="chart-info-overlay">
+    <span class="chart-info-name">{{ current_chart_data.name }}</span>
+    
+    <div class="chart-info-details-group">
+        {% if current_chart_data.type in ['synastry', 'composite'] and current_chart_data.natal_meta_1 and current_chart_data.natal_meta_2 %}
+            {# Sinastri/Kompozit için iki haritanın tarihlerini göster #}
+            <div class="chart-info-item">
+                <i class="fas fa-user"></i>
+                <span>1: {{ current_chart_data.natal_meta_1.day }}.{{ current_chart_data.natal_meta_1.month }}.{{ current_chart_data.natal_meta_1.year }} {{ "%02d"|format(current_chart_data.natal_meta_1.hour) }}:{{ "%02d"|format(current_chart_data.natal_meta_1.minute) }}</span>
+            </div>
+            <div class="chart-info-item">
+                <i class="fas fa-user-friends"></i>
+                <span>2: {{ current_chart_data.natal_meta_2.day }}.{{ current_chart_data.natal_meta_2.month }}.{{ current_chart_data.natal_meta_2.year }} {{ "%02d"|format(current_chart_data.natal_meta_2.hour) }}:{{ "%02d"|format(current_chart_data.natal_meta_2.minute) }}</span>
+            </div>
+        {% else %}
+            {# Normal haritalar için standart bilgileri göster #}
+            <div class="chart-info-item"><i class="far fa-calendar-alt"></i><span>{{ current_chart_data.day }}.{{ current_chart_data.month }}.{{ current_chart_data.year }} {{ "%02d"|format(current_chart_data.hour) }}:{{ "%02d"|format(current_chart_data.minute) }}</span></div>
+            <div class="chart-info-item"><i class="fas fa-map-marker-alt"></i><span>{{ current_chart_data.location_name }}</span></div>
+            <div class="chart-info-item"><i class="fas fa-globe"></i><span>{{ current_chart_data.zodiac_type }} | UTC {{ current_chart_data.tz_offset }}</span></div>
+        {% endif %}
+    </div>
+
+    {# --- YENİ EKLENEN DEĞİŞTİR BUTONU --- #}
+    {# Sadece Sinastri haritalarında görünür ve en sağa yaslanır #}
+    {% if current_chart_data.type in ['synastri', 'synastry', 'composite'] %}
+    <button onclick="swapSynastryCharts()" 
+            title="İç ve Dış Haritanın Yerini Değiştir"
+            style="margin-left: auto; background: #e67e22; color: white; border: none; border-radius: 4px; padding: 6px 12px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <i class="fas fa-exchange-alt"></i> <span>DEĞİŞTİR</span>
+    </button>
+    {% endif %}
+    
+</div>
+{% endif %}
+                
+                <div id="customTooltip" class="custom-tooltip"></div>
+                <div class="chart-wheel-placeholder">
+                    {% if last_chart %}
+                        <svg id="astroChart" viewBox="0 0 700 700"></svg>
+                    {% else %}
+                        <p style="padding: 20px; text-align: center; color: #777; margin-top: 50px;">Harita bekleniyor...</p>
+                    {% endif %}
+                </div>
+                
+                <div id="aktif_haritalar" class="tab-content">
+                    {% include 'active_charts_list.html' ignore missing %}
+                </div>
+                <div id="hesaplama_raporu" class="tab-content active" style="display:block; width:100%; padding:0 20px;">
+                    {% if report_success %}
+                        <div class="report-container">
+                            {% include 'report_output.html' ignore missing %}
+                        </div>
+                    {% elif report_success == False %}
+                        <div class="alert error">❌ {{ report_error }}</div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </main>
+
+        <div class="right-sidebar-wrapper" id="rightSidebarWrapper">
+            <div id="right-panel-toggle" onclick="toggleRightPanel()"><i class="fas fa-chevron-right"></i></div>
+            <aside class="sidebar-form-card" id="rightSidebar">
+                <div class="tab-navigation">
+                    <a href="{{ url_for('home', tab='natal') }}" class="tab-button {% if active_tab == 'natal' %}active{% endif %}">Harita Aç</a>
+                    <a href="{{ url_for('home', tab='aktif') }}" class="tab-button {% if active_tab == 'aktif' %}active{% endif %}">Aktif ({{ active_charts|length }})</a>
+                </div>
+                <div id="natal" class="tab-content {% if active_tab == 'natal' %}active{% endif %}">
+                    <form id="natalForm" method="POST" action="{{ url_for('home', tab='natal') }}">
+                        {% include 'natal_form_fields.html' ignore missing %}
+                        <button type="submit" class="btn-primary" style="width:100%; background:#27ae60; color:white; padding:8px; border:none; border-radius:4px; font-weight:bold; margin-top:10px;">HESAPLA</button>
+                    </form>
+                </div>
+                <div id="aktif" class="tab-content {% if active_tab == 'aktif' %}active{% endif %}">
+                    {% include 'active_charts_list.html' ignore missing %}
+                </div>
+            </aside>
+        </div>
+    </div>
+    {% endblock %}
+
+    <input type="hidden" id="bar_lat" value="41.0082"><input type="hidden" id="bar_lon" value="28.9784"><input type="hidden" id="bar_tz" value="3.0"><input type="hidden" id="bar_loc_name" value="İstanbul, Türkiye">
+    <form id="instantTransitForm" method="POST" action="{{ url_for('home', tab='instant_transit') }}" style="display:none;"><input type="hidden" name="bar_year" id="form_bar_year"><input type="hidden" name="bar_month" id="form_bar_month"><input type="hidden" name="bar_day" id="form_bar_day"><input type="hidden" name="bar_hour" id="form_bar_hour"><input type="hidden" name="bar_minute" id="form_bar_minute"><input type="hidden" name="bar_lat" id="form_bar_lat"><input type="hidden" name="bar_lon" id="form_bar_lon"><input type="hidden" name="bar_tz" id="form_bar_tz"><input type="hidden" name="bar_loc_name" id="form_bar_loc_name"><input type="hidden" name="transit_type" id="form_transit_type"></form>
+    <form id="timeAdjustForm" method="POST" action="/adjust_active_time" style="display:none;"><input type="hidden" name="unit" id="time_adjust_unit"><input type="hidden" name="amount" id="time_adjust_amount"></form>
+    
+    <div id="locationModal" class="modal-overlay"><div class="modal-box"><h4 id="locationModalTitle">Konum Seçin</h4><div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" id="modal_city_input" placeholder="Şehir adı..." style="flex:1;"><button onclick="searchInModal()" style="background:#1565c0; color:white; border:none; border-radius:4px; padding:0 15px; cursor:pointer;">BUL</button></div><p id="modal-loading" style="display:none; color:#666;">Aranıyor...</p><ul id="locationResultList" class="location-list"></ul><button class="close-modal-btn" onclick="closeLocationModal()">Kapat</button></div></div>
+    <div id="transit-context-menu" class="transit-context-menu"><div class="transit-menu-item" onclick="submitInstantTransit('Astronomik')">Astronomik Transit</div><div class="transit-menu-item" onclick="submitInstantTransit('Drakonik')">Drakonik Transit</div></div>
+    
+    <div id="selectionModal" class="modal-overlay"><div class="modal-box" style="max-width:600px;"><h4 id="selectionModalTitle">Görünüm</h4><div id="backBtnContainer" style="display:none; border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:5px;"><span class="back-btn" onclick="goBackToFolders()"> <i class="fas fa-arrow-left"></i> Klasörlere Dön</span></div><div style="display:flex; gap:10px;"><div style="flex:1; border-right:1px solid #eee; padding-right:5px;"><b>Görünür (Haritada)</b><ul id="visibleList" class="synastry-list" style="height:200px;"></ul></div><div style="flex:1; padding-left:5px;"><b id="hiddenTitle">Gizli (Ekle)</b><ul id="hiddenList" class="synastry-list" style="height:200px;"></ul></div></div><button class="close-modal-btn" onclick="closeSelectionModal()" style="margin-top:15px;">Kapat</button></div></div>
+    <div id="sidebar-context-menu" class="custom-context-menu"><a id="context-save" href="#" class="context-menu-item save"><i class="fas fa-save"></i> Arşive Kaydet</a><a id="context-edit" href="#" class="context-menu-item edit"><i class="fas fa-edit"></i> Düzenle</a><a id="context-delete" href="#" class="context-menu-item delete"><i class="fas fa-trash-alt"></i> Aktif Listeden Sil</a></div>
+    <div id="canvas-context-menu" class="custom-context-menu"><div class="context-menu-header">Görünüm Seçenekleri</div><a href="javascript:void(0)" onclick="openSelectionModal('planets', 'Gezegen Seçimi')" class="context-menu-item"><i class="fas fa-globe-europe"></i> Gezegen Seçimi</a><a href="javascript:void(0)" onclick="openSelectionModal('asteroids', 'Asteroid Seçimi')" class="context-menu-item"><i class="fas fa-meteor"></i> Asteroid Seçimi</a><a href="javascript:void(0)" onclick="openSelectionModal('angles', 'Köşe Noktaları')" class="context-menu-item"><i class="fas fa-draw-polygon"></i> Köşe Noktaları</a><a href="javascript:void(0)" onclick="openSelectionModal('fixedstars', 'Sabit Yıldızlar Seçimi')" class="context-menu-item"><i class="fas fa-star"></i> Sabit Yıldızlar Seçimi</a></div>
+
+    <div id="celestialEventsModal" class="modal-overlay">
+        <div class="synastry-modal-box" style="max-width: 1100px; width: 95%;">
+            <div class="synastry-header">
+                <span><i class="fas fa-moon"></i> Gökyüzü Olayları Arşivi</span>
+                <span style="cursor:pointer; font-size:18px;" onclick="document.getElementById('celestialEventsModal').style.display='none'">✕</span>
+            </div>
+            
+            <div class="synastry-body" style="flex-direction: column; padding-top:10px;">
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                    <input type="number" id="ce_year" placeholder="Yıl" value="2025" 
+                           style="width: 100px; padding:8px; border:1px solid #ddd; border-radius:4px; font-weight:bold;">
+                    <button onclick="searchCelestialEvents()" 
+                            style="background:#2c3e50; color:white; border:none; padding:8px 20px; border-radius:4px; cursor:pointer; font-weight:bold;">
+                        YILI LİSTELE
+                    </button>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex: 1; min-height: 300px;">
+                    
+                    <div style="display:flex; flex-direction:column;">
+                        <h5 style="margin:0 0 8px 0; color:#c0392b; font-size:13px; border-bottom:2px solid #c0392b; padding-bottom:4px;">
+                            <i class="fas fa-eclipse"></i> TUTULMALAR
+                        </h5>
+                        <div id="eclipseList" class="synastry-list" style="flex:1; height:400px; overflow-y: auto; background:#fff5f5; border-color:#fadbd8;">
+                             <p style="text-align:center; color:#999; font-size:12px; margin-top:20px;">Yıl seçip arayın.</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; flex-direction:column;">
+                        <h5 style="margin:0 0 8px 0; color:#2980b9; font-size:13px; border-bottom:2px solid #2980b9; padding-bottom:4px;">
+                            <i class="far fa-moon"></i> YENİ AY & DOLUNAY
+                        </h5>
+                        <div id="phaseList" class="synastry-list" style="flex:1; height:400px; overflow-y: auto; background:#ebf5fb; border-color:#d6eaf8;">
+                            <p style="text-align:center; color:#999; font-size:12px; margin-top:20px;">Yıl seçip arayın.</p>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form id="loadEventForm" action="/load_celestial_event" method="POST" style="display:none;">
+        <input type="hidden" name="title" id="le_title">
+        <input type="hidden" name="year" id="le_year">
+        <input type="hidden" name="month" id="le_month">
+        <input type="hidden" name="day" id="le_day">
+        <input type="hidden" name="hour" id="le_hour">
+        <input type="hidden" name="minute" id="le_minute">
+    </form>
+
+    <script>
+    // --- GENEL YARDIMCI FONKSİYONLAR ---
+
+    function openCelestialModal() {
+        document.getElementById('celestialEventsModal').style.display = 'flex';
+        const now = new Date();
+        document.getElementById('ce_year').value = now.getFullYear();
+        searchCelestialEvents(); 
+    }
+
+    function searchCelestialEvents() {
+        const y = document.getElementById('ce_year').value;
+        const eclipseList = document.getElementById('eclipseList');
+        const phaseList = document.getElementById('phaseList');
+        
+        eclipseList.innerHTML = '<p style="text-align:center; color:#666; margin-top:10px;">Aranıyor...</p>';
+        phaseList.innerHTML = '<p style="text-align:center; color:#666; margin-top:10px;">Aranıyor...</p>';
+        
+        fetch('/api/search_celestial_events', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ year: y })
+        })
+        .then(r => r.json())
+        .then(data => {
+            eclipseList.innerHTML = '';
+            phaseList.innerHTML = '';
+            
+            if (data.success) {
+                if (data.eclipses.length > 0) {
+                    data.eclipses.forEach(ev => { eclipseList.appendChild(createEventItem(ev, '#c0392b')); });
+                } else { eclipseList.innerHTML = '<p style="text-align:center; color:#999; padding:10px;">Bu yıl tutulma yok.</p>'; }
+
+                if (data.phases.length > 0) {
+                    data.phases.forEach(ev => { phaseList.appendChild(createEventItem(ev, '#2980b9')); });
+                } else { phaseList.innerHTML = '<p style="text-align:center; color:#999; padding:10px;">Kayıt bulunamadı.</p>'; }
+            } else { alert("Hata: " + data.error); }
+        })
+        .catch(err => { console.error(err); eclipseList.innerHTML = '<p style="color:red;">Bağlantı hatası.</p>'; });
+    }
+
+    function createEventItem(ev, color) {
+        const item = document.createElement('div');
+        item.className = "chart-select-item";
+        item.style.display = "flex";
+        item.style.justifyContent = "space-between";
+        
+        let icon = '🌑'; 
+        if (ev.title.includes('Dolunay')) icon = '🌕';
+        if (ev.title.includes('Tutulma')) icon = '🌓';
+        
+        item.innerHTML = `
+            <div>
+                <span style="font-size:12px; font-weight:bold; color:${color};">${icon} ${ev.title}</span><br>
+                <span style="font-size:11px; color:#555;">${ev.sign_info}</span>
+            </div>
+            <div style="text-align:right;">
+                <span style="font-size:10px; font-weight:bold; color:#333;">${ev.date_str}</span><br>
+                <button style="margin-top:2px; background:${color}; color:white; border:none; border-radius:3px; padding:2px 6px; font-size:9px; cursor:pointer;">AÇ</button>
+            </div>
+        `;
+        
+        item.onclick = function() {
+            document.getElementById('le_title').value = ev.title;
+            document.getElementById('le_year').value = ev.year;
+            document.getElementById('le_month').value = ev.month;
+            document.getElementById('le_day').value = ev.day;
+            document.getElementById('le_hour').value = ev.hour;
+            document.getElementById('le_minute').value = ev.minute;
+            document.getElementById('loadEventForm').submit();
+        };
+        return item;
+    }
+
+    function toggleRightPanel() { const wrapper = document.getElementById('rightSidebarWrapper'); const btnIcon = document.querySelector('#right-panel-toggle i'); if (!wrapper || !btnIcon) return; wrapper.classList.toggle('collapsed'); if (wrapper.classList.contains('collapsed')) { btnIcon.classList.remove('fa-chevron-right'); btnIcon.classList.add('fa-chevron-left'); } else { btnIcon.classList.remove('fa-chevron-left'); btnIcon.classList.add('fa-chevron-right'); } }
+    function saveLastSelectedChart(index) { localStorage.setItem('lastSelectedChartIndex', index); }
+    let searchTarget = 'form'; const ASTEROID_CATEGORY = ["Chiron", "Ceres", "Pallas", "Juno", "Vesta"]; const ANGLE_POINTS = ["ASC", "DSC", "IC", "MC"]; const DEFAULT_HIDDEN = ["Güney Düğümü", "Şans Noktası", "Chiron", "Ceres", "Pallas", "Juno", "Vesta", "Eris", "Haumea", "Makemake", "ASC", "DSC", "IC", "MC"]; let visibilitySettings = JSON.parse(localStorage.getItem('astroVisibilitySettings')) || { hidden: [...DEFAULT_HIDDEN], visible_stars: [] }; if (!visibilitySettings.visible_stars) { visibilitySettings.visible_stars = []; } let selectionData = { planets: { visible: [], hidden: [] }, asteroids: { visible: [], hidden: [] }, angles: { visible: [], hidden: [] }, fixedstars: { visible: [], hidden: [] } }; function saveVisibilitySettings() { localStorage.setItem('astroVisibilitySettings', JSON.stringify(visibilitySettings)); } const ALWAYS_VISIBLE_STARS = ["Sirius", "Spica", "Antares", "Regulus", "Fomalhaut", "Aldebaran", "Vega", "Betelgeuse"];
+    document.addEventListener('DOMContentLoaded', function() { var activeTabId = "{{ active_tab }}"; if (activeTabId === 'aktif') { let btn = document.querySelector('.tab-button[href*="aktif"]'); if(btn) btn.classList.add('active'); let tab = document.getElementById('aktif'); if(tab) tab.style.display = 'block'; let natalBtn = document.querySelector('.tab-button[href*="natal"]'); if(natalBtn) natalBtn.classList.remove('active'); let natalTab = document.getElementById('natal'); if(natalTab) natalTab.style.display = 'none'; } else if (activeTabId === 'transit' || activeTabId === 'sinastri' || activeTabId === 'instant_transit') { if(document.getElementById('natal')) document.getElementById('natal').style.display = 'block'; } else if (activeTabId) { var contentToShow = document.getElementById(activeTabId); if (contentToShow) contentToShow.style.display = 'block'; } updateReportVisibility(); restoreState(); setInterval(() => { const now = new Date(); const dateSpan = document.getElementById('bar_datetime'); if(dateSpan) dateSpan.innerText = now.toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); const fYear = document.getElementById('form_bar_year'); if(fYear) fYear.value = now.getFullYear(); const fMonth = document.getElementById('form_bar_month'); if(fMonth) fMonth.value = now.getMonth()+1; const fDay = document.getElementById('form_bar_day'); if(fDay) fDay.value = now.getDate(); const fHour = document.getElementById('form_bar_hour'); if(fHour) fHour.value = now.getHours(); const fMin = document.getElementById('form_bar_minute'); if(fMin) fMin.value = now.getMinutes(); if(now.getSeconds() === 0) updateASC(); }, 1000); setTimeout(updateASC, 500); document.addEventListener("wheel", function(e){ if(document.activeElement.type === "number") document.activeElement.blur(); }); const citySearchBtn = document.getElementById('city_search_btn'); if(citySearchBtn) citySearchBtn.addEventListener('click', function(e) { e.preventDefault(); openFormLocationSearch(); }); var cityInput = document.getElementById('city_search_input'); if(cityInput) cityInput.addEventListener("keypress", function(e) { if (e.key === "Enter") { e.preventDefault(); openFormLocationSearch(); } }); var modalInput = document.getElementById('modal_city_input'); if(modalInput) modalInput.addEventListener("keypress", function(e) { if (e.key === "Enter") { e.preventDefault(); searchInModal(); } }); const chartArea = document.querySelector('.chart-wheel-placeholder'); if (chartArea) { chartArea.addEventListener('contextmenu', function(e) { e.preventDefault(); if (document.getElementById('astroChart')) { showCanvasContextMenu(e); } }); } window.addEventListener('click', function() { document.getElementById('transit-context-menu').style.display = 'none'; document.getElementById('sidebar-context-menu').style.display = 'none'; document.getElementById('canvas-context-menu').style.display = 'none'; const tooltip = document.getElementById('customTooltip'); if(tooltip) tooltip.style.display = 'none'; }); });
+    function openTransitMenu(event) { event.stopPropagation(); const menu = document.getElementById('transit-context-menu'); const rect = event.currentTarget.getBoundingClientRect(); menu.style.left = (rect.right + 5) + 'px'; menu.style.top = rect.top + 'px'; menu.style.display = 'block'; } function saveTimeStep() { const val = document.getElementById('timeStepSelect').value; localStorage.setItem('astroTimeStep', val); } function restoreState() { const s=localStorage.getItem('astroTimeStep'); if(s) { const el = document.getElementById('timeStepSelect'); if(el) el.value=s; } const l=localStorage.getItem('astroBarLocation'); if(l) { const d=JSON.parse(l); if(document.getElementById('bar_lat')) document.getElementById('bar_lat').value=d.lat; if(document.getElementById('bar_lon')) document.getElementById('bar_lon').value=d.lon; if(document.getElementById('bar_tz')) document.getElementById('bar_tz').value=d.tz; if(document.getElementById('bar_loc_name')) document.getElementById('bar_loc_name').value=d.name; if(document.getElementById('bar_location_display')) document.getElementById('bar_location_display').innerText=d.name; } } function adjustTime(factor) { document.getElementById('time_adjust_unit').value = document.getElementById('timeStepSelect').value; document.getElementById('time_adjust_amount').value = factor; document.getElementById('timeAdjustForm').submit(); } function updateASC() { const latEl = document.getElementById('bar_lat'); if(!latEl) return; const lat = latEl.value; const lon = document.getElementById('bar_lon').value; const tz = document.getElementById('bar_tz').value; const now = new Date(); fetch('/api/get_asc', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ year:now.getFullYear(), month:now.getMonth()+1, day:now.getDate(), hour:now.getHours(), minute:now.getMinutes(), lat:lat, lon:lon, tz:tz }) }).then(r=>r.json()).then(d => { if(d.success && document.getElementById('bar_asc_degree')) document.getElementById('bar_asc_degree').innerText = d.asc; }).catch(err => console.log("ASC Error", err)); }
+    function showContextMenu(event, chartIndex) { if(!event) return; event.preventDefault(); document.getElementById('canvas-context-menu').style.display = 'none'; const menu = document.getElementById('sidebar-context-menu'); menu.style.display = 'block'; menu.style.left = event.pageX + 'px'; menu.style.top = event.pageY + 'px'; document.getElementById('context-save').href = "/save_active_chart/" + chartIndex; document.getElementById('context-edit').href = "/edit_active_chart/" + chartIndex; document.getElementById('context-delete').href = "/delete_active_chart/" + chartIndex; }
+    function showCanvasContextMenu(event) { if(!event) return; event.preventDefault(); document.getElementById('sidebar-context-menu').style.display = 'none'; const menu = document.getElementById('canvas-context-menu'); menu.style.display = 'block'; menu.style.left = event.pageX + 'px'; menu.style.top = event.pageY + 'px'; }
+    function openFormLocationSearch() { const cityInput = document.getElementById('city_search_input'); const cityVal = cityInput.value; if(!cityVal) { alert("Lütfen bir şehir adı girin."); return; } searchTarget = 'form'; document.getElementById('locationModalTitle').innerText = "Doğum Yeri Ara (UTC Hesapla)"; document.getElementById('modal_city_input').value = cityVal; document.getElementById('locationResultList').innerHTML = ""; document.getElementById('locationModal').style.display = 'flex'; document.getElementById('modal_city_input').focus(); searchInModal(); } function openSidebarLocationSearch() { searchTarget = 'bar'; document.getElementById('locationModalTitle').innerText = "Canlı Konum Değiştir (Şimdi)"; document.getElementById('modal_city_input').value = ""; document.getElementById('locationResultList').innerHTML = ""; document.getElementById('locationModal').style.display = 'flex'; document.getElementById('modal_city_input').focus(); } function closeLocationModal() { document.getElementById('locationModal').style.display = 'none'; } function searchInModal() { const city = document.getElementById('modal_city_input').value; if(!city) return; const now = new Date(); let y = now.getFullYear(); let m = now.getMonth()+1; let d = now.getDate(); let source = 'unknown'; if (searchTarget === 'form') { source = 'form'; const yInput = document.getElementById('year'); const mInput = document.getElementById('month'); const dInput = document.getElementById('day'); if (yInput && mInput && dInput && yInput.value && mInput.value && dInput.value) { y = yInput.value; m = mInput.value; d = dInput.value; } } else { source = 'bar'; } document.getElementById('modal-loading').style.display = 'block'; document.getElementById('locationResultList').innerHTML = ''; fetch('/api/search_location', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ city:city, year:y, month:m, day:d, source: source }) }).then(r => r.json()).then(d_resp => { document.getElementById('modal-loading').style.display = 'none'; const ul = document.getElementById('locationResultList'); ul.innerHTML = ''; if(d_resp.success && d_resp.results && d_resp.results.length > 0) { d_resp.results.forEach(l => { const li = document.createElement('li'); li.className = 'location-item'; let utcSign = l.tz_offset >= 0 ? "+" : ""; let utcShow = utcSign + l.tz_offset; li.innerHTML = `<strong>${l.address}</strong><br><span style='color:#666; font-size:11px;'>UTC ${utcShow} (Tarih: ${d}.${m}.${y})</span>`; li.onclick = () => { selectLocation(l); }; ul.appendChild(li); }); } else { ul.innerHTML = '<li style="padding:10px; color:red;">Sonuç bulunamadı.</li>'; } }).catch(err => { document.getElementById('modal-loading').style.display = 'none'; document.getElementById('locationResultList').innerHTML = '<li style="padding:10px; color:red;">Sunucu hatası!</li>'; }); } function selectLocation(l) { if(searchTarget === 'bar') { document.getElementById('bar_lat').value = l.lat; document.getElementById('bar_lon').value = l.lon; document.getElementById('bar_tz').value = l.tz_offset; document.getElementById('bar_loc_name').value = l.address; document.getElementById('bar_location_display').innerText = l.address; localStorage.setItem('astroBarLocation', JSON.stringify({ lat: l.lat, lon: l.lon, tz: l.tz_offset, name: l.address })); updateASC(); } else { if(document.getElementById('lat')) document.getElementById('lat').value = l.lat; if(document.getElementById('lon')) document.getElementById('lon').value = l.lon; if(document.getElementById('tz_offset')) document.getElementById('tz_offset').value = l.tz_offset; if(document.getElementById('location_name')) document.getElementById('location_name').value = l.address; if(document.getElementById('city_search_input')) document.getElementById('city_search_input').value = l.address.split(',')[0]; let utcSign = l.tz_offset >= 0 ? "+" : ""; let utcFormatted = utcSign + l.tz_offset; const displayEl = document.getElementById('selected_location_display'); if(displayEl) { displayEl.innerHTML = `<i class="fas fa-check-circle"></i> ${l.address} (UTC ${utcFormatted})`; displayEl.style.color = "#27ae60"; } const utcInp = document.getElementById('tz_offset'); if(utcInp && typeof validateUtcInput === 'function') validateUtcInput(utcInp); } closeLocationModal(); } function submitInstantTransit(type) { document.getElementById('form_transit_type').value = type; document.getElementById('form_bar_lat').value = document.getElementById('bar_lat').value; document.getElementById('form_bar_lon').value = document.getElementById('bar_lon').value; document.getElementById('form_bar_tz').value = document.getElementById('bar_tz').value; document.getElementById('form_bar_loc_name').value = document.getElementById('bar_loc_name').value; document.getElementById('instantTransitForm').submit(); }
+    let currentStarCategory = null; function closeSelectionModal() { document.getElementById('selectionModal').style.display = 'none'; currentStarCategory = null; if (typeof drawZodiac === "function") drawZodiac(); if (typeof drawAllPlanets === "function") drawAllPlanets(); } function openSelectionModal(dataType, title) { document.getElementById('canvas-context-menu').style.display = 'none'; document.getElementById('selectionModalTitle').innerText = title; document.getElementById('selectionModal').style.display = 'flex'; currentStarCategory = null; prepareSelectionData(); renderSelectionLists(dataType); } function prepareSelectionData() { if (typeof chartData === 'undefined') return; selectionData.planets.visible = []; selectionData.planets.hidden = []; selectionData.asteroids.visible = []; selectionData.asteroids.hidden = []; selectionData.fixedstars.visible = []; selectionData.fixedstars.hidden = []; for (let pName in chartData.planets) { let targetGroup = 'planets'; if (ASTEROID_CATEGORY.includes(pName)) { targetGroup = 'asteroids'; } if (visibilitySettings.hidden.includes(pName)) { selectionData[targetGroup].hidden.push({name: pName}); } else { selectionData[targetGroup].visible.push({name: pName}); } } if (chartData.fixed_stars) { for (let sName in chartData.fixed_stars) { let sData = chartData.fixed_stars[sName]; let signName = sData[3]; if (signName === "Yılancı" || signName === "Ophiuchus") signName = "Akrep"; let item = {name: sName, category: signName}; let isVisible = false; if (visibilitySettings.visible_stars.includes(sName)) { isVisible = true; } else if (ALWAYS_VISIBLE_STARS.includes(sName) && !visibilitySettings.hidden.includes(sName)) { isVisible = true; } if (isVisible) { selectionData.fixedstars.visible.push(item); } else { selectionData.fixedstars.hidden.push(item); } } } } function renderSelectionLists(dataType) { const visibleList = document.getElementById('visibleList'); const hiddenList = document.getElementById('hiddenList'); const backBtn = document.getElementById('backBtnContainer'); const hiddenTitle = document.getElementById('hiddenTitle'); visibleList.innerHTML = ''; hiddenList.innerHTML = ''; if (dataType === 'fixedstars') { if (currentStarCategory === null) { backBtn.style.display = 'none'; hiddenTitle.innerText = "Gizli (Kategoriler)"; const signs = ["Koç", "Boğa", "İkizler", "Yengeç", "Aslan", "Başak", "Terazi", "Akrep", "Yay", "Oğlak", "Kova", "Balık"]; signs.forEach(sign => { const li = document.createElement('li'); li.className = 'chart-select-item folder-item'; li.innerHTML = `<i class="fas fa-folder"></i> ${sign} Takımyıldızı`; li.onclick = () => { currentStarCategory = sign; renderSelectionLists('fixedstars'); }; hiddenList.appendChild(li); }); } else { backBtn.style.display = 'block'; hiddenTitle.innerText = `Gizli (${currentStarCategory})`; const starsInFolder = selectionData.fixedstars.hidden.filter(item => item.category === currentStarCategory); if (starsInFolder.length === 0) { hiddenList.innerHTML = '<li style="padding:10px; color:#999;">Bu kategoride gizli yıldız yok.</li>'; } else { starsInFolder.forEach(item => { const li = document.createElement('li'); li.className = 'chart-select-item'; li.style.display = 'flex'; li.style.justifyContent = 'space-between'; li.innerHTML = `<i class="fas fa-arrow-left" style="color: #27ae60;"></i> <span>${item.name}</span>`; li.onclick = () => toggleVisibility(item.name, dataType); hiddenList.appendChild(li); }); } } selectionData.fixedstars.visible.forEach((item) => { const li = document.createElement('li'); li.className = 'chart-select-item'; li.style.display = 'flex'; li.style.justifyContent = 'space-between'; li.innerHTML = `<span>${item.name}</span> <i class="fas fa-arrow-right" style="color: #c0392b;"></i>`; li.onclick = () => toggleVisibility(item.name, dataType); visibleList.appendChild(li); }); return; } backBtn.style.display = 'none'; hiddenTitle.innerText = "Gizli (Ekle)"; if (!selectionData[dataType]) return; selectionData[dataType].visible.forEach((item) => { const li = document.createElement('li'); li.className = 'chart-select-item'; li.style.display = 'flex'; li.style.justifyContent = 'space-between'; li.innerHTML = `<span>${item.name}</span> <i class="fas fa-arrow-right" style="color: #c0392b;"></i>`; li.onclick = () => toggleVisibility(item.name, dataType); visibleList.appendChild(li); }); selectionData[dataType].hidden.forEach((item) => { const li = document.createElement('li'); li.className = 'chart-select-item'; li.style.display = 'flex'; li.style.justifyContent = 'space-between'; li.innerHTML = `<i class="fas fa-arrow-left" style="color: #27ae60;"></i> <span>${item.name}</span>`; li.onclick = () => toggleVisibility(item.name, dataType); hiddenList.appendChild(li); }); } function goBackToFolders() { currentStarCategory = null; renderSelectionLists('fixedstars'); } function toggleVisibility(name, currentDataType) { if (currentDataType === 'fixedstars') { if (visibilitySettings.visible_stars.includes(name)) { const idx = visibilitySettings.visible_stars.indexOf(name); visibilitySettings.visible_stars.splice(idx, 1); } else if (ALWAYS_VISIBLE_STARS.includes(name) && !visibilitySettings.hidden.includes(name)) { visibilitySettings.hidden.push(name); } else { const hIdx = visibilitySettings.hidden.indexOf(name); if (hIdx > -1) visibilitySettings.hidden.splice(hIdx, 1); visibilitySettings.visible_stars.push(name); } } else { const index = visibilitySettings.hidden.indexOf(name); if (index > -1) { visibilitySettings.hidden.splice(index, 1); } else { visibilitySettings.hidden.push(name); } } saveVisibilitySettings(); prepareSelectionData(); renderSelectionLists(currentDataType); updateReportVisibility(); if (typeof drawZodiac === "function" && typeof chartData !== 'undefined') { const svg = document.getElementById('astroChart'); if (svg) { while (svg.firstChild) { svg.removeChild(svg.firstChild); } drawZodiac(); drawAllPlanets(); } } } function updateReportVisibility() { const hiddenList = visibilitySettings.hidden; const visibleStars = visibilitySettings.visible_stars; const rows = document.querySelectorAll('.report-row'); rows.forEach(row => { const name = row.getAttribute('data-name'); const type = row.getAttribute('data-type'); if (type === 'star') { let shouldShow = false; if (visibleStars.includes(name)) { shouldShow = true; } else if (ALWAYS_VISIBLE_STARS.includes(name) && !hiddenList.includes(name)) { shouldShow = true; } if (shouldShow) { row.style.setProperty('display', 'table-row', 'important'); } else { row.style.setProperty('display', 'none', 'important'); } } else { if (hiddenList.includes(name)) { row.style.display = 'none'; } else { row.style.display = 'table-row'; } } }); } 
+    
+    // --- TOOLTIP POZİSYON DÜZELTMESİ (GÜNCELLENDİ) ---
+    function showChartTooltip(e, name, deg, sign, min) { 
+        const tooltip = document.getElementById('customTooltip'); 
+        if (!tooltip) return; 
+        tooltip.innerHTML = `<span class="tooltip-title">${name}</span><span class="tooltip-detail">${deg} ${sign} ${min}</span>`; 
+        // clientX/Y yerine pageX/Y kullanılarak kaydırma sorununu çözer
+        tooltip.style.left = (e.pageX + 15) + 'px'; 
+        tooltip.style.top = (e.pageY + 15) + 'px'; 
+        tooltip.style.display = 'block'; 
+    }
+    
+    function calculateDetails(absDeg, startDeg, signName) { let relDeg = absDeg - startDeg; if (relDeg < 0) relDeg += 360; const degrees = Math.floor(relDeg); const minutesDecimal = (relDeg - degrees) * 60; const minutes = Math.round(minutesDecimal); if (minutes === 60) { return { signName: signName, deg: degrees + 1, min: 0 }; } return { signName: signName, deg: degrees, min: minutes }; } function getRelativeDegreeJS(absDeg) { absDeg %= 360; let boundaries = []; if (typeof chartData !== 'undefined' && chartData.boundaries) { boundaries = chartData.boundaries; } else { boundaries = [ {name:"Koç", start:0, end:30}, {name:"Boğa", start:30, end:60}, {name:"İkizler", start:60, end:90}, {name:"Yengeç", start:90, end:120}, {name:"Aslan", start:120, end:150}, {name:"Başak", start:150, end:180}, {name:"Terazi", start:180, end:210}, {name:"Akrep", start:210, end:240}, {name:"Yay", start:240, end:270}, {name:"Oğlak", start:270, end:300}, {name:"Kova", start:300, end:330}, {name:"Balık", start:330, end:360} ]; } for (let i = 0; i < boundaries.length; i++) { const b = boundaries[i]; if (b.start < b.end) { if (absDeg >= b.start && absDeg < b.end) return calculateDetails(absDeg, b.start, b.name); } else { if (absDeg >= b.start || absDeg < b.end) return calculateDetails(absDeg, b.start, b.name); } } return { signName: "Bilinmeyen", deg: 0, min: 0 }; } let houseOverflowMap = {}; function calculateHouseOverflows(planetsByHouse, hBounds) { const DEG_PER_PLANET = 6.0; houseOverflowMap = {}; for(let i=1; i<=12; i++) { let housePlanets = planetsByHouse[i] || []; let count = housePlanets.length; if (count === 0) continue; let bounds = hBounds[i-1]; let houseWidth = (bounds.end - bounds.start + 360) % 360; let requiredWidth = count * DEG_PER_PLANET; if (requiredWidth > houseWidth) { let extraSpace = requiredWidth - houseWidth + 2.0; houseOverflowMap[i] = extraSpace; } else { houseOverflowMap[i] = 0; } } } function describeArc(x, y, radius, startAngle, endAngle){ var start = getCoords(radius, endAngle); var end = getCoords(radius, startAngle); var largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1"; var d = [ "M", start.x, start.y, "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y ].join(" "); return d; }
+    
+    {% if last_chart %}
+        const chartData = JSON.parse('{{ last_chart | tojson | safe }}');
+
+        // --- 1. ASC SABİTLEME ---
+        // Ev sistemi nereden geliyorsa (Houses objesi), ASC odur.
+        // Bu sayede ASC her zaman sol tarafta (Saat 9) sabit kalır.
+        let ascDegree = 0;
+        if (chartData.houses && chartData.houses['CUSP1']) {
+            ascDegree = chartData.houses['CUSP1'];
+        } else if (chartData.chart1 && chartData.chart1.cusps && chartData.chart1.cusps['ASC']) {
+            ascDegree = chartData.chart1.cusps['ASC'];
+        }
+
+        const isSynastry = !!(chartData.chart1 && chartData.chart2);
+        
+        // --- 2. GÖRSEL AYARLAR ---
+        const PLANET_IMAGE_MAP = { "Güneş": "{{ url_for('static', filename='images/semboller/gunes.svg') }}", "Ay": "{{ url_for('static', filename='images/semboller/ay.svg') }}", "Merkür": "{{ url_for('static', filename='images/semboller/merkur.svg') }}", "Venüs": "{{ url_for('static', filename='images/semboller/venus.svg') }}", "Mars": "{{ url_for('static', filename='images/semboller/mars.svg') }}", "Jüpiter": "{{ url_for('static', filename='images/semboller/jupiter.svg') }}", "Satürn": "{{ url_for('static', filename='images/semboller/saturn.svg') }}", "Uranüs": "{{ url_for('static', filename='images/semboller/uranus.svg') }}", "Neptün": "{{ url_for('static', filename='images/semboller/neptun.svg') }}", "Plüton": "{{ url_for('static', filename='images/semboller/pluton.svg') }}", "Kuzey Düğümü": "{{ url_for('static', filename='images/semboller/kuzey_dugumu.svg') }}", "Güney Düğümü": "{{ url_for('static', filename='images/semboller/guney_dugumu.svg') }}", "Şans Noktası": "{{ url_for('static', filename='images/semboller/sans_noktasi.svg') }}", "Chiron": "{{ url_for('static', filename='images/semboller/chiron.svg') }}", "Ceres": "{{ url_for('static', filename='images/semboller/ceres.svg') }}", "Pallas": "{{ url_for('static', filename='images/semboller/pallas.svg') }}", "Juno": "{{ url_for('static', filename='images/semboller/juno.svg') }}", "Vesta": "{{ url_for('static', filename='images/semboller/vesta.svg') }}", "Eris": "{{ url_for('static', filename='images/semboller/eris.svg') }}", "Makemake": "{{ url_for('static', filename='images/semboller/makemake.svg') }}", "Haumea": "{{ url_for('static', filename='images/semboller/haumea.svg') }}" };
+        const ZODIAC_IMAGE_MAP = { "Koç": "{{ url_for('static', filename='images/semboller/koc.svg') }}", "Boğa": "{{ url_for('static', filename='images/semboller/boga.svg') }}", "İkizler": "{{ url_for('static', filename='images/semboller/ikizler.svg') }}", "Yengeç": "{{ url_for('static', filename='images/semboller/yengec.svg') }}", "Aslan": "{{ url_for('static', filename='images/semboller/aslan.svg') }}", "Başak": "{{ url_for('static', filename='images/semboller/basak.svg') }}", "Terazi": "{{ url_for('static', filename='images/semboller/terazi.svg') }}", "Akrep": "{{ url_for('static', filename='images/semboller/akrep.svg') }}", "Yay": "{{ url_for('static', filename='images/semboller/yay.svg') }}", "Oğlak": "{{ url_for('static', filename='images/semboller/oglak.svg') }}", "Kova": "{{ url_for('static', filename='images/semboller/kova.svg') }}", "Balık": "{{ url_for('static', filename='images/semboller/balik.svg') }}" };
+        
+        const SYMBOL_SIZE = 23; 
+        const PLANET_SIGN_SYMBOL_SIZE = 18; 
+        const CUSP_SIGN_SYMBOL_SIZE = 18; 
+        const CUSP_TEXT_OFFSET = 25; 
+        const vg = document.getElementById('astroChart'); 
+        const svg = vg; 
+        const cx = 350; 
+        const cy = 350;
+        
+        const R_ZODIAC_OUTER = 350; 
+        const R_ZODIAC_INNER = 310; 
+        const R_DUAL_DIVIDER = 310;
+        const R_HOUSE_LABELS = 40; 
+        const R_CUSP_SYMBOL_CENTER = 330; 
+        const R_PLANETS_AVG = 285; 
+        const R_PLANET_DEGREES = 255; 
+        const R_PLANET_SIGN = 230; 
+        const R_PLANET_MINUTE = 205; 
+        const R_PLANET_RETRO = 180; 
+        const R_INNER_RING = 30; 
+        const SVG_NS = "http://www.w3.org/2000/svg"; 
+
+        // --- KOORDİNAT HESAPLAMA ---
+        function getCoords(r, a) { 
+            const rad = (-((a - ascDegree + 360) % 360) + 180) * (Math.PI / 180); 
+            return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) }; 
+        }
+
+        function createSvgElement(t, a) { const e = document.createElementNS(SVG_NS, t); for (let k in a) e.setAttribute(k, a[k]); return e; }
+        function getAngleDiff(a, b) { let d = Math.abs(a - b); return Math.min(d, 360 - d); }
+
+        // --- ZODIAC ÇİZİMİ ---
+        function drawZodiac() { 
+            svg.appendChild(createSvgElement('circle', { cx: cx, cy: cy, r: R_ZODIAC_OUTER, fill: 'white', stroke: 'none' })); 
+            svg.appendChild(createSvgElement('circle', { cx: cx, cy: cy, r: R_ZODIAC_OUTER, fill: 'none', class: 'chart-line' })); 
+            svg.appendChild(createSvgElement('circle', { cx: cx, cy: cy, r: R_ZODIAC_INNER, fill: 'none', class: 'chart-line' })); 
+            
+            if (isSynastry) { 
+                svg.appendChild(createSvgElement('circle', { cx: cx, cy: cy, r: R_DUAL_DIVIDER, fill: 'none', stroke: '#999', 'stroke-width': '1', 'stroke-dasharray': '2,2' }));
+                svg.appendChild(createSvgElement('circle', { cx: cx, cy: cy, r: R_ZODIAC_OUTER - 5, fill: 'none', stroke: '#eee', 'stroke-width': '1' }));
+            } 
+        }
+
+        // --- EVLERİ ÇİZME ---
+        function drawHouses(hBounds) { 
+            const houses = chartData.houses; 
+            if (!houses) return []; 
+            svg.appendChild(createSvgElement('circle', { cx: cx, cy: cy, r: R_INNER_RING, fill: 'none', class: 'chart-line' })); 
+            
+            if (!hBounds) { 
+                hBounds = []; 
+                for (let i = 1; i <= 12; i++) { 
+                    const s = houses[`CUSP${i}`]; 
+                    const e = houses[`CUSP${(i % 12) + 1}`]; 
+                    if (s !== undefined) hBounds.push({ id: i, start: s, end: e }); 
+                } 
+            } 
+            
+            for (let i = 1; i <= 12; i++) { 
+                const cuspDeg = houses[`CUSP${i}`]; 
+                if (cuspDeg === undefined) continue; 
+                
+                const nextCusp = houses[`CUSP${(i % 12) + 1}`];
+                const outerRadius = isSynastry ? R_DUAL_DIVIDER : R_ZODIAC_INNER;
+                
+                // Ev Çizgisi
+                if (!isSynastry) {
+                    let overflow = houseOverflowMap[i] || 0;
+                    if (overflow > 0) {
+                        let pStart = getCoords(R_INNER_RING, cuspDeg); 
+                        let pMidIn = getCoords(150, cuspDeg); 
+                        let shiftedAngle = (cuspDeg - overflow + 360) % 360; 
+                        let pMidOut = getCoords(150, shiftedAngle); 
+                        let pEnd = getCoords(outerRadius, shiftedAngle); 
+                        let d = `M ${pStart.x} ${pStart.y} L ${pMidIn.x} ${pMidIn.y} L ${pMidOut.x} ${pMidOut.y} L ${pEnd.x} ${pEnd.y}`; 
+                        svg.appendChild(createSvgElement('path', { d: d, class: 'house-cusp-stepped' })); 
+                    } else { 
+                        const p1 = getCoords(R_INNER_RING, cuspDeg); 
+                        const p2 = getCoords(outerRadius, cuspDeg); 
+                        svg.appendChild(createSvgElement('line', { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, class: 'house-cusp' })); 
+                    }
+                } else {
+                    // Sinastri için düz çizgi
+                    const p1 = getCoords(R_INNER_RING, cuspDeg); 
+                    const p2 = getCoords(outerRadius, cuspDeg); 
+                    svg.appendChild(createSvgElement('line', { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, class: 'house-cusp' })); 
+                }
+                
+                // Ev Numarası
+                let diff = (nextCusp - cuspDeg + 360) % 360;
+                let midAngle = (cuspDeg + diff / 2) % 360; 
+                if (getAngleDiff(cuspDeg, nextCusp) > 180) midAngle = (cuspDeg + diff / 2 + 180) % 360; 
+                const pLabelCoords = getCoords(R_HOUSE_LABELS, midAngle); 
+                const labelEl = createSvgElement('text', { x: pLabelCoords.x, y: pLabelCoords.y, class: 'house-label', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); 
+                labelEl.textContent = i; 
+                svg.appendChild(labelEl); 
+                
+                // Ev Derecesi/Burç Bilgisi
+                const degreeInfo = getRelativeDegreeJS(cuspDeg); 
+                const signImageUrl = ZODIAC_IMAGE_MAP[degreeInfo.signName]; 
+                const mInt = degreeInfo.min; 
+                const minStr = (mInt < 10 ? '0' + mInt : '' + mInt); 
+                const pCuspSign = getCoords(R_CUSP_SYMBOL_CENTER, cuspDeg); 
+                const rotatedAngle = (cuspDeg - ascDegree + 360) % 360; 
+                const visualAngleRad = (-rotatedAngle + 180) * (Math.PI / 180); 
+                const perpAngleRad = visualAngleRad + (Math.PI / 2); 
+                const dx = CUSP_TEXT_OFFSET * Math.cos(perpAngleRad); 
+                const dy = CUSP_TEXT_OFFSET * Math.sin(perpAngleRad); 
+                let pCuspDegree, pCuspMinute; 
+                if (rotatedAngle > 180) { 
+                    pCuspDegree = { x: pCuspSign.x - dx, y: pCuspSign.y - dy }; 
+                    pCuspMinute = { x: pCuspSign.x + dx, y: pCuspSign.y + dy }; 
+                } else { 
+                    pCuspDegree = { x: pCuspSign.x + dx, y: pCuspSign.y + dy }; 
+                    pCuspMinute = { x: pCuspSign.x - dx, y: pCuspSign.y - dy }; 
+                } 
+                const cuspDegreeEl = createSvgElement('text', { x: pCuspDegree.x, y: pCuspDegree.y, class: 'cusp-degree', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); 
+                cuspDegreeEl.textContent = degreeInfo.deg + '°'; 
+                svg.appendChild(cuspDegreeEl); 
+                const cuspMinuteEl = createSvgElement('text', { x: pCuspMinute.x, y: pCuspMinute.y, class: 'cusp-minute', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); 
+                cuspMinuteEl.textContent = minStr + "'"; 
+                svg.appendChild(cuspMinuteEl); 
+                
+                if (signImageUrl) { 
+                    const cuspSignEl = createSvgElement('image', { href: signImageUrl, x: pCuspSign.x - (CUSP_SIGN_SYMBOL_SIZE/2), y: pCuspSign.y - (CUSP_SIGN_SYMBOL_SIZE/2), width: CUSP_SIGN_SYMBOL_SIZE, height: CUSP_SIGN_SYMBOL_SIZE }); 
+                    svg.appendChild(cuspSignEl); 
+                }
+            } 
+            return hBounds; 
+        }
+
+        // --- SİNASTRİ YÖNETİCİSİ (DÜZELTİLDİ: CHART1 = İÇ, CHART2 = DIŞ) ---
+        function drawDualWheelPlanets() {
+            let hBounds = [];
+            if (chartData.houses) {
+                for (let i = 1; i <= 12; i++) {
+                    let s = chartData.houses['CUSP' + i];
+                    let e = chartData.houses['CUSP' + (i % 12 + 1)];
+                    if (s !== undefined) hBounds.push({ id: i, start: s, end: e });
+                }
+            }
+
+            let innerDensity = {}; 
+            let outerDensity = {}; 
+            for(let i=1; i<=12; i++) { innerDensity[i] = 0; outerDensity[i] = 0; }
+
+            // 1. İÇ HARİTA (Chart 1 - EV SAHİBİ - İç Çember)
+            // KURAL: Ev çizgileri kime aitse o içte olur. chartData.houses genellikle chart1'den gelir.
+            const targetInner = chartData.chart1 ? chartData.chart1.planets : chartData.planets;
+            for (const [name, pData] of Object.entries(targetInner)) {
+                 if (visibilitySettings.hidden.includes(name)) continue;
+                 let deg = pData[0];
+                 for(let h=0; h<hBounds.length; h++) {
+                     let hb = hBounds[h];
+                     let isHere = false;
+                     if(hb.start < hb.end) { if(deg >= hb.start && deg < hb.end) isHere = true; }
+                     else { if(deg >= hb.start || deg < hb.end) isHere = true; }
+                     if(isHere) { innerDensity[hb.id]++; break; }
+                 }
+            }
+
+            // 2. DIŞ HARİTA (Chart 2 - İKİNCİL - Dış Çember)
+            if (chartData.chart2) {
+                for (const [name, pData] of Object.entries(chartData.chart2.planets)) {
+                     if (visibilitySettings.hidden.includes(name)) continue;
+                     let deg = pData[0];
+                     for(let h=0; h<hBounds.length; h++) {
+                         let hb = hBounds[h];
+                         let isHere = false;
+                         if(hb.start < hb.end) { if(deg >= hb.start && deg < hb.end) isHere = true; }
+                         else { if(deg >= hb.start || deg < hb.end) isHere = true; }
+                         if(isHere) { outerDensity[hb.id]++; break; }
+                     }
+                }
+            }
+
+            // EV GENİŞLETME (MİNİMUM 15 PİKSEL)
+            houseOverflowMap = {};
+            const DEG_PER_PLANET = 6.0; 
+            const MIN_HOUSE_PIXEL = 15; 
+            const MIN_HOUSE_DEG = (MIN_HOUSE_PIXEL / (2 * Math.PI * 310)) * 360; 
+
+            for(let i=1; i<=12; i++) {
+                let bounds = hBounds[i-1];
+                let houseWidth = (bounds.end - bounds.start + 360) % 360;
+                let minWidthReq = 0;
+                if (houseWidth < MIN_HOUSE_DEG) {
+                    minWidthReq = MIN_HOUSE_DEG - houseWidth;
+                }
+                let count = Math.max(innerDensity[i], outerDensity[i]); 
+                let requiredWidth = count * DEG_PER_PLANET;
+                let planetOverflow = 0;
+                if (requiredWidth > houseWidth) {
+                    planetOverflow = requiredWidth - houseWidth + 2.0; 
+                }
+                houseOverflowMap[i] = Math.max(minWidthReq, planetOverflow);
+            }
+
+            drawHouses(hBounds);
+            
+            // İç çember çizgisi
+            svg.appendChild(createSvgElement('circle', { 
+                cx: cx, cy: cy, r: 175, 
+                fill: 'none', stroke: '#334155', 'stroke-width': '1', class: 'chart-line' 
+            }));
+            
+            // GEZEGENLERİ ÇİZ - YERLER DEĞİŞTİRİLDİ
+            
+            // İÇ: Chart 1
+            const innerPlanets = [];
+            for (const [name, pData] of Object.entries(targetInner)) {
+                if (visibilitySettings.hidden.includes(name)) continue;
+                innerPlanets.push({ name: name, degree: pData[0], data: pData, isOuter: false });
+            }
+            drawSynastryRingDetailed(innerPlanets, false);
+
+            // DIŞ: Chart 2
+            if (chartData.chart2) {
+                const outerPlanets = [];
+                for (const [name, pData] of Object.entries(chartData.chart2.planets)) {
+                    if (visibilitySettings.hidden.includes(name)) continue;
+                    outerPlanets.push({ name: name, degree: pData[0], data: pData, isOuter: true });
+                }
+                drawSynastryRingDetailed(outerPlanets, true);
+            }
+        }
+
+        // --- DETAYLI SİNASTRİ HALKA ÇİZİMİ ---
+        function drawSynastryRingDetailed(planets, isOuter) {
+            planets.sort((a, b) => a.degree - b.degree);
+            const adjustedPlanets = JSON.parse(JSON.stringify(planets));
+
+            const R_BASE = isOuter ? 290 : 160;
+            
+            // 1. ADIM: EV ÇİZGİLERİNDEN KAÇIŞ (20 PİKSEL)
+            const PIXEL_GAP_HOUSE = 20; 
+            const degreesPerPixel = 360 / (2 * Math.PI * R_BASE);
+            const avoidanceAngle = degreesPerPixel * PIXEL_GAP_HOUSE; 
+
+            let houseCusps = [];
+            if (chartData.houses) {
+                for (let i = 1; i <= 12; i++) {
+                    houseCusps.push(chartData.houses['CUSP' + i]);
+                }
+            }
+
+            adjustedPlanets.forEach(p => {
+                houseCusps.forEach(cusp => {
+                    let diff = p.degree - cusp;
+                    while (diff <= -180) diff += 360;
+                    while (diff > 180) diff -= 360;
+
+                    if (Math.abs(diff) < avoidanceAngle) {
+                        if (diff >= 0) {
+                            p.degree = (cusp + avoidanceAngle + 0.1) % 360;
+                        } else {
+                            p.degree = (cusp - avoidanceAngle - 0.1 + 360) % 360;
+                        }
+                    }
+                });
+            });
+
+            // 2. ADIM: GEZEGENLER ARASI MESAFE (25 PİKSEL)
+            const PIXEL_GAP_PLANETS = 25;
+            const MIN_OBJ_DIST = degreesPerPixel * PIXEL_GAP_PLANETS; 
+            
+            for (let loop = 0; loop < 20; loop++) { 
+                for (let i = 0; i < adjustedPlanets.length; i++) {
+                    let p1 = adjustedPlanets[i];
+                    let p2 = adjustedPlanets[(i + 1) % adjustedPlanets.length];
+                    let diff = (p2.degree - p1.degree + 360) % 360;
+                    if (diff < MIN_OBJ_DIST) {
+                        let push = (MIN_OBJ_DIST - diff) / 2;
+                        p1.degree = (p1.degree - push + 360) % 360;
+                        p2.degree = (p2.degree + push) % 360;
+                    }
+                }
+            }
+
+            // 3. ADIM: ÇİZİM
+            const R_PLANET = R_BASE;
+            const R_DEGREE = R_BASE - 30;
+            const R_SIGN = R_BASE - 55;
+            const R_MINUTE = R_BASE - 80;
+            const R_RETRO = R_BASE - 105;
+
+            const group = createSvgElement('g', { class: isOuter ? 'outer-synastry-ring' : 'inner-synastry-ring' });
+            svg.appendChild(group);
+
+            adjustedPlanets.forEach((p) => {
+                const originalData = planets.find(x => x.name === p.name);
+                const realDeg = originalData.degree;
+                const visualDeg = p.degree;
+                const pData = originalData.data;
+
+                if (Math.abs(getAngleDiff(visualDeg, realDeg)) > 3.0) {
+                    let guidelineStart;
+                    if (isOuter) {
+                        guidelineStart = Math.min(R_BASE - 20, R_DUAL_DIVIDER - 20);
+                    } else {
+                        guidelineStart = Math.max(R_BASE - 20, 175 + 20);
+                    }
+                    const pReal = getCoords(guidelineStart, realDeg);
+                    const pVis = getCoords(R_BASE, visualDeg);
+                    group.appendChild(createSvgElement('line', {
+                        x1: pReal.x, y1: pReal.y, x2: pVis.x, y2: pVis.y,
+                        class: 'guideline'
+                    }));
+                }
+
+                const planetGroup = createSvgElement('g', { class: 'planet-group', style: 'cursor:pointer' });
+                planetGroup.onclick = (e) => {
+                    e.stopPropagation();
+                    const degInfo = getRelativeDegreeJS(realDeg);
+                    showChartTooltip(e, p.name, degInfo.deg + '°', degInfo.signName, degInfo.min + "'");
+                };
+                group.appendChild(planetGroup);
+
+                const coordPlanet = getCoords(R_PLANET, visualDeg);
+                if (PLANET_IMAGE_MAP[p.name]) {
+                    const iconSize = 20;
+                    planetGroup.appendChild(createSvgElement('image', {
+                        href: PLANET_IMAGE_MAP[p.name],
+                        x: coordPlanet.x - iconSize / 2,
+                        y: coordPlanet.y - iconSize / 2,
+                        width: iconSize,
+                        height: iconSize
+                    }));
+                }
+
+                const coordDegree = getCoords(R_DEGREE, visualDeg);
+                const degInfo = getRelativeDegreeJS(realDeg);
+                const degreeTxt = createSvgElement('text', {
+                    x: coordDegree.x,
+                    y: coordDegree.y,
+                    class: 'planet-degree',
+                    'text-anchor': 'middle',
+                    'dominant-baseline': 'middle'
+                });
+                degreeTxt.textContent = degInfo.deg + '°';
+                planetGroup.appendChild(degreeTxt);
+
+                const coordSign = getCoords(R_SIGN, visualDeg);
+                const signImageUrl = ZODIAC_IMAGE_MAP[degInfo.signName];
+                if (signImageUrl) {
+                    const synastrySignSize = 16;
+                    planetGroup.appendChild(createSvgElement('image', {
+                        href: signImageUrl,
+                        x: coordSign.x - synastrySignSize / 2,
+                        y: coordSign.y - synastrySignSize / 2,
+                        width: synastrySignSize,
+                        height: synastrySignSize
+                    }));
+                }
+
+                const coordMinute = getCoords(R_MINUTE, visualDeg);
+                const minuteTxt = createSvgElement('text', {
+                    x: coordMinute.x,
+                    y: coordMinute.y,
+                    class: 'planet-minute',
+                    'text-anchor': 'middle',
+                    'dominant-baseline': 'middle'
+                });
+                const minStr = (degInfo.min < 10 ? '0' + degInfo.min : degInfo.min) + "'";
+                minuteTxt.textContent = minStr;
+                planetGroup.appendChild(minuteTxt);
+
+                if (pData[5] === 'R') {
+                    const coordRetro = getCoords(R_RETRO, visualDeg);
+                    const retroTxt = createSvgElement('text', {
+                        x: coordRetro.x,
+                        y: coordRetro.y,
+                        class: 'planet-retrograde',
+                        'text-anchor': 'middle',
+                        'dominant-baseline': 'middle'
+                    });
+                    retroTxt.textContent = 'R';
+                    planetGroup.appendChild(retroTxt);
+                }
+            });
+        }
+
+        // --- ANA ÇİZİM BAŞLATICI ---
+        function drawAllPlanets() {
+            const checkSynastry = !!(chartData.chart1 && chartData.chart2);
+            if (checkSynastry) { 
+                drawDualWheelPlanets(); 
+            } else { 
+                drawSingleChartPlanets(); 
+            } 
+        }
+        
+        // --- MEVCUT TEKLİ HARİTA FONKSİYONLARI ---
+        function drawSingleChartPlanets() { const planets = chartData.planets; const stars = chartData.fixed_stars || {}; let hBounds = []; for(let i=1; i<=12; i++) { let s = chartData.houses['CUSP'+i]; let e = chartData.houses['CUSP'+(i%12+1)]; if(s!==undefined) hBounds.push({id:i, start:s, end:e}); } let planetsByHouse = {}; for(let i=1; i<=12; i++) planetsByHouse[i] = []; for (const name of Object.keys(planets)) { if (visibilitySettings.hidden.includes(name)) continue; const p_data = planets[name]; if (!PLANET_IMAGE_MAP[name]) continue; const houseNumber = parseInt(p_data[6], 10); planetsByHouse[houseNumber].push({ name, p_data, visualDeg: p_data[0], realDeg: p_data[0], type: 'planet', houseNum: houseNumber }); } for (const name of Object.keys(stars)) { let shouldDraw = false; if (visibilitySettings.visible_stars.includes(name)) { shouldDraw = true; } else if (ALWAYS_VISIBLE_STARS.includes(name) && !visibilitySettings.hidden.includes(name)) { shouldDraw = true; } if (shouldDraw) { const s_data = stars[name]; const houseNumber = parseInt(s_data[6], 10); planetsByHouse[houseNumber].push({ name, p_data: s_data, visualDeg: s_data[0], realDeg: s_data[0], type: 'star', houseNum: houseNumber }); } } calculateHouseOverflows(planetsByHouse, hBounds); drawHouses(hBounds); const planetsGroup = createSvgElement('g', { id: 'planets-group' }); svg.appendChild(planetsGroup); for (let i = 1; i <= 12; i++) { let housePlanets = planetsByHouse[i]; if (housePlanets.length === 0) continue; let bounds = hBounds[i-1]; let overflow = houseOverflowMap[i] || 0; let visualStart = (bounds.start - overflow + 360) % 360; let totalVisualWidth = ((bounds.end - bounds.start + 360) % 360) + overflow; housePlanets.sort((a, b) => a.realDeg - b.realDeg); let padding = 5.0; let step = (totalVisualWidth - (2 * padding)) / (housePlanets.length > 1 ? housePlanets.length - 1 : 1); if (housePlanets.length === 1) { housePlanets[0].visualDeg = (visualStart + totalVisualWidth / 2) % 360; } else { housePlanets.forEach((p, idx) => { p.visualDeg = (visualStart + padding + (idx * step)) % 360; }); } housePlanets.forEach(p => drawSinglePlanetDetailed(p, planetsGroup, R_PLANETS_AVG, false)); } }
+        function drawSinglePlanetDetailed(item, container, radius, forceGuideline) { const { name, p_data, visualDeg, realDeg, type } = item; const rx = p_data[5]; const signName = p_data[3]; const signImageUrl = ZODIAC_IMAGE_MAP[signName]; const planetGroup = createSvgElement('g', { class: 'planet-group', style: 'cursor: pointer;' }); planetGroup.onclick = function(e) { e.stopPropagation(); let degStr = '0°'; let minStr = "00'"; const degText = p_data[4]; if (degText && degText.includes('°')) { const parts = degText.split('°'); degStr = parts[0].trim() + '°'; if (parts.length > 1 && parts[1].trim()) minStr = parts[1].trim(); } showChartTooltip(e, name, degStr, signName, minStr); }; container.appendChild(planetGroup); const pImage = getCoords(radius, visualDeg); if (Math.abs(getAngleDiff(visualDeg, realDeg)) > 3.0) { const pReal = getCoords(R_INNER_RING, realDeg); const pVis = getCoords(radius, visualDeg); const line = createSvgElement('line', { x1: pReal.x, y1: pReal.y, x2: pVis.x, y2: pVis.y, class: 'guideline' }); container.insertBefore(line, container.firstChild); } if (type === 'planet' && PLANET_IMAGE_MAP[name]) { const imageUrl = PLANET_IMAGE_MAP[name]; const imageEl = createSvgElement('image', { href: imageUrl, x: pImage.x - (SYMBOL_SIZE/2), y: pImage.y - (SYMBOL_SIZE/2), width: SYMBOL_SIZE, height: SYMBOL_SIZE }); planetGroup.appendChild(imageEl); } else if (type === 'star') { const starText = createSvgElement('text', { x: pImage.x, y: pImage.y, 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': '10px', 'fill': '#e67e22', 'font-weight': 'bold' }); starText.textContent = '*'; planetGroup.appendChild(starText); } const degText = p_data[4]; let degStr = '0°'; let minStr = "00'"; if (degText && degText.includes('°')) { const parts = degText.split('°'); degStr = parts[0].trim() + '°'; if (parts.length > 1 && parts[1].trim()) { minStr = parts[1].trim(); if (!minStr.includes("'")) minStr += "'"; } } const pDegree = getCoords(R_PLANET_DEGREES, visualDeg); const degreeEl = createSvgElement('text', { x: pDegree.x, y: pDegree.y, class: 'planet-degree', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); degreeEl.textContent = degStr; planetGroup.appendChild(degreeEl); if (signImageUrl) { const pSign = getCoords(R_PLANET_SIGN, visualDeg); const signImageEl = createSvgElement('image', { href: signImageUrl, x: pSign.x - (PLANET_SIGN_SYMBOL_SIZE/2), y: pSign.y - (PLANET_SIGN_SYMBOL_SIZE/2), width: PLANET_SIGN_SYMBOL_SIZE, height: PLANET_SIGN_SYMBOL_SIZE }); svg.appendChild(signImageEl); } const pMinute = getCoords(R_PLANET_MINUTE, visualDeg); const minuteEl = createSvgElement('text', { x: pMinute.x, y: pMinute.y, class: 'planet-minute', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); minuteEl.textContent = minStr; planetGroup.appendChild(minuteEl); if (rx) { const pRetro = getCoords(R_PLANET_RETRO, visualDeg); const retroEl = createSvgElement('text', { x: pRetro.x, y: pRetro.y, class: 'planet-retrograde', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); retroEl.textContent = rx; planetGroup.appendChild(retroEl); } }
+
+        if (chartData) { drawZodiac(); drawAllPlanets(); }
+    {% endif %}
+    
+    // SİNASTRİ HARİTALARINI DEĞİŞTİR
+    function swapSynastryCharts() {
+        fetch('/api/swap_synastry', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        })
+        .then(r => r.json())
+        .then(data => {
+            if(data.success) {
+                window.location.reload();
+            } else {
+                alert('Hata: ' + (data.error || 'Bilinmeyen hata'));
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Bağlantı hatası');
+        });
+    }
+
+    function prepareSelectionData() {
+    if (typeof chartData === 'undefined') return;
+    selectionData.planets.visible = [];
+    selectionData.planets.hidden = [];
+    selectionData.asteroids.visible = [];
+    selectionData.asteroids.hidden = [];
+    selectionData.fixedstars.visible = [];
+    selectionData.fixedstars.hidden = [];
+    
+    // Sinastri kontrolü: chart1 ve chart2 varsa, chart1'den al
+    const planetsSource = (chartData.chart1 && chartData.chart1.planets) ? chartData.chart1.planets : chartData.planets;
+    const starsSource = (chartData.chart1 && chartData.chart1.fixed_stars) ? chartData.chart1.fixed_stars : chartData.fixed_stars;
+    
+    for (let pName in planetsSource) {
+        let targetGroup = 'planets';
+        if (ASTEROID_CATEGORY.includes(pName)) {
+            targetGroup = 'asteroids';
+        }
+        if (visibilitySettings.hidden.includes(pName)) {
+            selectionData[targetGroup].hidden.push({name: pName});
+        } else {
+            selectionData[targetGroup].visible.push({name: pName});
+        }
+    }
+    
+    if (starsSource) {
+        for (let sName in starsSource) {
+            let sData = starsSource[sName];
+            let signName = sData[3];
+            if (signName === "Yılancı" || signName === "Ophiuchus") signName = "Akrep";
+            let item = {name: sName, category: signName};
+            let isVisible = false;
+            if (visibilitySettings.visible_stars.includes(sName)) {
+                isVisible = true;
+            } else if (ALWAYS_VISIBLE_STARS.includes(sName) && !visibilitySettings.hidden.includes(sName)) {
+                isVisible = true;
+            }
+            if (isVisible) {
+                selectionData.fixedstars.visible.push(item);
+            } else {
+                selectionData.fixedstars.hidden.push(item);
+            }
+        }
+    }
+    
+    // Köşe noktaları için
+    ANGLE_POINTS.forEach(angleName => {
+        if (visibilitySettings.hidden.includes(angleName)) {
+            selectionData.angles.hidden.push({name: angleName});
+        } else {
+            selectionData.angles.visible.push({name: angleName});
+        }
+    });
+}
+</script>
+
+    {% include 'return_module.html' ignore missing %}
+    {% include 'synastry_module.html' ignore missing %}
+    {% include 'progression_module.html' ignore missing %}
+
+</body>
+</html>

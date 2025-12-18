@@ -1,0 +1,36 @@
+{% set saved_charts = user_manager.get_user_saved_charts(user_email) %}
+{% set today = datetime.date.today() %}
+{% set now = datetime.datetime.now() %}
+
+<form method="POST" action="{{ url_for('home', tab='transit') }}">
+    <div class="form-group">
+        <label>1. Kayıtlı Natal Haritayı Seçin</label>
+        <select name="natal_chart_id" required>
+            <option value="">-- Harita Seçin --</option>
+            {% for category, charts in saved_charts.items() %}
+                <optgroup label="{{ category }}">
+                    {% for chart in charts %}
+                        <option value="{{ chart.id }}|{{ category }}">{{ chart.name }}</option>
+                    {% endfor %}
+                </optgroup>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="form-row">
+        <div class="form-group col-4">
+            <label>2. Transit Tarihi</label>
+            <input type="date" name="transit_date" value="{{ today.strftime('%Y-%m-%d') }}" required>
+        </div>
+        <div class="form-group col-4">
+            <label>Saat</label>
+            <input type="number" name="transit_hour" value="{{ now.hour }}" min="0" max="23" required>
+        </div>
+        <div class="form-group col-4">
+            <label>Dakika</label>
+            <input type="number" name="transit_minute" value="{{ now.minute }}" min="0" max="59" required>
+        </div>
+    </div>
+    
+    <button type="submit" class="btn-primary">TRANSİT HESAPLA</button>
+</form>

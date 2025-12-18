@@ -1,0 +1,42 @@
+{% if active_charts %}
+    <div class="chart-list-container" style="padding-right: 5px;">
+        
+        {% for chart in active_charts %}
+            <a href="{{ url_for('set_active_chart', index=loop.index0) }}" 
+               class="chart-list-item {% if current_chart_data and chart.id == current_chart_data.id %}selected{% endif %}"
+               onclick="saveLastSelectedChart({{ loop.index0 }})"
+               oncontextmenu="showContextMenu(event, {{ loop.index0 }}); return false;">
+                
+                <span class="chart-list-name">
+                    {% if chart.type == 'synastry' %}
+                        <i class="fas fa-user-friends" style="color:#e67e22;"></i>
+                    {% elif chart.name.startswith('Transit') %}
+                        <i class="fas fa-clock" style="color:#27ae60;"></i>
+                    {% else %}
+                        <i class="far fa-user-circle" style="color:#4a90e2;"></i>
+                    {% endif %}
+                    {{ chart.name }}
+                </span>
+                
+                <span class="chart-list-date">
+                    {# Tüm haritalar için chart.year kullan (sinastri/progression'da zaten progressed tarih) #}
+                    {{ chart.day }}.{{ chart.month }}.{{ chart.year }} 
+                    {{ "%02d"|format(chart.hour) }}:{{ "%02d"|format(chart.minute) }}
+                    {% if chart.zodiac_type %}
+                        <span style="display:block; font-size:9px; color:#666; margin-top:2px;">
+                            📍 {{ chart.zodiac_type }}
+                        </span>
+                    {% endif %}
+                </span>
+                
+            </a>
+        {% endfor %}
+        
+    </div>
+{% else %}
+    <div style="text-align: center; padding: 20px; color: #999; font-size: 12px;">
+        <i class="fas fa-inbox" style="font-size: 24px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
+        Henüz aktif harita yok.
+        <br>Harita hesapladığınızda buraya düşecektir.
+    </div>
+{% endif %}

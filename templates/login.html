@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş Yap / Kayıt Ol</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style_modern.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Sadece bu sayfa için ortalama stili */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #F8F8F8; 
+            font-family: 'Segoe UI', sans-serif;
+        }
+        
+        /* Geçiş Linkleri için Stil */
+        .toggle-text {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #666;
+        }
+        .toggle-text a {
+            color: #1565c0;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .toggle-text a:hover {
+            text-decoration: underline;
+        }
+
+        /* Hata mesajı metni */
+        .validation-error {
+            color: #c0392b;
+            font-size: 10px;
+            margin-top: -8px;
+            margin-bottom: 10px;
+            display: none; /* Başlangıçta gizli */
+            padding-left: 35px;
+        }
+    </style>
+</head>
+<body>
+    <aside class="sidebar-form-card" style="width: 400px; padding: 30px;">
+        
+        {% if session.get('login_error') %}
+            <div class="alert error" style="margin-bottom: 15px;">{{ session.pop('login_error') }}</div>
+        {% endif %}
+        {% if session.get('login_success') %}
+            <div class="alert success" style="margin-bottom: 15px;">{{ session.pop('login_success') }}</div>
+        {% endif %}
+
+        <div id="login-box">
+            <h3 class="form-title" style="text-align:center; margin-bottom:20px;">Giriş Yap</h3>
+            
+            <form method="POST" action="{{ url_for('login') }}">
+                <input type="hidden" name="form_type" value="login">
+                
+                <div class="form-group icon-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="email" placeholder="E-posta Adresi" required>
+                </div>
+                
+                <div class="form-group icon-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" placeholder="Şifre" required>
+                </div>
+                
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="remember_me" name="remember_me" checked>
+                    <label for="remember_me">Oturumu açık tut</label>
+                </div>
+                
+                <button type="submit" class="btn-primary" style="width: 100%;">GİRİŞ YAP</button>
+            </form>
+            
+            <div class="toggle-text">
+                Hesabın yok mu? <a onclick="showRegister()">Kayıt Ol</a>
+            </div>
+        </div>
+
+        <div id="register-box" style="display: none;">
+            <h3 class="form-title" style="text-align:center; margin-bottom:20px;">Kayıt Ol</h3>
+            
+            <form method="POST" action="{{ url_for('login') }}" onsubmit="return validateRegisterForm()">
+                <input type="hidden" name="form_type" value="register">
+                
+                <div class="form-group icon-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" name="name" placeholder="Ad Soyad" required minlength="3">
+                </div>
+
+                <div class="form-group icon-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" name="email" id="reg_email" placeholder="E-posta Adresi" required>
+                </div>
+
+                <div class="form-group icon-group">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" name="phone" id="reg_phone" placeholder="Telefon (Başında 0 olmadan)" 
+                           maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                </div>
+                <div id="phone-error" class="validation-error">Geçerli bir numara giriniz (En az 10 hane).</div>
+
+                <div class="form-group icon-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" name="password" placeholder="Şifre Belirle" required minlength="6">
+                </div>
+                
+                <button type="submit" class="btn-primary" style="width: 100%; background-color: #27ae60;">KAYIT OL</button>
+            </form>
+            
+            <div class="toggle-text">
+                Zaten hesabın var mı? <a onclick="showLogin()">Giriş Yap</a>
+            </div>
+        </div>
+
+    </aside>
+
+    <script>
+        // Kayıt Formunu Göster
+        function showRegister() {
+            document.getElementById('login-box').style.display = 'none';
+            document.getElementById('register-box').style.display = 'block';
+            // Varsa eski hata mesajlarını temizle
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(el => el.style.display = 'none');
+        }
+
+        // Giriş Formunu Göster
+        function showLogin() {
+            document.getElementById('register-box').style.display = 'none';
+            document.getElementById('login-box').style.display = 'block';
+        }
+
+        // Kayıt Doğrulama
+        function validateRegisterForm() {
+            const phoneInput = document.getElementById('reg_phone');
+            const phoneError = document.getElementById('phone-error');
+            const phoneVal = phoneInput.value;
+
+            // Telefon Kontrolü: En az 10 hane olmalı
+            if (phoneVal.length < 10) {
+                phoneError.style.display = 'block';
+                phoneInput.focus();
+                return false; // Formu gönderme
+            } else {
+                phoneError.style.display = 'none';
+            }
+
+            return true; // Her şey tamamsa gönder
+        }
+    </script>
+</body>
+</html>
