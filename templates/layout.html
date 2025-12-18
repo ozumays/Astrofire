@@ -893,9 +893,11 @@
             return hBounds; 
         }
 
-        // --- SİNASTRİ YÖNETİCİSİ (DÜZELTİLDİ: MANUEL SWAP) ---
+        // --- SİNASTRİ YÖNETİCİSİ (DÜZELTİLDİ: STANDART MANTIK) ---
         function drawDualWheelPlanets() {
             let hBounds = [];
+            
+            // 1. Ev Çizgilerini Tanımla (Chart 1'den gelir)
             if (chartData.houses) {
                 for (let i = 1; i <= 12; i++) {
                     let s = chartData.houses['CUSP' + i];
@@ -908,15 +910,14 @@
             let outerDensity = {}; 
             for(let i=1; i<=12; i++) { innerDensity[i] = 0; outerDensity[i] = 0; }
 
-            // ⚠️ KRİTİK DEĞİŞİKLİK: VERİ KAYNAKLARINI YER DEĞİŞTİRDİK
-            // Normalde: targetInner = chart1, targetOuter = chart2
-            // Sorunu çözmek için: targetInner = chart2, targetOuter = chart1 yapıyoruz.
+            // ⚠️ DÜZELTME: Manuel Swap Kaldırıldı. 
+            // Standart: Chart 1 = İç (Ev Sahibi), Chart 2 = Dış (Misafir)
             
-            // İÇ ÇEMBER VERİSİ (Normalde Chart 1'di, şimdi Chart 2 yaptık)
-            const targetInner = chartData.chart2 ? chartData.chart2.planets : chartData.planets;
+            // İÇ ÇEMBER VERİSİ (Chart 1)
+            const targetInner = chartData.chart1 ? chartData.chart1.planets : chartData.planets;
             
-            // DIŞ ÇEMBER VERİSİ (Normalde Chart 2'ydi, şimdi Chart 1 yaptık)
-            const targetOuter = chartData.chart1 ? chartData.chart1.planets : {};
+            // DIŞ ÇEMBER VERİSİ (Chart 2)
+            const targetOuter = chartData.chart2 ? chartData.chart2.planets : {};
 
             // 1. İÇ HARİTA YOĞUNLUK HESABI
             for (const [name, pData] of Object.entries(targetInner)) {
@@ -974,9 +975,9 @@
                 fill: 'none', stroke: '#334155', 'stroke-width': '1', class: 'chart-line' 
             }));
             
-            // --- GEZEGENLERİ ÇİZ (VERİLERİ YER DEĞİŞTİRİLMİŞ HALDE ÇİZİYORUZ) ---
+            // --- GEZEGENLERİ ÇİZ ---
             
-            // 1. İÇ ÇEMBERE ÇİZİLECEK OLANLAR (targetInner)
+            // 1. İÇ ÇEMBER (Chart 1 - Ev Sahibi)
             const innerPlanets = [];
             for (const [name, pData] of Object.entries(targetInner)) {
                 if (visibilitySettings.hidden.includes(name)) continue;
@@ -985,7 +986,7 @@
             }
             drawSynastryRingDetailed(innerPlanets, false);
 
-            // 2. DIŞ ÇEMBERE ÇİZİLECEK OLANLAR (targetOuter)
+            // 2. DIŞ ÇEMBER (Chart 2 - Misafir)
             if (Object.keys(targetOuter).length > 0) {
                 const outerPlanets = [];
                 for (const [name, pData] of Object.entries(targetOuter)) {
@@ -1250,6 +1251,7 @@
 
 </body>
 </html>
+
 
 
 
