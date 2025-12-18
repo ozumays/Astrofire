@@ -485,18 +485,28 @@ def admin_delete_user(email):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # Eğer zaten giriş yapmışsa direkt ana sayfaya at
-    if session.get('logged_in_email'):
-        return redirect(url_for('home'))
-
+    # ... (Önceki kodlar aynı kalacak) ...
+    
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+        # ... (Email/Şifre doğrulama kodların) ...
         
-        # 1. user_manager ile bilgileri kontrol et
-        # (Önce arşivi tazelemesi için user_manager'ı zorlayalım)
-        user_manager.load_archive_from_disk() 
-        success, message = user_manager.try_login(email, password)
+        if user_manager.validate_login(email, password):
+            session['logged_in'] = True
+            session['logged_in_email'] = email
+            session['display_name'] = user_data.get('name', 'Kullanıcı')
+            
+            # --- YENİ EKLENEN KISIM: VERİLERİ GERİ YÜKLE ---
+            # Kullanıcının daha önce açık bıraktığı haritaları geri getir
+            saved_active = user_data.get('active_charts', [])
+            session['active_charts'] = saved_active
+            
+            # Eğer hiç haritası yoksa listeyi boş başlat
+            if not saved_active:
+                session['active_charts'] = []
+            # -----------------------------------------------
+            
+            flash('Giriş başarılı!', 'success')
+            return redirect(url_for('home'))
         
         if success:
             # ✅ İŞTE EKSİK OLAN PARÇA BU:
@@ -2123,6 +2133,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
