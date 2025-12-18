@@ -1703,6 +1703,7 @@ def home():
                     current_charts = session.get('active_charts', [])
                     current_charts.insert(0, new_chart)
                     session['active_charts'] = current_charts
+                    sync_active_charts_to_db()
                     session['current_chart_index'] = 0
                     session['last_report'] = res_text
                     session['last_chart'] = chart_data
@@ -2147,6 +2148,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
