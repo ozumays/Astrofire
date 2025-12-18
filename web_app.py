@@ -1394,21 +1394,44 @@ def home():
 
         elif active_tab == 'instant_transit':
             try:
+                # 1. Form Verilerini Al
                 yr = int(request.form.get('bar_year')); mo = int(request.form.get('bar_month')); dy = int(request.form.get('bar_day'))
                 hr = int(request.form.get('bar_hour')); mn = int(request.form.get('bar_minute'))
                 lat = float(request.form.get('bar_lat', 0)); lon = float(request.form.get('bar_lon', 0)); tz = float(request.form.get('bar_tz', 0))
-                t_type = request.form.get('transit_type', 'Astronomik')
+                
+                # 2. Transit Tipini Kontrol Et (DÜZELTME BURADA)
+                # Frontend'den "Drakonik" gelirse, motorun anladığı "Drakonik 28" (Yıldızsal) formatına çevir.
+                raw_type = request.form.get('transit_type', 'Astronomik')
+                
+                if raw_type == 'Drakonik':
+                    t_type = 'Drakonik 28'
+                else:
+                    t_type = raw_type
+
+                # 3. Hesaplamayı Yap (t_type artık doğru formatta)
                 res, t_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(yr, mo, dy, hr, mn, tz, lat, lon, None, 'P', t_type)
+                
                 if t_data:
-                    transit_chart = {'name': f"Transit ({dy}.{mo}.{yr} {hr}:{mn})", 'year': yr, 'month': mo, 'day': dy, 'hour': hr, 'minute': mn, 'tz_offset': tz, 'lat': lat, 'lon': lon, 'location_name': request.form.get('bar_loc_name'), 'zodiac_type': t_type, 'house_system': 'Placidus (P)', 'id': len(session.get('active_charts', [])) + 1, 'type': 'transit'}
+                    transit_chart = {
+                        'name': f"Transit ({dy}.{mo}.{yr} {hr}:{mn})", 
+                        'year': yr, 'month': mo, 'day': dy, 'hour': hr, 'minute': mn, 
+                        'tz_offset': tz, 'lat': lat, 'lon': lon, 
+                        'location_name': request.form.get('bar_loc_name'), 
+                        'zodiac_type': t_type,  # Düzelttiğimiz tipi kaydediyoruz
+                        'house_system': 'Placidus (P)', 
+                        'id': len(session.get('active_charts', [])) + 1, 
+                        'type': 'transit'
+                    }
+                    
                     current_charts = session.get('active_charts', [])
                     current_charts.insert(0, transit_chart)
                     session['active_charts'] = current_charts
                     session['current_chart_index'] = 0
                     session['last_chart'] = t_data
-                    session['last_report'] = f"TRANSİT\n\n" + res
+                    session['last_report'] = f"TRANSİT ({t_type})\n\n" + res
                     session['current_chart_data'] = transit_chart
                     active_tab = 'aktif'
+            
             except Exception as e: session['report_error'] = str(e)
         
         elif active_tab == 'sinastri_compute':
@@ -1790,6 +1813,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
