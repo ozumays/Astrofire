@@ -428,6 +428,9 @@ def admin_delete_user(email):
 # ============================================================================
 # 🔑 EKSİK OLAN LOGIN ROTASI
 # ============================================================================
+# ============================================================================
+# 🔑 EKSİK OLAN LOGIN ROTASI
+# ============================================================================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     # Eğer zaten giriş yapmışsa ana sayfaya gönder
@@ -442,6 +445,9 @@ def login():
         success, message = user_manager.try_login(email, password)
         
         if success:
+            # 🟢 KRİTİK EKLEME: Kullanıcıyı tarayıcı hafızasına (Session) kaydet
+            session['logged_in_email'] = email 
+            
             # Başarılı ise ana sayfaya yönlendir
             return redirect(url_for('home'))
         else:
@@ -1777,6 +1783,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
