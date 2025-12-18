@@ -43,23 +43,46 @@
             display: none; /* Başlangıçta gizli */
             padding-left: 35px;
         }
+
+        /* Sunucudan gelen hata kutuları */
+        .alert {
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .alert.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .alert.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
     </style>
 </head>
 <body>
     <aside class="sidebar-form-card" style="width: 400px; padding: 30px;">
         
-        {% if session.get('login_error') %}
-            <div class="alert error" style="margin-bottom: 15px;">{{ session.pop('login_error') }}</div>
+        {% if error %}
+            <div class="alert error">{{ error }}</div>
         {% endif %}
-        {% if session.get('login_success') %}
-            <div class="alert success" style="margin-bottom: 15px;">{{ session.pop('login_success') }}</div>
+        
+        {% if register_error %}
+            <div class="alert error">{{ register_error }}</div>
+        {% endif %}
+
+        {% if session.get('login_error') %}
+            <div class="alert error">{{ session.pop('login_error') }}</div>
         {% endif %}
 
         <div id="login-box">
             <h3 class="form-title" style="text-align:center; margin-bottom:20px;">Giriş Yap</h3>
             
             <form method="POST" action="{{ url_for('login') }}">
-                <input type="hidden" name="form_type" value="login">
                 
                 <div class="form-group icon-group">
                     <i class="fas fa-envelope"></i>
@@ -87,8 +110,7 @@
         <div id="register-box" style="display: none;">
             <h3 class="form-title" style="text-align:center; margin-bottom:20px;">Kayıt Ol</h3>
             
-            <form method="POST" action="{{ url_for('login') }}" onsubmit="return validateRegisterForm()">
-                <input type="hidden" name="form_type" value="register">
+            <form method="POST" action="{{ url_for('register') }}" onsubmit="return validateRegisterForm()">
                 
                 <div class="form-group icon-group">
                     <i class="fas fa-user"></i>
