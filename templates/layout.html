@@ -605,10 +605,17 @@
                 
                 <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; justify-content: center;">
                     <input type="number" id="ce_year" placeholder="Yıl" value="2025" 
-                           style="width: 100px; padding:8px; border:1px solid #ddd; border-radius:4px; font-weight:bold; text-align: center;">
+                           style="width: 80px; padding:8px; border:1px solid #ddd; border-radius:4px; font-weight:bold; text-align: center;">
+                    
+                    <select id="ce_zodiac" style="padding:8px; border:1px solid #ddd; border-radius:4px; font-weight:bold; color:#333;">
+                        <option value="Tropikal">Tropikal</option>
+                        <option value="Astronomik">Astronomik</option>
+                        <option value="Drakonik">Drakonik</option>
+                    </select>
+
                     <button onclick="searchCelestialEvents()" 
                             style="background:#2c3e50; color:white; border:none; padding:8px 20px; border-radius:4px; cursor:pointer; font-weight:bold;">
-                        YILI LİSTELE
+                        LİSTELE
                     </button>
                 </div>
                 
@@ -1303,6 +1310,7 @@
 
 </body>
 </html>
+
 
 
 
