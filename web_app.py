@@ -8,7 +8,7 @@ import traceback
 import random 
 import math
 import re        
-import csv      
+import csv       
 import io        
 from werkzeug.utils import secure_filename
 from dateutil import tz
@@ -25,6 +25,14 @@ import user_manager
 app = Flask(__name__)
 app.secret_key = 'super_secret_astro_key_for_session' 
 app.jinja_env.add_extension('jinja2.ext.do')
+
+# ============================================================================
+# 🌍 SWISS EPHEMERIS YOL AYARI (GLOBAL VE GARANTİ)
+# ============================================================================
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+EPHE_FOLDER = os.path.join(BASE_DIR, 'ephe')
+combined_path = f"{EPHE_FOLDER}:{BASE_DIR}" # Hem klasöre hem ana dizine bak
+swe.set_ephe_path(combined_path)
 
 # ============================================================================
 # ❓ ANALİZ SORULARI (SABİT LİSTE)
@@ -45,21 +53,16 @@ ANALIZ_SORULARI = [
 ]
 
 # ============================================================================
-# 🚀 EPHEMERIS AYARLARI
+# 🚀 EPHEMERIS KONTROLÜ
 # ============================================================================
-current_dir = os.path.dirname(os.path.abspath(__file__))
-ephe_path = os.path.join(current_dir, 'ephe')
-
-has_sepl = os.path.exists(os.path.join(ephe_path, 'sepl_18.se1'))
-has_semo = os.path.exists(os.path.join(ephe_path, 'semo_18.se1'))
+has_sepl = os.path.exists(os.path.join(EPHE_FOLDER, 'sepl_18.se1'))
+has_semo = os.path.exists(os.path.join(EPHE_FOLDER, 'semo_18.se1'))
 
 if has_sepl and has_semo:
-    print(f"✅ Ephemeris Dosyaları Bulundu: {ephe_path}")
-    swe.set_ephe_path(ephe_path)
+    print(f"✅ Ephemeris Dosyaları Bulundu: {EPHE_FOLDER}")
     CALC_MODE = swe.FLG_SWIEPH | swe.FLG_SPEED 
 else:
     print(f"⚠️ Ephemeris Dosyaları Eksik. Moshier moduna geçiliyor.")
-    swe.set_ephe_path('') 
     CALC_MODE = swe.FLG_MOSEPH 
 
 # ============================================================================
@@ -70,7 +73,6 @@ app.config["SESSION_TYPE"] = "filesystem"
 app.config["SESSION_FILE_DIR"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'flask_session')
 Session(app)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER_COURSES = os.path.join(BASE_DIR, 'static', 'uploads', 'courses')
 UPLOAD_FOLDER_CONTACT = os.path.join(BASE_DIR, 'static', 'uploads', 'contact')
 UPLOAD_FOLDER_CHARTS = os.path.join(BASE_DIR, 'static', 'uploads', 'charts')
@@ -87,9 +89,9 @@ os.makedirs(UPLOAD_FOLDER_CHARTS, exist_ok=True)
 # 🔐 YÖNETİCİ AYARLARI
 # ============================================================================
 ADMIN_EMAILS = ["astrozumaay@hotmail.com"] 
-ADMIN_PASSWORD = "123"  # Şimdilik 123 yapalım, girince değiştirirsin.
+ADMIN_PASSWORD = "123" 
 
-DATA_FILE = 'data_public_charts.json'       
+DATA_FILE = 'data_public_charts.json'        
 COURSES_FILE = 'data_courses.json'
 CONTACT_FILE = 'data_contact.json'
 
@@ -129,6 +131,7 @@ def sync_active_charts_to_db():
     """Session'daki aktif haritaları users.json dosyasına yazar."""
     if 'logged_in_email' in session:
         email = session['logged_in_email']
+        # user_manager'ın import edildiğinden emin ol
         user_data = user_manager.get_user_data_by_email(email)
         
         if user_data:
@@ -2148,6 +2151,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
