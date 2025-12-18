@@ -639,7 +639,7 @@ def admin_auto_classify():
     except Exception as e: return jsonify({'success': False, 'error': str(e)})
 
 # ============================================================================
-# 🔄 API: RETURN HESAPLAMA (VERİ BANKASI + AKTİF HARİTA DESTEKLİ)
+# 🔄 API: RETURN HESAPLAMA (GÜNCELLENDİ: TROPIKAL / ASTRONOMİK / DRAKONİK)
 # ============================================================================
 @app.route('/api/calculate_returns', methods=['POST'])
 def api_calculate_returns():
@@ -647,66 +647,81 @@ def api_calculate_returns():
         print("\n--- RETURN HESAPLAMA BAŞLADI ---")
         data = request.get_json()
         
-        # ID'yi al (String gelebilir, int'e çevir)
+        # ID'yi al
         raw_id = data.get('natal_chart_id')
         natal_chart_id = int(raw_id) if raw_id is not None else -1
         
         start_year = int(data.get('start_year'))
         end_year = int(data.get('end_year'))
         planet_name = data.get('planet_name')
-        target_zodiac = data.get('zodiac_type', 'Astronomik')
+        target_zodiac = data.get('zodiac_type', 'Tropikal') # Varsayılan: Tropikal
         
-        print(f"İstek: ID={natal_chart_id}, Gezegen={planet_name}, Yıl={start_year}-{end_year}")
+        print(f"İstek: ID={natal_chart_id}, Gezegen={planet_name}, Yıl={start_year}-{end_year}, Tip={target_zodiac}")
 
-        # 1. HARİTAYI BUL (Önce Aktif'e, sonra Veri Bankası'na bak)
+        # 1. HARİTAYI BUL
         natal_chart = None
-        
-        # A) Aktif Haritalarda Ara (ID küçükse indekstir)
         active_charts = session.get('active_charts', [])
+        
+        # A) Aktif Haritalarda Ara
         if 0 <= natal_chart_id < len(active_charts):
             natal_chart = active_charts[natal_chart_id]
             print("-> Kaynak: Aktif Oturum Haritası")
             
-        # B) Veri Bankasında Ara (ID büyükse veritabanı ID'sidir)
+        # B) Veri Bankasında Ara
         if not natal_chart:
             all_public = load_json_data(DATA_FILE)
             natal_chart = next((c for c in all_public if c['id'] == natal_chart_id), None)
-            if natal_chart: print("-> Kaynak: Veri Bankası (Data)")
+            if natal_chart: print("-> Kaynak: Veri Bankası")
 
         if not natal_chart:
-            print("❌ HATA: Harita bulunamadı!")
             return jsonify({'success': False, 'error': 'Harita bulunamadı.'})
         
         # 2. HESAPLAMA VERİLERİNİ HAZIRLA
-        # UTC Saati Hesapla
+        swe.set_ephe_path(EPHE_PATH) # Yolu garantile
+        
         tz_val = float(natal_chart.get('tz', natal_chart.get('tz_offset', 0)))
         utc_hour = natal_chart['hour'] + (natal_chart['minute']/60.0) - tz_val
         tjd_natal = swe.julday(natal_chart['year'], natal_chart['month'], natal_chart['day'], utc_hour)
         
-        # Gezegen ID
         p_map = {'Güneş': swe.SUN, 'Ay': swe.MOON, 'Merkür': swe.MERCURY, 'Venüs': swe.VENUS, 'Mars': swe.MARS, 'Jüpiter': swe.JUPITER, 'Satürn': swe.SATURN}
         pid = p_map.get(planet_name, swe.SUN)
         
-        # 3. MODU AYARLA
+        # 3. MODU AYARLA (HEDEF DERECEYİ BUL)
         calc_flags = swe.FLG_SWIEPH | swe.FLG_SPEED
+        target_lon = 0
+        
         if target_zodiac == 'Astronomik':
+            # Astronomik (Sidereal - Fagan/Bradley)
+            swe.set_sid_mode(swe.SIDM_FAGAN_BRADLEY, 0, 0)
             calc_flags |= swe.FLG_SIDEREAL
-            swe.set_sid_mode(swe.SIDM_LAHIRI, 0, 0)
+            res = swe.calc_ut(tjd_natal, pid, calc_flags)
+            target_lon = res[0][0]
+            
+        elif target_zodiac == 'Drakonik':
+            # Drakonik (Tropikal - Mean Node)
+            swe.set_sid_mode(0, 0, 0) # Tropikal mod
+            p_res = swe.calc_ut(tjd_natal, pid, swe.FLG_SWIEPH | swe.FLG_SPEED)[0][0]
+            n_res = swe.calc_ut(tjd_natal, swe.MEAN_NODE, swe.FLG_SWIEPH | swe.FLG_SPEED)[0][0]
+            target_lon = (p_res - n_res) % 360.0
+            
+        else:
+            # Tropikal (Standart)
+            swe.set_sid_mode(0, 0, 0)
+            res = swe.calc_ut(tjd_natal, pid, calc_flags)
+            target_lon = res[0][0]
         
-        # 4. HEDEF DERECEYİ BUL
-        res = swe.calc_ut(tjd_natal, pid, calc_flags)
-        target_lon = res[0][0]
-        
-        # Drakonik Özel Durum
-        if target_zodiac == 'Drakonik':
-            swe.set_sid_mode(0, 0, 0) # Tropikale dön
-            r_t = swe.calc_ut(tjd_natal, pid, swe.FLG_SWIEPH | swe.FLG_SPEED)[0][0]
-            n_t = swe.calc_ut(tjd_natal, swe.MEAN_NODE, swe.FLG_SWIEPH | swe.FLG_SPEED)[0][0]
-            target_lon = (r_t - n_t) % 360.0
-        
-        # 5. TARAMA MOTORU (Astro Core içindeki fonksiyonu kullanıyoruz)
-        # Güvenlik için buraya manuel motoru ekliyorum:
-        
+        # 4. TARAMA FONKSİYONU
+        def get_current_pos(t):
+            if target_zodiac == 'Drakonik':
+                # Drakonik ise o anki (Gezegen - Node) farkını hesapla
+                pp = swe.calc_ut(t, pid, swe.FLG_SWIEPH | swe.FLG_SPEED)[0][0]
+                nn = swe.calc_ut(t, swe.MEAN_NODE, swe.FLG_SWIEPH | swe.FLG_SPEED)[0][0]
+                return (pp - nn) % 360.0
+            else:
+                # Tropikal veya Astronomik (Bayraklar yukarıda ayarlandı)
+                return swe.calc_ut(t, pid, calc_flags)[0][0]
+
+        # 5. DÖNÜŞLERİ ARA
         returns = []
         curr_jd = swe.julday(start_year, 1, 1)
         limit_jd = swe.julday(end_year + 1, 1, 1)
@@ -716,37 +731,44 @@ def api_calculate_returns():
         while curr_jd < limit_jd and safety < 20000:
             safety += 1
             
-            def get_pos(t):
-                if target_zodiac == 'Drakonik':
-                    pp = swe.calc_ut(t, pid, swe.FLG_SWIEPH | swe.FLG_SPEED)[0][0]
-                    nn = swe.calc_ut(t, swe.MEAN_NODE, swe.FLG_SWIEPH | swe.FLG_SPEED)[0][0]
-                    return (pp - nn) % 360.0
-                return swe.calc_ut(t, pid, calc_flags)[0][0]
-
-            p1 = get_pos(curr_jd)
-            p2 = get_pos(curr_jd + step)
+            p1 = get_current_pos(curr_jd)
+            p2 = get_current_pos(curr_jd + step)
             
+            # Açılar arasındaki fark (Geçiş kontrolü)
             d1 = (p1 - target_lon + 180) % 360 - 180
             d2 = (p2 - target_lon + 180) % 360 - 180
             
             if (d1 * d2 < 0) and (abs(d1 - d2) < 180):
-                # Hassas bul
-                low = curr_jd; high = curr_jd + step; found = high
+                # Geçiş bulundu, hassaslaştır (Binary Search benzeri)
+                low = curr_jd
+                high = curr_jd + step
+                found_time = high
+                
                 for _ in range(15):
-                    mid = (low+high)/2.0
-                    pm = get_pos(mid)
+                    mid = (low + high) / 2.0
+                    pm = get_current_pos(mid)
                     dm = (pm - target_lon + 180) % 360 - 180
-                    if d1 * dm < 0: high = mid
-                    else: low = mid
-                    found = low
+                    if d1 * dm < 0:
+                        high = mid
+                    else:
+                        low = mid
+                    found_time = low
                 
-                y, m, d, h_dec = swe.revjul(found)
+                # Tarihi Çevir ve Kaydet
+                y, m, d, h_dec = swe.revjul(found_time)
                 if start_year <= y <= end_year:
-                    date_str = f"{d:02d}.{m:02d}.{y} {int(h_dec):02d}:{int((h_dec-int(h_dec))*60):02d}"
-                    print(f"   -> Bulundu: {date_str}")
-                    returns.append({'year': y, 'month': m, 'day': d, 'hour': int(h_dec), 'minute': int((h_dec-int(h_dec))*60), 'date_str': date_str})
+                    h = int(h_dec)
+                    mn = int((h_dec - h) * 60)
+                    date_str = f"{d:02d}.{m:02d}.{y} {h:02d}:{mn:02d}"
+                    print(f"   -> Bulundu: {date_str} ({target_zodiac})")
+                    returns.append({
+                        'year': y, 'month': m, 'day': d, 
+                        'hour': h, 'minute': mn, 
+                        'date_str': date_str
+                    })
                 
-                curr_jd = found + (25.0 if pid==swe.MOON else 300.0)
+                # Bir sonraki döngü için ileri atla (Ay ise 25 gün, Güneş ise 300 gün)
+                curr_jd = found_time + (25.0 if pid == swe.MOON else 300.0)
                 continue
             
             curr_jd += step
@@ -756,6 +778,7 @@ def api_calculate_returns():
 
     except Exception as e:
         print(f"API HATASI: {e}")
+        import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)})
 
@@ -2085,6 +2108,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
