@@ -375,6 +375,43 @@
     .back-btn:hover {
         text-decoration: underline;
     }
+
+    /* --- TRANSİT MENÜSÜ TASARIMI (EKLENDİ) --- */
+
+    /* Menünün kendisi (gizli başlar, JavaScript ile açılır) */
+    .transit-context-menu { 
+        display: none;             /* Varsayılan olarak gizli */
+        position: fixed;           /* EKRANDA SABİT DURMASI İÇİN 'absolute' YERİNE 'fixed' YAPTIM */
+        z-index: 9999;             /* Diğer her şeyin üstünde görünsün */
+        width: 180px;              /* Genişlik */
+        background-color: #fff;    /* Beyaz arka plan */
+        border: 1px solid #ddd;    /* İnce gri kenarlık */
+        border-radius: 6px;        /* Köşeleri yuvarlatma */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Hafif gölge efekti */
+        padding: 5px 0;            /* İç boşluk */
+    } 
+
+    /* Menü öğeleri (Astronomik Transit, Drakonik Transit) */
+    .transit-menu-item { 
+        display: block; 
+        padding: 6px 12px;         /* Öğeler arası boşluk */
+        text-decoration: none;     /* Alt çizgiyi kaldır */
+        color: #333;               /* Metin rengi (koyu gri) */
+        font-size: 12px;           /* Yazı boyutu */
+        cursor: pointer;           /* Fare imleci el işareti olsun */
+        transition: background-color 0.2s; /* Hover efekti için geçiş */
+        border-bottom: 1px solid #f5f5f5; /* Hafif çizgi */
+    } 
+    
+    .transit-menu-item:last-child {
+        border-bottom: none;
+    }
+
+    /* Menü öğelerinin üzerine gelindiğindeki efekt */
+    .transit-menu-item:hover { 
+        background-color: #f0f7ff; /* Açık mavi arka plan */
+        color: #1565c0;            /* Koyu mavi metin rengi */
+    }
 </style>
 </head>
 <body>
@@ -1204,7 +1241,7 @@
 
     {% include 'return_module.html' ignore missing %}
     {% include 'synastry_module.html' ignore missing %}
-    {% include 'progression_module.html' ignore missing %}
 
 </body>
 </html>
+
