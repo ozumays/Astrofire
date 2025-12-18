@@ -709,16 +709,18 @@
 
     function searchCelestialEvents() {
         const y = document.getElementById('ce_year').value;
+        const z = document.getElementById('ce_zodiac').value; // Zodyak tipini al
+        
         const eclipseList = document.getElementById('eclipseList');
         const phaseList = document.getElementById('phaseList');
         
-        eclipseList.innerHTML = '<p style="text-align:center; color:#666; margin-top:10px;">Aranıyor...</p>';
-        phaseList.innerHTML = '<p style="text-align:center; color:#666; margin-top:10px;">Aranıyor...</p>';
+        eclipseList.innerHTML = '<p style="text-align:center; color:#666; margin-top:10px;"><i class="fas fa-spinner fa-spin"></i> Hesaplanıyor...</p>';
+        phaseList.innerHTML = '<p style="text-align:center; color:#666; margin-top:10px;"><i class="fas fa-spinner fa-spin"></i> Hesaplanıyor...</p>';
         
         fetch('/api/search_celestial_events', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ year: y })
+            body: JSON.stringify({ year: y, zodiac_type: z }) // Tipi sunucuya gönder
         })
         .then(r => r.json())
         .then(data => {
@@ -1301,6 +1303,7 @@
 
 </body>
 </html>
+
 
 
 
