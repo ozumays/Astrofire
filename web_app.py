@@ -429,12 +429,11 @@ def admin_delete_user(email):
 # ============================================================================
 # 🔑 EKSİK OLAN LOGIN ROTASI
 # ============================================================================
-# ============================================================================
-# 🔑 EKSİK OLAN LOGIN ROTASI
-# ============================================================================
+# web_app.py içindeki login ve register fonksiyonlarını bununla değiştir:
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # Eğer zaten giriş yapmışsa ana sayfaya gönder
+    # Eğer zaten giriş yapmışsa direkt ana sayfaya at
     if session.get('logged_in_email'):
         return redirect(url_for('home'))
 
@@ -442,32 +441,39 @@ def login():
         email = request.form.get('email')
         password = request.form.get('password')
         
-        # user_manager ile giriş kontrolü yap
+        # 1. user_manager ile bilgileri kontrol et
+        # (Önce arşivi tazelemesi için user_manager'ı zorlayalım)
+        user_manager.load_archive_from_disk() 
         success, message = user_manager.try_login(email, password)
         
         if success:
-            # 🟢 KRİTİK EKLEME: Kullanıcıyı tarayıcı hafızasına (Session) kaydet
-            session['logged_in_email'] = email 
+            # ✅ İŞTE EKSİK OLAN PARÇA BU:
+            # Kullanıcının emailini tarayıcı hafızasına (Session) kazıyoruz.
+            session['logged_in_email'] = email
             
-            # Başarılı ise ana sayfaya yönlendir
+            # Ana sayfaya gönder
             return redirect(url_for('home'))
         else:
-            # Hatalıysa tekrar login sayfasını hata mesajıyla göster
+            # Şifre yanlışsa hata mesajıyla sayfayı tekrar göster
             return render_template('login.html', error=message)
 
-    # GET isteği ise sadece sayfayı göster
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        # Kayıt olma işlemleri (Basit hali)
         name = request.form.get('name')
         email = request.form.get('email')
         password = request.form.get('password')
+        phone = request.form.get('phone', '') # Telefonu da alalım
         
-        success, message = user_manager.register_user(name, email, password)
+        # user_manager ile kaydet
+        success, message = user_manager.register_user(name, email, password, phone)
+        
         if success:
+            # Kayıt başarılıysa login sayfasına gönder ama hata mesajı yerine başarı mesajı verelim
+            # (login.html'de session['login_success'] varsa yeşil gösterir)
+            session['login_success'] = "Kayıt başarılı! Şimdi giriş yapabilirsin."
             return redirect(url_for('login'))
         else:
              return render_template('login.html', register_error=message)
@@ -1784,6 +1790,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
