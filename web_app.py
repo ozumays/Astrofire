@@ -308,9 +308,22 @@ def admin_login_page():
 
 @app.route('/yonetim/dashboard')
 def admin_dashboard():
-    if not session.get('admin_access'): return redirect(url_for('admin_login_page'))
-    return render_template('admin_dashboard.html', users=user_manager.get_all_users(), public_charts=load_json_data(DATA_FILE), courses=load_json_data(COURSES_FILE), contact=load_json_data(CONTACT_FILE))
+    # 1. Giriş yapılmamışsa at
+    if not session.get('admin_access'): 
+        return redirect(url_for('admin_login_page'))
+    
+    # 2. Veritabanını tazele (Yeni kayıtları görmek için kritik!)
+    user_manager.load_archive_from_disk()
 
+    # 3. Verileri topla
+    tum_kullanicilar = user_manager.get_all_users()
+    
+    # 4. Sayfaya gönder (users değişkeni ile)
+    return render_template('admin_dashboard.html', 
+                           users=tum_kullanicilar,  # <-- İŞTE BU SATIR KULLANICILARI GÖSTERİR
+                           public_charts=load_json_data(DATA_FILE), 
+                           courses=load_json_data(COURSES_FILE), 
+                           contact=load_json_data(CONTACT_FILE))
 @app.route('/yonetim/logout')
 def admin_logout():
     session.pop('admin_access', None)
@@ -1815,6 +1828,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
