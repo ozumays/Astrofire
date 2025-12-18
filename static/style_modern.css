@@ -1,0 +1,416 @@
+/* static/style_modern.css */
+
+/* --- TEMEL AYARLAR --- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;700&display=swap');
+
+body {
+    font-family: 'Poppins', Arial, sans-serif;
+    margin: 0;
+    background-color: #F4F7FA; 
+    color: #333;
+    font-size: 14px; 
+}
+* {
+    box-sizing: border-box;
+}
+
+/* --- 1. ÜST NAVİGASYON (Header) --- */
+.main-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 40px;
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #E0E0E0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.logo-container {
+    display: flex;
+    align-items: center;
+    font-size: 1.2em;
+    font-weight: 700;
+    color: #333;
+}
+.logo-img {
+    height: 40px; 
+    margin-right: 10px;
+    font-size: 1.5em; 
+    color: #4A708B;
+}
+.main-nav {
+    display: flex;
+    gap: 20px;
+}
+.nav-link {
+    text-decoration: none;
+    color: #555;
+    font-weight: 500;
+    padding: 10px 5px;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+}
+.nav-link:hover, .nav-link.active {
+    color: #4A708B;
+    border-bottom: 3px solid #4A708B;
+}
+.user-area {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.user-display-name {
+    font-weight: 500;
+}
+.btn-login, .btn-logout {
+    text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+.btn-login {
+    background-color: #4A708B;
+    color: white;
+}
+.btn-login:hover {
+    background-color: #3A5C77;
+}
+.btn-logout {
+    background-color: #F0F0F0;
+    color: #333;
+}
+
+/* --- 2. ANA YERLEŞİM (3 Sütunlu) --- */
+.main-container {
+    display: flex;
+    max-width: 1600px; 
+    margin: 20px auto;
+    gap: 20px;
+    padding: 0 20px;
+}
+
+/* YENİ SOL SIDEBAR (Analiz Tipleri) */
+.sidebar-left {
+    flex-basis: 220px; 
+    flex-shrink: 0;
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 15px;
+    height: fit-content; 
+    position: sticky;
+    top: 90px;
+}
+.sidebar-title {
+    color: #4A708B;
+    border-bottom: 2px solid #EFEFEF;
+    padding-bottom: 5px;
+    margin-top: 0;
+}
+.sidebar-link {
+    display: block;
+    padding: 10px;
+    color: #555;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+.sidebar-link:hover, .sidebar-link.active {
+    background-color: #EFEFEF;
+    color: #333;
+    font-weight: 500;
+}
+
+/* ORTA İÇERİK (Harita Çarkı ve Rapor) */
+.chart-content {
+    flex: 2; /* 2/3 genişlik */
+    background-color: #FFFFFF;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+}
+.chart-wheel-placeholder {
+    height: 500px;
+    background-color: #F8F8F8;
+    border: 1px dashed #D3D3D3;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #888;
+    font-style: italic;
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+.report-container {
+    margin-top: 20px;
+}
+
+/* SAĞ TARAF (Form Kartı) - Genişlik küçültüldü */
+.sidebar-form-card {
+    flex: 1; 
+    max-width: 360px; 
+    background-color: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    padding: 25px;
+    height: fit-content; 
+    position: sticky;
+    top: 90px; 
+}
+.form-title {
+    color: #333;
+    font-weight: 700;
+    font-size: 1.8em;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+.form-info {
+    text-align: center;
+    color: #777;
+    margin-bottom: 25px;
+}
+.form-link {
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+    color: #4A708B;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+/* --- FORM ELEMANLARI (Modern Stil) - Küçültüldü --- */
+.form-group {
+    margin-bottom: 10px; 
+}
+.form-group label {
+    font-size: 0.8em; 
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 3px; 
+    display: block;
+}
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 8px; 
+    border: 1px solid #DCDCDC;
+    border-radius: 6px;
+    background-color: #F8F9FA;
+    font-size: 0.9em; 
+}
+/* İkonlu Form Alanları (Giriş/Kayıt) */
+.form-group.icon-group {
+    position: relative;
+    margin-bottom: 20px;
+}
+.icon-group i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+}
+.icon-group input {
+    padding-left: 40px;
+}
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+}
+.checkbox-group input {
+    width: auto;
+    margin-right: 10px;
+}
+.form-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.form-group.col-2 { width: 16%; }
+.form-group.col-4 { width: 33%; }
+
+/* --- BUTONLAR --- */
+.btn-primary {
+    background: linear-gradient(90deg, #4A708B, #6A8DAD);
+    color: white;
+    width: 100%;
+    padding: 10px 15px; 
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.0em; 
+    margin-top: 10px;
+    transition: all 0.3s;
+}
+.btn-primary:hover {
+    box-shadow: 0 4px 10px rgba(74, 112, 139, 0.3);
+}
+
+/* --- SEKME YAPISI (Form Kartı İçinde) --- */
+.tab-navigation {
+    display: flex;
+    border-bottom: 1px solid #E0E0E0;
+    margin-bottom: 20px;
+}
+.tab-button {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-weight: 500;
+    color: #777;
+    text-decoration: none;
+    font-size: 0.9em; 
+}
+.tab-button.active {
+    border-bottom: 3px solid #4A708B;
+    color: #333;
+}
+.tab-content {
+    display: none; 
+}
+.tab-content.active {
+    display: block; 
+}
+
+/* --- ALERTLER --- */
+.alert {
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-weight: 500;
+    text-align: center;
+}
+.alert.success {
+    background-color: #D4EDDA;
+    color: #155724;
+}
+.alert.error {
+    background-color: #F8D7DA;
+    color: #721C24;
+}
+
+/* --- RAPOR ALANI --- */
+.report-title {
+    color: #4A708B;
+    border-bottom: 2px solid #EFEFEF;
+    padding-bottom: 5px;
+}
+.report-section pre {
+    background-color: #F4F4F4;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+/* Rapor Tablosu */
+table.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.report-table th, .report-table td {
+    border: 1px solid #D3D3D3;
+    padding: 8px 12px;
+    text-align: left;
+}
+.report-table th {
+    background-color: #F8F8F8;
+    color: #4A708B;
+}
+.report-table tr:nth-child(even) {
+    background-color: #FFFFFF;
+}
+
+/* --- ESKİ SIDEBAR (Kayıtlı Haritalar sayfası için) --- */
+.sidebar {
+    width: 100%; 
+    padding: 15px;
+    background-color: #FFFFFF; 
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.05);
+    height: fit-content; 
+}
+.sidebar-category {
+    font-weight: bold;
+    color: #4A708B;
+}
+.chart-list {
+    list-style: none;
+    padding-left: 10px;
+}
+.chart-list li a {
+    text-decoration: none;
+    color: #3A5C77;
+}
+.chart-list li a:hover {
+    text-decoration: underline;
+}
+
+/* --- AKTİF HARİTALAR TABLOSU (Web Sağ Tık Alternatifi) --- */
+.btn-action {
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    margin-right: 5px;
+}
+.btn-action.save {
+    background-color: #5cb85c; /* Yeşil */
+    color: white;
+}
+.btn-action.delete {
+    background-color: #d9534f; /* Kırmızı */
+    color: white;
+}
+.btn-action {
+    background-color: #4A708B; /* Mavi */
+    color: white;
+}
+
+/* Tıklanabilir Tablo Satırları (Aktif Haritalar) */
+.clickable-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.clickable-row:hover {
+    background-color: #f0f8ff !important; 
+}
+
+/* --- ÖZEL SAĞ TIK MENÜSÜ --- */
+.custom-context-menu {
+    position: fixed; 
+    display: none; 
+    background-color: white;
+    border: 1px solid #D3D3D3;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    border-radius: 6px;
+    padding: 5px 0;
+    z-index: 1000;
+}
+.context-menu-item {
+    padding: 8px 15px;
+    color: #333;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+    font-size: 0.9em;
+}
+.context-menu-item:hover {
+    background-color: #F4F7FA;
+}
+.context-menu-item.delete {
+    color: #d9534f;
+}
+.context-menu-item.save {
+    color: #5cb85c; 
+}

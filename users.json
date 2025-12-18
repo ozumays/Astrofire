@@ -1,0 +1,15 @@
+{
+    "astrozumaay@hotmail.com": {
+        "name": "Özlem Aydın",
+        "password": "123123",
+        "phone": "05438131872",
+        "email": "astrozumaay@hotmail.com"
+    },
+    "demo@astro.com": {
+        "name": "Emre Karahan",
+        "password": "demo",
+        "phone": "5551234567",
+        "email": "demo@astro.com",
+        "register_date": "23.11.2025 21:29"
+    }
+}
