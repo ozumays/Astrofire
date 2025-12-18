@@ -1,24 +1,29 @@
-# user_manager.py (GÜNCEL TAM HALİ - Klasör Yönetimi Destekli)
+# user_manager.py (DÜZELTİLMİŞ VERSİYON)
 import json
 import os
 import traceback 
 import datetime 
-from yardimcilar import is_valid_email, is_valid_phone, SESSION_FILE
+import re # Email kontrolü için
+import random
 
 # --- Numpy Kontrolü ---
 try:
     import numpy as np
 except ImportError:
-    print("--- USER_MANAGER UYARI: 'numpy' BULUNAMADI! Arşiv kaydı başarısız olabilir. ---")
     np = None 
 
-# --- Arşiv Dosyaları ---
+# --- Sabitler ---
 USER_REGISTRY_FILE = "users.json"
 USER_ARCHIVE_FILE = "user_archive.json"
+SESSION_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'flask_session', 'session_data.json')
 
 # Global Veri Depoları
 REGISTERED_USERS = {}
 USER_DATA_STORE = {}
+
+# --- YARDIMCI FONKSİYONLAR (Bağımsız çalışması için buraya alındı) ---
+def is_valid_email(email):
+    return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
 # --- Numpy Encoder ---
 class NumpyJSONEncoder(json.JSONEncoder):
@@ -31,23 +36,19 @@ class NumpyJSONEncoder(json.JSONEncoder):
             return obj.tolist()
         return super(NumpyJSONEncoder, self).default(obj)
 
-# --- YENİ: Disk İşlemleri (Yükleme/Kaydetme) ---
+# --- Disk İşlemleri ---
 
 def save_archive_to_disk():
-    """Kullanıcı ve arşiv verilerini diske kaydeder."""
     try:
         with open(USER_REGISTRY_FILE, 'w', encoding='utf-8') as f:
             json.dump(REGISTERED_USERS, f, ensure_ascii=False, indent=4)
             
         with open(USER_ARCHIVE_FILE, 'w', encoding='utf-8') as f:
             json.dump(USER_DATA_STORE, f, ensure_ascii=False, indent=4, cls=NumpyJSONEncoder)
-        
     except Exception as e:
-        print(f"KRİTİK HATA: Arşiv kaydedilirken hata oluştu: {e}")
-        traceback.print_exc()
+        print(f"KRİTİK HATA: Arşiv kaydedilirken hata: {e}")
 
 def load_archive_from_disk():
-    """Uygulama başlarken verileri yükler."""
     global REGISTERED_USERS, USER_DATA_STORE
     try:
         if os.path.exists(USER_REGISTRY_FILE):
@@ -59,22 +60,18 @@ def load_archive_from_disk():
                 USER_DATA_STORE = json.load(f)
         
         print(f"DEBUG: Arşiv yüklendi ({len(REGISTERED_USERS)} kullanıcı).")
-        
     except Exception as e:
         print(f"KRİTİK HATA: Arşiv okunurken hata: {e}")
-        traceback.print_exc()
         REGISTERED_USERS = {}
         USER_DATA_STORE = {}
 
-# --- KLASÖR YÖNETİMİ (YENİ EKLENEN KISIM) ---
+# --- KLASÖR YÖNETİMİ ---
 
 def create_new_folder(email, folder_name):
-    """Kullanıcı için yeni bir klasör oluşturur."""
     if email in USER_DATA_STORE:
         if 'saved' not in USER_DATA_STORE[email]:
             USER_DATA_STORE[email]['saved'] = {}
         
-        # Klasör zaten yoksa oluştur
         if folder_name not in USER_DATA_STORE[email]['saved']:
             USER_DATA_STORE[email]['saved'][folder_name] = []
             save_archive_to_disk()
@@ -82,7 +79,6 @@ def create_new_folder(email, folder_name):
     return False
 
 def move_chart_to_folder(email, chart_id, current_folder, target_folder):
-    """Haritayı bir klasörden diğerine taşır."""
     if email in USER_DATA_STORE and 'saved' in USER_DATA_STORE[email]:
         saved = USER_DATA_STORE[email]['saved']
         
@@ -90,7 +86,6 @@ def move_chart_to_folder(email, chart_id, current_folder, target_folder):
             chart_to_move = None
             chart_index = -1
             
-            # Haritayı bul
             for i, chart in enumerate(saved[current_folder]):
                 if str(chart.get('id')) == str(chart_id):
                     chart_to_move = chart
@@ -98,34 +93,18 @@ def move_chart_to_folder(email, chart_id, current_folder, target_folder):
                     break
             
             if chart_to_move:
-                # Eskisinden sil
                 saved[current_folder].pop(chart_index)
-                # Yenisine ekle
                 saved[target_folder].insert(0, chart_to_move)
                 save_archive_to_disk()
                 return True
     return False
 
 def get_user_folder_list(email):
-    """Kullanıcının klasör isimlerini liste olarak döner."""
     if email in USER_DATA_STORE and 'saved' in USER_DATA_STORE[email]:
         return list(USER_DATA_STORE[email]['saved'].keys())
     return ["Genel"]
 
 # --- KULLANICI & OTURUM İŞLEMLERİ ---
-
-def save_session_data(email, remember_me):
-    data = {'logged_in_email': email if remember_me else None}
-    try:
-        with open(SESSION_FILE, 'w') as f: json.dump(data, f)
-    except: pass
-
-def load_session_data():
-    if os.path.exists(SESSION_FILE):
-        try:
-            with open(SESSION_FILE, 'r') as f: return json.load(f).get('logged_in_email')
-        except: return None
-    return None
 
 def get_user_data_by_email(email):
     return REGISTERED_USERS.get(email)
@@ -141,30 +120,37 @@ def get_all_users():
         })
     return user_list
 
-def try_login(email, password, remember_me):
+# DÜZELTME 1: try_login artık 'remember_me' zorunlu değil (Varsayılan False)
+def try_login(email, password, remember_me=False):
     user_data = get_user_data_by_email(email)
     if not (email and password): return False, "Lütfen tüm alanları doldurun."
-    if user_data and user_data['password'] == password:
-        save_session_data(email, remember_me)
+    
+    if user_data and user_data.get('password') == password:
         return True, user_data
     return False, "Hatalı e-posta veya şifre."
 
-def try_register(name, email, phone, password):
-    if not (name and email and phone and password): return False, "Eksik bilgi."
+# DÜZELTME 2: Fonksiyon adı 'register_user' yapıldı ve 'phone' opsiyonel oldu
+def register_user(name, email, password, phone=""):
+    if not (name and email and password): return False, "Eksik bilgi."
     if email in REGISTERED_USERS: return False, "Bu e-posta zaten kayıtlı."
     if not is_valid_email(email): return False, "Geçersiz e-posta."
     
     register_date = datetime.datetime.now().strftime("%d.%m.%Y %H:%M")
-    REGISTERED_USERS[email] = {'name': name, 'password': password, 'phone': phone, 'email': email, 'register_date': register_date}
     
-    # Kullanıcı veri deposunu başlat (Varsayılan Genel klasörü)
+    # Kullanıcıyı kaydet
+    REGISTERED_USERS[email] = {
+        'name': name, 
+        'password': password, 
+        'phone': phone, 
+        'email': email, 
+        'register_date': register_date
+    }
+    
+    # Veri deposunu başlat
     USER_DATA_STORE[email] = {'active': [], 'saved': {'Genel': []}}
     
     save_archive_to_disk()
     return True, f"'{name}' başarıyla kaydedildi."
-
-def logout_user():
-    save_session_data(None, False)
 
 def save_chart_to_user_data(email, chart_data, category_name="Genel"):
     if email not in USER_DATA_STORE:
@@ -176,8 +162,7 @@ def save_chart_to_user_data(email, chart_data, category_name="Genel"):
         user_archive[category_name] = []
     
     if 'id' not in chart_data or chart_data['id'] is None:
-        import random
-        chart_data['id'] = random.randint(100000, 999999) # Basit ID üretimi
+        chart_data['id'] = random.randint(100000, 999999)
     
     user_archive[category_name].append(chart_data)
     save_archive_to_disk()
@@ -188,7 +173,8 @@ def get_user_saved_charts(email):
         return USER_DATA_STORE[email].get('saved', {})
     return {}
 
-def delete_chart_from_archive(email, category_name, chart_id):
+# DÜZELTME 3: Fonksiyon adı web_app.py ile uyumlu hale getirildi
+def delete_user_chart(email, category_name, chart_id):
     if email in USER_DATA_STORE:
         saved = USER_DATA_STORE[email].get('saved', {})
         if category_name in saved:
@@ -207,7 +193,9 @@ def delete_registered_user(email):
         return True
     return False
 
-# --- Yükle ve Demo Kullanıcı Oluştur ---
+# --- Yükleme İşlemi ---
 load_archive_from_disk()
+
+# Demo Kullanıcı (İstersen kaldırabilirsin)
 if "demo@astro.com" not in REGISTERED_USERS:
-    try_register("Emre Karahan", "demo@astro.com", "5551234567", "demo")
+    register_user("Demo Kullanıcı", "demo@astro.com", "demo", "5550000000")
