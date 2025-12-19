@@ -95,7 +95,7 @@ DATA_FILE = 'data_public_charts.json'
 COURSES_FILE = 'data_courses.json'
 CONTACT_FILE = 'data_contact.json'
 
-# --- YARDIMCI FONKSİYONLAR ---
+# --- YARDIMCI FONKSİYONLAR (GÜVENLİ VERSİYON) ---
 def load_json_data(filename):
     if not os.path.exists(filename): return {} if filename == CONTACT_FILE else []
     try: 
@@ -103,19 +103,40 @@ def load_json_data(filename):
     except: return {} if filename == CONTACT_FILE else []
 
 def save_json_data(filename, data):
-    with open(filename, 'w', encoding='utf-8') as f: json.dump(data, f, ensure_ascii=False, indent=4)
+    try:
+        with open(filename, 'w', encoding='utf-8') as f: json.dump(data, f, ensure_ascii=False, indent=4)
+    except: pass
 
 def get_current_user_email(): return session.get('logged_in_email')
-def get_user_display_name(email):
-    user_data = user_manager.get_user_data_by_email(email)
-    return user_data['name'] if user_data else "Misafir"
 
+def get_user_display_name(email):
+    """Hata korumalı kullanıcı ismi çekme"""
+    try:
+        if not email: return "Misafir"
+        user_data = user_manager.get_user_data_by_email(email)
+        return user_data.get('name', 'Kullanıcı') if user_data else "Misafir"
+    except:
+        return "Misafir"
+
+# ============================================================================
+# 🛡️ GÜVENLİ CONTEXT YÜKLEYİCİ (ÇÖKMEYİ ENGELLER)
+# ============================================================================
 def get_common_context():
     email = get_current_user_email()
-    folder_list = user_manager.get_user_folder_list(email) if email else ["Genel"]
+    folder_list = ["Genel"]
+    
+    # Klasörleri çekmeyi dene, hata verirse "Genel" kullan
+    if email:
+        try:
+            folders = user_manager.get_user_folder_list(email)
+            if folders: folder_list = folders
+        except:
+            folder_list = ["Genel"]
+
     return {
-        'user_email': email, 'is_logged_in': bool(email),
-        'display_name': get_user_display_name(email) if email else None,
+        'user_email': email, 
+        'is_logged_in': bool(email),
+        'display_name': get_user_display_name(email),
         'motor': ASTRO_MOTOR_NESNESİ,
         'active_charts': session.get('active_charts', []),
         'current_chart_data': session.get('current_chart_data'),
@@ -128,18 +149,18 @@ def get_common_context():
 # 💾 YARDIMCI FONKSİYON: AKTİF HARİTALARI KAYDET
 # ========================================================
 def sync_active_charts_to_db():
-    """Session'daki aktif haritaları users.json dosyasına yazar."""
-    if 'logged_in_email' in session:
-        email = session['logged_in_email']
-        # user_manager'ın import edildiğinden emin ol
-        user_data = user_manager.get_user_data_by_email(email)
-        
-        if user_data:
-            # Session'daki listeyi al, veritabanına koy
-            user_data['active_charts'] = session.get('active_charts', [])
-            user_manager.save_user_data(email, user_data)
-            print(f"💾 [SYNC] {email} için aktif haritalar veritabanına kaydedildi.")
-
+    """Session'daki aktif haritaları users.json dosyasına yazar (Hata Korumalı)."""
+    try:
+        if 'logged_in_email' in session:
+            email = session['logged_in_email']
+            user_data = user_manager.get_user_data_by_email(email)
+            
+            if user_data:
+                user_data['active_charts'] = session.get('active_charts', [])
+                user_manager.save_user_data(email, user_data)
+                print(f"💾 [SYNC] {email} veritabanına yazıldı.")
+    except Exception as e:
+        print(f"⚠️ Sync Hatası (Önemsiz): {e}")
 # ============================================================================
 # 🔮 TRANSİT TAHMİN MOTORU (DÜZELTİLMİŞ)
 # ============================================================================
@@ -2151,6 +2172,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
