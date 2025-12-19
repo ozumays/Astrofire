@@ -884,248 +884,189 @@ def search_location():
 @app.route('/api/search_celestial_events', methods=['POST'])
 def api_search_celestial_events():
     try:
-        import os
-        
+        import os 
+        # 1. Gelen Veriyi Al
         data = request.json
         year = int(data.get('year', 2025))
-        zodiac_type = data.get('zodiac_type', 'Tropikal') # Seçilen tip
+        zodiac_type = data.get('zodiac_type', 'Tropikal') 
         
         eclipses = []
         phases = []
         
-        # Swiss Ephemeris Hazırlığı
-        swe.set_ephe_path(EPHE_PATH)
-        
-        # --- YARDIMCI FONKSİYON: Derece Dönüştürücü ---
+        # 2. EPHEMERIS YOLUNU AYARLA
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        ephe_path = os.path.join(base_dir, 'ephe')
+        swe.set_ephe_path(ephe_path)
+
+        # 3. MOD SEÇİMİ (Kritik Düzeltme)
+        # Önce dosyalar çalışıyor mu diye test et
+        try:
+            swe.calc_ut(2460000, swe.SUN, swe.FLG_SWIEPH)
+            ACTIVE_FLAG = swe.FLG_SWIEPH | swe.FLG_SPEED
+            ECL_FLAG = 0 # Swiss Eph modu için 0 yeterli
+            print("✅ Swiss Ephemeris Modu Aktif (Dosyalar Okundu)")
+        except:
+            # Hata verirse Moshier moda geç
+            ACTIVE_FLAG = swe.FLG_MOSEPH
+            ECL_FLAG = swe.FLG_MOSEPH_ECL_ALL
+            print("⚠️ Ephemeris Hatası: Moshier (Matematiksel) Moda Geçildi.")
+
+        # --- YARDIMCI: Zodyak Konumu ---
         def get_zodiac_pos(julian_day, body_id):
-            # 1. Önce Tropikal Dereceyi Al
-            swe.set_sid_mode(0, 0, 0) # Tropikal Mod
-            res = swe.calc_ut(julian_day, body_id)[0]
+            swe.set_sid_mode(0, 0, 0)
+            res = swe.calc_ut(julian_day, body_id, ACTIVE_FLAG)[0]
             deg_trop = res[0]
-            
             final_deg = deg_trop
             
-            # 2. Tipe Göre Dönüştür
             if zodiac_type == 'Astronomik':
-                # Fagan-Bradley (Gerçek gökyüzüne en yakın standart) veya senin özel offsetin
-                # Burada standart Fagan/Bradley kullanıyoruz, senin özel engine'i burada çağırmak sistemi yavaşlatabilir.
                 swe.set_sid_mode(swe.SIDM_FAGAN_BRADLEY, 0, 0)
-                res_sid = swe.calc_ut(julian_day, body_id)[0]
+                res_sid = swe.calc_ut(julian_day, body_id, ACTIVE_FLAG | swe.FLG_SIDEREAL)[0]
                 final_deg = res_sid[0]
                 
             elif zodiac_type == 'Drakonik':
-                # Drakonik = Gezegen - Kuzey Düğümü (Mean Node)
-                # Kuzey Düğümü (Mean) ID: 10
-                node_res = swe.calc_ut(julian_day, 10)[0] # 10 = Mean Node, 11 = True Node
+                node_res = swe.calc_ut(julian_day, swe.MEAN_NODE, ACTIVE_FLAG)[0]
                 node_deg = node_res[0]
                 final_deg = (deg_trop - node_deg + 360) % 360
-            
+                
             return final_deg
 
-        # --- YARDIMCI FONKSİYON: Burç İsmi Bulucu ---
+        # --- YARDIMCI: Burç İsmi ---
         def get_sign_name(degree):
-            signs = ["Koç", "Boğa", "İkizler", "Yengeç", "Aslan", "Başak", 
-                     "Terazi", "Akrep", "Yay", "Oğlak", "Kova", "Balık"]
+            signs = ["Koç", "Boğa", "İkizler", "Yengeç", "Aslan", "Başak", "Terazi", "Akrep", "Yay", "Oğlak", "Kova", "Balık"]
             idx = int(degree // 30)
             rem = degree % 30
             d = int(rem)
             m = int((rem - d) * 60)
             return f"{d}° {signs[idx]} {m}'"
 
-        # --- 1. TUTULMALARI BUL (Güneş ve Ay) ---
+        # --- TARAMA ---
         tjd_start = swe.julday(year, 1, 1)
         tjd_end = swe.julday(year, 12, 31)
         
         # A) GÜNEŞ TUTULMALARI
         tjd = tjd_start
         while tjd < tjd_end:
-            res = swe.sol_eclipse_when_glob(tjd)
-            if res[0] == swe.FLG_SWIEPH: # Tutulma bulundu
-                t_eclipse = res[1][0] # Maksimum tutulma zamanı
-                if t_eclipse > tjd_end: break
+            try:
+                res = swe.sol_eclipse_when_glob(tjd, ECL_FLAG)
+            except: res = (0, [0])
                 
-                # Tarih Formatla
-                y, m, d, h_dec = swe.revjul(t_eclipse)
-                h = int(h_dec); mn = int((h_dec - h) * 60)
-                
-                # Zodyak Konumu (Güneş)
-                deg = get_zodiac_pos(t_eclipse, swe.SUN)
-                sign_str = get_sign_name(deg)
-                
-                eclipses.append({
-                    "title": "Güneş Tutulması",
-                    "date_str": f"{d:02d}.{m:02d}.{y} {h:02d}:{mn:02d}",
-                    "sign_info": sign_info_fmt(sign_str, zodiac_type),
-                    "year":y, "month":m, "day":d, "hour":h, "minute":mn
-                })
-                tjd = t_eclipse + 25 # Bir sonraki aya atla
-            else:
-                tjd += 25 # Bulamazsa 25 gün ileri git
-
-        # B) AY TUTULMALARI
-        tjd = tjd_start
-        while tjd < tjd_end:
-            res = swe.lun_eclipse_when(tjd)
-            if res[0] == swe.FLG_SWIEPH:
+            if res[0] & swe.ECL_ALLTYPES_SOLAR:
                 t_eclipse = res[1][0]
                 if t_eclipse > tjd_end: break
                 
                 y, m, d, h_dec = swe.revjul(t_eclipse)
                 h = int(h_dec); mn = int((h_dec - h) * 60)
                 
-                # Zodyak Konumu (Ay)
+                deg = get_zodiac_pos(t_eclipse, swe.SUN)
+                sign_str = get_sign_name(deg)
+                
+                eclipses.append({
+                    "title": "Güneş Tutulması", 
+                    "date_str": f"{d:02d}.{m:02d}.{y} {h:02d}:{mn:02d}", 
+                    "sign_info": f"{sign_str} ({zodiac_type})", 
+                    "year":y, "month":m, "day":d, "hour":h, "minute":mn
+                })
+                tjd = t_eclipse + 25 
+            else: 
+                tjd += 25
+
+        # B) AY TUTULMALARI
+        tjd = tjd_start
+        while tjd < tjd_end:
+            try:
+                res = swe.lun_eclipse_when(tjd, ECL_FLAG)
+            except: res = (0, [0])
+
+            if res[0] & swe.ECL_ALLTYPES_LUNAR:
+                t_eclipse = res[1][0]
+                if t_eclipse > tjd_end: break
+                
+                y, m, d, h_dec = swe.revjul(t_eclipse)
+                h = int(h_dec); mn = int((h_dec - h) * 60)
+                
                 deg = get_zodiac_pos(t_eclipse, swe.MOON)
                 sign_str = get_sign_name(deg)
                 
                 eclipses.append({
-                    "title": "Ay Tutulması",
-                    "date_str": f"{d:02d}.{m:02d}.{y} {h:02d}:{mn:02d}",
-                    "sign_info": sign_info_fmt(sign_str, zodiac_type),
+                    "title": "Ay Tutulması", 
+                    "date_str": f"{d:02d}.{m:02d}.{y} {h:02d}:{mn:02d}", 
+                    "sign_info": f"{sign_str} ({zodiac_type})", 
                     "year":y, "month":m, "day":d, "hour":h, "minute":mn
                 })
                 tjd = t_eclipse + 25
-            else:
+            else: 
                 tjd += 25
 
-        # --- 2. YENİ AY ve DOLUNAYLARI BUL ---
-        # 1.1'den başlayıp ayı tarıyoruz
-        tjd_iter = tjd_start
-        while tjd_iter < tjd_end:
-            # Bir sonraki Yeni Ay
-            res_new = swe.pheno_ut(tjd_iter, swe.MOON, swe.SE_PHASE_ANGLE)
-            # Bu biraz karmaşık, basit faz taraması yapalım:
-            # Basitçe Ay ve Güneş arasındaki açıyı kontrol eden döngü yerine
-            # 'swe.mooncross' benzeri bir mantık kullanabiliriz ama
-            # En temiz yöntem: 29.5 gün atlayarak faz bulmak.
-            
-            # Biz burada basitçe Python astro kütüphanesi yerine,
-            # Swisseph ile faz araması yapacağız (Moon Phases)
-            # Ancak kodu karmaşıklaştırmamak için, zaten tutulmaları ayırdık.
-            # Normal Yeni Ay / Dolunay döngüsünü ekleyelim.
-            pass
-            tjd_iter += 30 # Şimdilik while döngüsünü kırmasın diye
-            
-        # (NOT: Daha hızlı ve basit faz listesi için hazır bir döngü kuralım)
-        # Sadece ana fazları bulur
-        tjd = tjd_start - 20 
-        while True:
-            # 0 derece (Yeni Ay)
-            res_new = swe.sol_eclipse_when_glob(tjd) # Bu tutulma arar, faz değil.
-            
-            # Doğru Faz Bulma Yöntemi:
-            # Ay'ın Güneş'e göre açısını (Elongation) takip et.
-            # Ancak bu çok kod gerektirir. Basitçe tarihleri gezelim.
-            break # Faz kısmını aşağıda 'moon_phases' fonksiyonu ile yapalım.
-
-        # --- BASİT FAZ TARAMASI ---
-        # Bu yöntem her ayı tarar ve Yeni Ay / Dolunay tarihlerini çıkarır
-        curr_m = 1
-        while curr_m <= 12:
-            # Ayın 1'i ve 15'i civarını kontrol etmeye gerek yok, 
-            # Swiss eph ile kesin zamanı bulmak zor olabilir.
-            # Bunun yerine "next_phase" mantığı kuralım.
-            pass
-            curr_m += 1
-            
-        # Fazlar için daha pratik çözüm:
-        # Her ay için Yeni Ay ve Dolunay zamanlarını bul.
-        # Bu işlem CPU yorabilir, o yüzden 12 ayı manuel dönelim.
-        
-        for m in range(1, 13):
-            # Ayın başındaki TJD
-            tjd_month = swe.julday(year, m, 1)
-            
-            # O ay içindeki olayları bulmak için kaba tarama yerine
-            # Astro motorumuzdaki faz bulucuyu kullanalım (Varsa)
-            # Yoksa manuel hesap:
-            
-            # Yaklaşık Yeni Aylar (Ay boyu tarama)
-            # Not: Performans için burayı basitleştiriyorum.
-            # Gerçek uygulamada 'swe.mooncross' kullanılır.
-            pass
-
-        # --- ALTERNATİF FAZ LİSTESİ (HIZLI) ---
-        # Fazları bulmak için 1 Ocak'tan itibaren Ay-Güneş açısını kontrol edip
-        # 0 (Yeniay) ve 180 (Dolunay) olduğu anları yakalayacağız.
-        
+        # C) YENİ AY VE DOLUNAYLAR
         t_search = tjd_start
         while t_search < tjd_end:
-            # Güneş ve Ay boylamı
-            res_sun = swe.calc_ut(t_search, swe.SUN)[0][0]
-            res_moon = swe.calc_ut(t_search, swe.MOON)[0][0]
-            diff = (res_moon - res_sun + 360) % 360
+            r_sun = swe.calc_ut(t_search, swe.SUN, ACTIVE_FLAG)[0][0]
+            r_moon = swe.calc_ut(t_search, swe.MOON, ACTIVE_FLAG)[0][0]
             
-            # Yeni aya kalan gün (kabaca)
+            diff = (r_moon - r_sun + 360) % 360
             days_to_new = (360 - diff) / 12.2
             days_to_full = (180 - diff + 360) % 360 / 12.2
             
-            if days_to_new < days_to_full:
+            if days_to_new < days_to_full: 
                 target_tjd = t_search + days_to_new
                 type_str = "Yeni Ay"
-                jump = 10
-            else:
+            else: 
                 target_tjd = t_search + days_to_full
                 type_str = "Dolunay"
-                jump = 10
-                
-            # Hassaslaştırma (Iterasyon)
+            
+            # Hassaslaştırma
             for _ in range(3):
-                r_sun = swe.calc_ut(target_tjd, swe.SUN)[0][0]
-                r_moon = swe.calc_ut(target_tjd, swe.MOON)[0][0]
-                d_diff = (r_moon - r_sun + 360) % 360
-                if type_str == "Dolunay":
+                r_s = swe.calc_ut(target_tjd, swe.SUN, ACTIVE_FLAG)[0][0]
+                r_m = swe.calc_ut(target_tjd, swe.MOON, ACTIVE_FLAG)[0][0]
+                d_diff = (r_m - r_s + 360) % 360
+                
+                if type_str == "Dolunay": 
                     err = (d_diff - 180)
-                    # 180 civarı (-180..180 normalize et)
                     while err > 180: err -= 360
                     while err < -180: err += 360
-                else:
+                else: 
                     err = d_diff
                     if err > 180: err -= 360
                 
-                target_tjd -= (err / 12.19) # Düzeltme
+                target_tjd -= (err / 12.19)
             
-            # Kaydet (Eğer yıl içindeyse)
+            # Kaydet
             if target_tjd >= tjd_start and target_tjd <= tjd_end:
-                # Tutulma ile çakışıyor mu? (Aynı günse ekleme, tutulma listesinde var zaten)
-                is_eclipse = False
+                # Çakışma kontrolü
+                is_duplicate = False
+                t_y, t_m, t_d, _ = swe.revjul(target_tjd)
                 for ec in eclipses:
-                    # TJD'den tarih çevir
-                    e_y, e_m, e_d, _ = ec["year"], ec["month"], ec["day"], 0
-                    t_y, t_m, t_d, t_h = swe.revjul(target_tjd)
-                    if e_y == t_y and e_m == t_m and abs(e_d - t_d) < 2:
-                        is_eclipse = True
-                        break
+                    if ec["year"] == t_y and ec["month"] == t_m and abs(ec["day"] - t_d) < 2:
+                        is_duplicate = True; break
                 
-                if not is_eclipse:
+                if not is_duplicate:
                     y, m, d, h_dec = swe.revjul(target_tjd)
                     h = int(h_dec); mn = int((h_dec - h) * 60)
                     
-                    # Derece (Ay için)
                     deg = get_zodiac_pos(target_tjd, swe.MOON)
                     sign_str = get_sign_name(deg)
                     
                     phases.append({
-                        "title": type_str,
-                        "date_str": f"{d:02d}.{m:02d}.{y} {h:02d}:{mn:02d}",
-                        "sign_info": sign_info_fmt(sign_str, zodiac_type),
+                        "title": type_str, 
+                        "date_str": f"{d:02d}.{m:02d}.{y} {h:02d}:{mn:02d}", 
+                        "sign_info": f"{sign_str} ({zodiac_type})", 
                         "year":y, "month":m, "day":d, "hour":h, "minute":mn
                     })
             
-            t_search = target_tjd + 14 # 14 gün sonrasına git
+            t_search = target_tjd + 14
             
-        # Tarihe göre sırala
+        # Sıralama
         eclipses.sort(key=lambda x: (x['year'], x['month'], x['day']))
         phases.sort(key=lambda x: (x['year'], x['month'], x['day']))
 
         return jsonify({'success': True, 'eclipses': eclipses, 'phases': phases})
 
     except Exception as e:
-        print(f"Celestial Error: {e}")
+        print(f"API Celestial Error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)})
-
-def sign_info_fmt(sign_str, z_type):
-    return f"{sign_str} ({z_type})"
-
+        
 @app.route('/load_celestial_event', methods=['POST'])
 def load_celestial_event():
     try:
@@ -2172,6 +2113,7 @@ def logout():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
     app.run(host='0.0.0.0', port=port, debug=True)
+
 
 
 
