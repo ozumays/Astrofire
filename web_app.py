@@ -93,7 +93,9 @@ ADMIN_PASSWORD = "123"
 
 DATA_FILE = 'data_public_charts.json'        
 COURSES_FILE = 'data_courses.json'
+CONSULTATIONS_FILE = 'data_consultations.json'
 CONTACT_FILE = 'data_contact.json'
+SUPPORT_LINKS_FILE = 'support_links.json'
 
 # --- YARDIMCI FONKSİYONLAR (GÜVENLİ VERSİYON) ---
 def load_json_data(filename):
@@ -132,15 +134,20 @@ def get_common_context():
             if folders: folder_list = folders
         except:
             folder_list = ["Genel"]
+    
+    # Destek linklerini yükle
+    support_links = load_json_data(SUPPORT_LINKS_FILE)
 
     return {
         'user_email': email, 
         'is_logged_in': bool(email),
         'display_name': get_user_display_name(email),
+        'user_profile_image': None,  # TODO: Profil resmi çekme eklenecek
         'motor': ASTRO_MOTOR_NESNESİ,
         'active_charts': session.get('active_charts', []),
         'current_chart_data': session.get('current_chart_data'),
         'user_folders': folder_list,
+        'support_links': support_links,
         'is_admin': lambda: email in ADMIN_EMAILS,
         'analiz_sorulari': ANALIZ_SORULARI
     }
@@ -497,10 +504,58 @@ def admin_delete_course(id):
     courses = [c for c in load_json_data(COURSES_FILE) if c['id'] != id]; save_json_data(COURSES_FILE, courses)
     return redirect(url_for('admin_dashboard'))
 
+@app.route('/admin/add_consultation', methods=['POST'])
+def admin_add_consultation():
+    if not session.get('admin_access'): return redirect(url_for('admin_login_page'))
+    
+    # Resimleri işle
+    images = []
+    for i in range(1, 4):
+        key = f'consultation_image_{i}'
+        if key in request.files:
+            f = request.files[key]
+            if f and f.filename != '':
+                fn = secure_filename(f.filename)
+                un = f"consultation_{random.randint(1000,9999)}_{fn}"
+                f.save(os.path.join(app.config['UPLOAD_FOLDER_COURSES'], un))
+                images.append(un)
+            else:
+                images.append("")
+        else:
+            images.append("")
+    
+    consultations = load_json_data(CONSULTATIONS_FILE)
+    consultations.append({
+        "id": random.randint(10000, 99999),
+        "title": request.form.get('title'),
+        "price": request.form.get('price'),
+        "description": request.form.get('description'),
+        "images": images
+    })
+    save_json_data(CONSULTATIONS_FILE, consultations)
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/delete_consultation/<int:id>')
+def admin_delete_consultation(id):
+    if not session.get('admin_access'): return redirect(url_for('admin_login_page'))
+    consultations = [c for c in load_json_data(CONSULTATIONS_FILE) if c['id'] != id]
+    save_json_data(CONSULTATIONS_FILE, consultations)
+    return redirect(url_for('admin_dashboard'))
+
 @app.route('/admin/delete_user/<email>')
 def admin_delete_user(email):
     if not session.get('admin_access'): return redirect(url_for('admin_login_page'))
     user_manager.delete_registered_user(email); return redirect(url_for('admin_dashboard'))
+
+@app.route('/update_profile', methods=['POST'])
+def update_profile():
+    # Profil güncelleme kodu
+    pass
+
+@app.route('/upload_profile_image', methods=['POST'])  
+def upload_profile_image():
+    # Resim yükleme kodu
+    pass
 
 # ============================================================================
 # 🔑 EKSİK OLAN LOGIN ROTASI
@@ -509,39 +564,34 @@ def admin_delete_user(email):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # ... (Önceki kodlar aynı kalacak) ...
-    
     if request.method == 'POST':
-        # ... (Email/Şifre doğrulama kodların) ...
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '').strip()
         
-        if user_manager.validate_login(email, password):
-            session['logged_in'] = True
-            session['logged_in_email'] = email
-            session['display_name'] = user_data.get('name', 'Kullanıcı')
-            
-            # --- YENİ EKLENEN KISIM: VERİLERİ GERİ YÜKLE ---
-            # Kullanıcının daha önce açık bıraktığı haritaları geri getir
-            saved_active = user_data.get('active_charts', [])
-            session['active_charts'] = saved_active
-            
-            # Eğer hiç haritası yoksa listeyi boş başlat
-            if not saved_active:
-                session['active_charts'] = []
-            # -----------------------------------------------
-            
-            flash('Giriş başarılı!', 'success')
-            return redirect(url_for('home'))
+        # user_manager'daki try_login fonksiyonunu kullan
+        success, result = user_manager.try_login(email, password)
         
         if success:
-            # ✅ İŞTE EKSİK OLAN PARÇA BU:
-            # Kullanıcının emailini tarayıcı hafızasına (Session) kazıyoruz.
+            # Giriş başarılı - Session'ı kur
+            session['logged_in'] = True
             session['logged_in_email'] = email
+            session['display_name'] = result.get('name', 'Kullanıcı')
             
-            # Ana sayfaya gönder
+            # --- KRİTİK: Kullanıcının kayıtlı aktif haritalarını geri yükle ---
+            user_data = user_manager.USER_DATA_STORE.get(email, {})
+            saved_active_charts = user_data.get('active_charts', [])
+            session['active_charts'] = saved_active_charts if saved_active_charts else []
+            
+            # İlk haritayı aktif yap (varsa)
+            if session['active_charts']:
+                session['current_chart_index'] = 0
+                session['current_chart_data'] = session['active_charts'][0]
+            # ----------------------------------------------------------------
+            
             return redirect(url_for('home'))
         else:
-            # Şifre yanlışsa hata mesajıyla sayfayı tekrar göster
-            return render_template('login.html', error=message)
+            # Giriş başarısız - Hata mesajı göster
+            return render_template('login.html', error=result)
 
     return render_template('login.html')
 
@@ -1276,14 +1326,68 @@ def get_synastry_data():
 def register_synastry_session():
     try:
         content = request.json
+        print(f"\n🔍 DEBUG: Gelen JSON = {content}")
+        
         full_data = content.get('data')
         calc_type = content.get('type')
         
         active_charts = session.get('active_charts', [])
         
-        # Orijinal harita meta verilerini Session'dan çek (ILERLETME İÇİN GEREKLİ)
-        raw_id1 = full_data.get('data', {}).get('id1') or full_data.get('id1')
-        raw_id2 = full_data.get('data', {}).get('id2') or full_data.get('id2')
+        # KOMPOZİT HARİTA İSE (ID'siz gelebilir)
+        if full_data and full_data.get('is_composite'):
+            print("✅ KOMPOZİT HARİTA ALGILANDI - ID kontrolü atlanıyor")
+            
+            composite_data = full_data.get('data', {})
+            composite_data['type'] = 'composite'
+            
+            new_chart_entry = {
+                'id': len(active_charts) + 1,
+                'type': 'composite',
+                'saved_data': composite_data,
+                'name': composite_data.get('name', 'Kompozit Harita'),
+                'year': 2000,
+                'month': 1,
+                'day': 1,
+                'hour': 12,
+                'minute': 0,
+                'tz_offset': 0.0,
+                'lat': 0.0,
+                'lon': 0.0,
+                'location_name': 'Kompozit',
+                'zodiac_type': composite_data.get('zodiac_type', 'Astronomik'),
+                'house_system': 'P'
+            }
+            
+            active_charts.insert(0, new_chart_entry)
+            session['active_charts'] = active_charts
+            session['current_chart_index'] = 0
+            session['last_chart'] = composite_data
+            session['last_report'] = "Kompozit Harita"
+            session['current_chart_data'] = new_chart_entry
+            
+            print("✅ Kompozit harita kaydedildi!")
+            return jsonify({'success': True, 'new_index': 0})
+        
+        # SİNASTRİ HARİTASI İSE (ID'ler gerekli)
+        raw_id1 = content.get('id1')
+        raw_id2 = content.get('id2')
+        
+        # Eğer üst seviyede yoksa, data içinde ara
+        if raw_id1 is None and full_data:
+            raw_id1 = full_data.get('id1')
+        if raw_id2 is None and full_data:
+            raw_id2 = full_data.get('id2')
+        
+        print(f"🔍 DEBUG: raw_id1={raw_id1}, raw_id2={raw_id2}")
+        
+        # ID kontrolü yap - None ise hata döndür
+        if raw_id1 is None or raw_id2 is None:
+            print(f"❌ HATA: ID'ler bulunamadı!")
+            return jsonify({'success': False, 'error': 'Sinastri için harita ID\'leri eksik'})
+        
+        # İndeks sınırlarını kontrol et
+        if raw_id1 < 0 or raw_id1 >= len(active_charts) or raw_id2 < 0 or raw_id2 >= len(active_charts):
+            return jsonify({'success': False, 'error': 'Geçersiz harita indeksi'})
         
         # Session'daki haritaları ID'leri ile çekiyoruz
         c1_original = active_charts[raw_id1]
@@ -1337,11 +1441,26 @@ def register_synastry_session():
         return jsonify({'success': False, 'error': str(e)})
 
 
+@app.route('/api/get_current_chart_data', methods=['GET'])
+def api_get_current_chart_data():
+    """
+    Frontend'e güncel harita verisini döndürür (Swap sonrası kullanılır)
+    """
+    try:
+        chart_data = session.get('last_chart', {})
+        if chart_data:
+            return jsonify({'success': True, 'chart_data': chart_data})
+        else:
+            return jsonify({'success': False, 'error': 'Harita verisi bulunamadı'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/api/swap_synastry', methods=['POST'])
 def api_swap_synastry():
     """
     Sinastri haritalarında iç ve dış çarkı değiştir.
-    chart1 (dış) ile chart2 (iç) yer değiştirir ve evleri yeniden hesaplar.
+    SADECE chart1 ve chart2'nin YERİNİ DEĞİŞTİRİR.
+    Dereceler, evler ve tüm veriler AYNEN KALIR.
     """
     try:
         active_charts = session.get('active_charts', [])
@@ -1353,7 +1472,7 @@ def api_swap_synastry():
         chart = active_charts[current_index]
         
         # Sadece sinastri haritaları için çalış
-        if chart.get('type') not in ['synastry', 'composite']:
+        if chart.get('type') not in ['synastry', 'composite', 'synastri']:
             return jsonify({'success': False, 'error': 'Bu işlem sadece sinastri haritaları için geçerlidir.'})
         
         # Saved data'yı al
@@ -1361,38 +1480,70 @@ def api_swap_synastry():
         if not saved_data:
             return jsonify({'success': False, 'error': 'Harita verileri eksik.'})
         
-        # chart1 ve chart2'yi değiştir
-        chart1_old = saved_data.get('chart1')
-        chart2_old = saved_data.get('chart2')
+        print("\n🔄 SWAP İŞLEMİ BAŞLADI")
+        print(f"Chart1 ÖNCE (DIŞ): {saved_data.get('chart1', {}).get('name')}")
+        print(f"  → Güneş: {saved_data.get('chart1', {}).get('planets', {}).get('Güneş', ['?'])[0]}")
+        print(f"Chart2 ÖNCE (İÇ): {saved_data.get('chart2', {}).get('name')}")
+        print(f"  → Güneş: {saved_data.get('chart2', {}).get('planets', {}).get('Güneş', ['?'])[0]}")
         
-        if not chart1_old or not chart2_old:
+        # MEVCUT DURUMU AL (Deep Copy ile)
+        import copy
+        chart1_backup = copy.deepcopy(saved_data.get('chart1'))
+        chart2_backup = copy.deepcopy(saved_data.get('chart2'))
+        
+        if not chart1_backup or not chart2_backup:
             return jsonify({'success': False, 'error': 'Harita verileri eksik.'})
         
-        # YER DEĞİŞTİR
-        saved_data['chart1'] = chart2_old  # Eski dış -> Yeni iç
-        saved_data['chart2'] = chart1_old  # Eski iç -> Yeni dış
+        # SADECE YER DEĞİŞTİR (Veriler aynen kalır)
+        saved_data['chart1'] = chart2_backup  # DIŞ ÇARK ← eski iç çark
+        saved_data['chart2'] = chart1_backup  # İÇ ÇARK ← eski dış çark
         
-        # Evleri yeni iç haritadan al (chart1 artık eski chart2)
-        saved_data['houses'] = chart2_old.get('houses', {})
-        saved_data['cusps'] = chart2_old.get('cusps', {})
-        saved_data['boundaries'] = chart2_old.get('boundaries', [])
+        print(f"\nChart1 SONRA (DIŞ): {saved_data.get('chart1', {}).get('name')}")
+        print(f"  → Güneş: {saved_data.get('chart1', {}).get('planets', {}).get('Güneş', ['?'])[0]}")
+        print(f"Chart2 SONRA (İÇ): {saved_data.get('chart2', {}).get('name')}")
+        print(f"  → Güneş: {saved_data.get('chart2', {}).get('planets', {}).get('Güneş', ['?'])[0]}")
         
-        # Meta verileri de değiştir
-        meta1_old = chart.get('natal_meta_1')
-        meta2_old = chart.get('natal_meta_2')
+        # EVLERİ YENİ İÇ ÇARKTAN AL (chart2 artık iç çark)
+        saved_data['houses'] = chart2_backup.get('houses', {})
+        saved_data['cusps'] = chart2_backup.get('cusps', {})
+        saved_data['boundaries'] = chart2_backup.get('boundaries', [])
         
-        if meta1_old and meta2_old:
-            chart['natal_meta_1'] = meta2_old
-            chart['natal_meta_2'] = meta1_old
+        # META VERİLERİ DE DEĞİŞTİR
+        meta1_backup = copy.deepcopy(chart.get('natal_meta_1'))
+        meta2_backup = copy.deepcopy(chart.get('natal_meta_2'))
         
-        # Güncelle
+        if meta1_backup and meta2_backup:
+            print(f"\nMeta1 ÖNCE: {chart.get('natal_meta_1', {}).get('name')}")
+            print(f"Meta2 ÖNCE: {chart.get('natal_meta_2', {}).get('name')}")
+            
+            chart['natal_meta_1'] = meta2_backup
+            chart['natal_meta_2'] = meta1_backup
+            
+            print(f"Meta1 SONRA: {chart.get('natal_meta_1', {}).get('name')}")
+            print(f"Meta2 SONRA: {chart.get('natal_meta_2', {}).get('name')}")
+        
+        # LAYOUT TARİH BİLGİSİNİ GÜNCELLEME (KRİTİK DÜZELTME)
+        # Layout.html'in tarih kutusundaki bilgiler swap sonrası doğru kalmalı
+        # Ama YENİDEN HESAPLAMA TETİKLENMEMELİ!
+        
+        print(f"\nLayout Tarih ÖNCE: {chart.get('year')}/{chart.get('month')}/{chart.get('day')}")
+        
+        # UYARI: Tarih bilgisini değiştirmeyelim ki set_active_time tetiklenmesin!
+        # Layout sadece gösterim için kullanıyor, hesaplama saved_data'dan yapılıyor.
+        
+        print(f"Layout Tarih SONRA: {chart.get('year')}/{chart.get('month')}/{chart.get('day')}")
+        
+        # GÜNCELLE
         chart['saved_data'] = saved_data
         active_charts[current_index] = chart
         session['active_charts'] = active_charts
         session['last_chart'] = saved_data
         session['current_chart_data'] = chart
+        session.modified = True
         
-        return jsonify({'success': True, 'message': 'Haritalar değiştirildi!'})
+        print("✅ SWAP TAMAMLANDI\n")
+        
+        return jsonify({'success': True, 'message': 'İç ve dış çarklar yer değiştirdi!'})
         
     except Exception as e:
         print(f"❌ Swap Hatası: {e}")
@@ -1794,6 +1945,9 @@ def load_public_chart(id):
 @app.route('/egitimler')
 def page_education(): context = get_common_context(); context.update({'courses': load_json_data(COURSES_FILE), 'active_page': 'egitimler'}); return render_template('education.html', **context)
 
+@app.route('/danismanliklar')
+def page_consultations(): context = get_common_context(); context.update({'consultations': load_json_data(CONSULTATIONS_FILE), 'active_page': 'danismanliklar'}); return render_template('consultations.html', **context)
+
 @app.route('/iletisim')
 def page_contact(): context = get_common_context(); context.update({'contact': load_json_data(CONTACT_FILE), 'active_page': 'iletisim'}); return render_template('contact.html', **context)
 
@@ -2107,33 +2261,14 @@ def save_chart():
 
 @app.route('/logout')
 def logout():
+    # Çıkış yapmadan önce aktif haritaları kaydet
+    sync_active_charts_to_db()
+    
+    # Session'ı temizle
     session.clear()
+    
     return redirect(url_for('home'))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000)) 
-    app.run(host='0.0.0.0', port=port, debug=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    app.run(host='0.0.0.0', port=port, debug=False)
