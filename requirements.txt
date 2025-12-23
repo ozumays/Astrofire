@@ -6,4 +6,4 @@ geopy
 timezonefinder
 pytz
 pyswisseph
-echo pymongo
+pymongo
