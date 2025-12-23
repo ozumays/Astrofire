@@ -13,8 +13,36 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #F8F8F8; 
+            background-color: #000; 
             font-family: 'Segoe UI', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Video Arka Plan */
+        #bg-video {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+            z-index: -2;
+            opacity: 0.4;
+        }
+
+        /* Koyu Overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
         }
         
         /* Geçiş Linkleri için Stil */
@@ -65,6 +93,11 @@
     </style>
 </head>
 <body>
+    <!-- Video Arka Plan -->
+    <video id="bg-video" autoplay loop muted playsinline>
+        <source src="{{ url_for('static', filename='videos/bg_video.mp4') }}" type="video/mp4">
+    </video>
+
     <aside class="sidebar-form-card" style="width: 400px; padding: 30px;">
         
         {% if error %}
