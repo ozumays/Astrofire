@@ -7,3 +7,4 @@ timezonefinder
 pytz
 pyswisseph
 pymongo
+certifi
