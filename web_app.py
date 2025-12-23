@@ -17,10 +17,31 @@ from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 import pytz
 import swisseph as swe 
+from pymongo import MongoClient
+import certifi
 
 # Kendi modüllerin
 from astro_core import ASTRO_MOTOR_NESNESİ, get_relative_degree 
 import user_manager
+
+# ============================================================================
+# 🔌 MONGODB ATLAS BAĞLANTISI
+# ============================================================================
+MONGO_URI = "mongodb+srv://ozumays:26674424140@cluster0.8ptsdi0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+
+try:
+    # certifi.where() sayesinde SSL hatalarını (sertifika hataları) tamamen engelliyoruz
+    client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
+    
+    # Veritabanı ve Tablo (Koleksiyon) isimlerini belirliyoruz
+    db = client['AstrofireDB']
+    maps_col = db['user_maps']
+    
+    # Bağlantıyı test edelim
+    client.admin.command('ping')
+    print("✅ MongoDB Atlas bağlantısı başarıyla kuruldu!")
+except Exception as e:
+    print(f"❌ MongoDB bağlantı hatası: {e}")
 
 app = Flask(__name__)
 app.secret_key = 'super_secret_astro_key_for_session' 
@@ -168,6 +189,56 @@ def sync_active_charts_to_db():
                 print(f"💾 [SYNC] {email} veritabanına yazıldı.")
     except Exception as e:
         print(f"⚠️ Sync Hatası (Önemsiz): {e}")
+
+# ============================================================================
+# ☁️ MONGODB BULUT KAYIT FONKSİYONU
+# ============================================================================
+def harita_kaydet_buluta(kullanici_adi, harita_ismi, koordinatlar):
+    """
+    Kullanıcının haritasını MongoDB Atlas'a kaydeder.
+    
+    Args:
+        kullanici_adi (str): Kullanıcının email adresi
+        harita_ismi (str): Haritanın adı
+        koordinatlar (dict): Harita verileri (lat, lon, tarih, saat vb.)
+    
+    Returns:
+        str: Başarı mesajı
+    """
+    try:
+        yeni_veri = {
+            "kullanici": kullanici_adi,
+            "harita_adi": harita_ismi,
+            "koordinatlar": koordinatlar,
+            "tarih": datetime.datetime.now()
+        }
+        maps_col.insert_one(yeni_veri)
+        print(f"☁️ [BULUT] {harita_ismi} MongoDB'ye kaydedildi!")
+        return "Başarıyla kaydedildi!"
+    except Exception as e:
+        print(f"❌ [BULUT HATA] {e}")
+        return f"Hata: {e}"
+
+def haritalari_getir_buluttan(kullanici_adi):
+    """
+    Kullanıcının tüm haritalarını MongoDB Atlas'tan getirir.
+    
+    Args:
+        kullanici_adi (str): Kullanıcının email adresi
+    
+    Returns:
+        list: Kullanıcıya ait haritaların listesi
+    """
+    try:
+        # Sadece o kullanıcıya ait haritaları getirir (_id hariç)
+        sonuclar = maps_col.find({"kullanici": kullanici_adi}, {"_id": 0})
+        haritalar = list(sonuclar)
+        print(f"☁️ [BULUT] {len(haritalar)} harita getirildi: {kullanici_adi}")
+        return haritalar
+    except Exception as e:
+        print(f"❌ [BULUT GETİRME HATASI] {e}")
+        return []
+
 # ============================================================================
 # 🔮 TRANSİT TAHMİN MOTORU (DÜZELTİLMİŞ)
 # ============================================================================
@@ -910,26 +981,149 @@ def get_asc():
 @app.route('/api/search_location', methods=['POST'])
 def search_location():
     try:
-        d = request.get_json(); city = d.get('city')
+        d = request.get_json()
+        city = d.get('city')
         now = datetime.datetime.now()
-        try: req_year = int(d.get('year', now.year)); req_month = int(d.get('month', now.month)); req_day = int(d.get('day', now.day))
-        except: req_year, req_month, req_day = now.year, now.month, now.day
-        geolocator = Nominatim(user_agent=f"astro_{random.randint(1000,9999)}"); locs = geolocator.geocode(city, exactly_one=False, limit=5, language='tr', timeout=10)
-        if not locs: return jsonify({'success': False, 'message': 'Bulunamadı'})
-        res = []; tf = None
-        try: tf = TimezoneFinder(in_memory=True)
-        except: pass
+        
+        # Tarihi al
+        try:
+            req_year = int(d.get('year', now.year))
+            req_month = int(d.get('month', now.month))
+            req_day = int(d.get('day', now.day))
+        except:
+            req_year, req_month, req_day = now.year, now.month, now.day
+        
+        # Konumu ara
+        geolocator = Nominatim(user_agent=f"astro_{random.randint(1000,9999)}")
+        locs = geolocator.geocode(city, exactly_one=False, limit=5, language='tr', timeout=10)
+        
+        if not locs:
+            return jsonify({'success': False, 'message': 'Bulunamadı'})
+        
+        res = []
+        tf = None
+        try:
+            tf = TimezoneFinder(in_memory=True)
+        except:
+            pass
+        
         for l in locs:
-            offset = 0.0; tz_name = "UTC"
-            if tf:
-                try: 
+            offset = 0.0
+            tz_name = "UTC"
+            
+            # Address'i Türkçe'ye çevir
+            address_turkish = l.address
+            
+            # Yaygın ülke isimlerini Türkçe'ye çevir
+            country_translations = {
+                'Turkey': 'Türkiye',
+                'United States': 'Amerika Birleşik Devletleri',
+                'United Kingdom': 'Birleşik Krallık',
+                'Germany': 'Almanya',
+                'France': 'Fransa',
+                'Italy': 'İtalya',
+                'Spain': 'İspanya',
+                'Greece': 'Yunanistan',
+                'Netherlands': 'Hollanda',
+                'Belgium': 'Belçika',
+                'Austria': 'Avusturya',
+                'Switzerland': 'İsviçre',
+                'Sweden': 'İsveç',
+                'Norway': 'Norveç',
+                'Denmark': 'Danimarka',
+                'Poland': 'Polonya',
+                'Russia': 'Rusya',
+                'China': 'Çin',
+                'Japan': 'Japonya',
+                'South Korea': 'Güney Kore',
+                'India': 'Hindistan',
+                'Pakistan': 'Pakistan',
+                'Iran': 'İran',
+                'Iraq': 'Irak',
+                'Syria': 'Suriye',
+                'Egypt': 'Mısır',
+                'Saudi Arabia': 'Suudi Arabistan',
+                'United Arab Emirates': 'Birleşik Arap Emirlikleri',
+                'Israel': 'İsrail',
+                'Lebanon': 'Lübnan',
+                'Jordan': 'Ürdün',
+                'Cyprus': 'Kıbrıs',
+                'Bulgaria': 'Bulgaristan',
+                'Romania': 'Romanya',
+                'Serbia': 'Sırbistan',
+                'Croatia': 'Hırvatistan',
+                'Bosnia and Herzegovina': 'Bosna-Hersek',
+                'Albania': 'Arnavutluk',
+                'North Macedonia': 'Kuzey Makedonya',
+                'Montenegro': 'Karadağ',
+                'Kosovo': 'Kosova'
+            }
+            
+            for eng, tr in country_translations.items():
+                address_turkish = address_turkish.replace(eng, tr)
+            
+            # ÖNCELİK: TÜRKİYE İÇİN MANUEL KONTROL (pytz'ye güvenme!)
+            if 'Turkey' in l.address or 'Türkiye' in address_turkish:
+                # 2016'dan sonra yaz saati kaldırıldı, UTC+3 sabit
+                if req_year >= 2016:
+                    offset = 3.0
+                else:
+                    # 2016 öncesi: Mart-Ekim arası UTC+3 (yaz), Kasım-Şubat UTC+2 (kış)
+                    if 3 <= req_month <= 10:
+                        offset = 3.0  # Yaz saati
+                    else:
+                        offset = 2.0  # Kış saati
+                tz_name = "Europe/Istanbul"
+            
+            # Türkiye değilse pytz ile hesapla
+            elif tf:
+                try:
+                    # Timezone'u bul
                     found_tz = tf.timezone_at(lng=l.longitude, lat=l.latitude)
-                    if found_tz: tz_name = found_tz; target_dt = datetime.datetime(req_year, req_month, req_day, 12, 0); tz_obj = pytz.timezone(tz_name); dt_aware = tz_obj.localize(target_dt, is_dst=None); offset = dt_aware.utcoffset().total_seconds() / 3600.0
-                except: offset = 3.0 if 'Turkey' in l.address or 'Türkiye' in l.address else 0.0
-            else: offset = 3.0 if 'Turkey' in l.address or 'Türkiye' in l.address else 0.0
-            res.append({'address': l.address, 'lat': l.latitude, 'lon': l.longitude, 'tz_offset': offset, 'tz_name': tz_name})
+                    
+                    if found_tz:
+                        tz_name = found_tz
+                        
+                        # Hedef tarihi oluştur (saat 12:00'de hesapla)
+                        target_dt = datetime.datetime(req_year, req_month, req_day, 12, 0)
+                        
+                        # Timezone objesini oluştur
+                        tz_obj = pytz.timezone(tz_name)
+                        
+                        # UTC offset'i hesapla
+                        try:
+                            dt_aware = tz_obj.localize(target_dt, is_dst=False)
+                        except:
+                            try:
+                                dt_aware = tz_obj.localize(target_dt, is_dst=True)
+                            except:
+                                dt_aware = tz_obj.normalize(tz_obj.localize(target_dt))
+                        
+                        # Offset'i saat cinsinden hesapla
+                        offset = dt_aware.utcoffset().total_seconds() / 3600.0
+                        
+                except Exception as e:
+                    print(f"Timezone hesaplama hatası ({l.address}): {e}")
+                    offset = 0.0
+            else:
+                # TimezoneFinder yoksa varsayılan
+                offset = 0.0
+            
+            res.append({
+                'address': l.address,
+                'lat': l.latitude,
+                'lon': l.longitude,
+                'tz_offset': offset,
+                'tz_name': tz_name
+            })
+        
         return jsonify({'success': True, 'results': res})
-    except: return jsonify({'success': False})
+        
+    except Exception as e:
+        print(f"search_location genel hatası: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)})
 
 @app.route('/api/search_celestial_events', methods=['POST'])
 def api_search_celestial_events():
@@ -1200,6 +1394,38 @@ def sinastri_hesapla():
         traceback.print_exc()
         return f"<h3>Sinastri Hesaplama Hatası Oluştu:</h3><p>{str(e)}</p>"
 
+def astronomik_cakisma_onleyici(planets_data):
+    if not planets_data: return planets_data
+    
+    # Mutlak dereceye göre (0-360) sırala (Koç -> Balık)
+    sorted_planets = sorted(planets_data.items(), key=lambda x: float(x[1][0]))
+    
+    last_abs_degree = -10.0
+    current_level = 0
+    # Katmanlar: Sadece içeri doğru (negatif) basamaklama yaparak taşmayı önler
+    # 0: Orijinal hat, -22: Bir alt katman, -44: İkinci alt katman
+    levels = [0, -22, -44] 
+    
+    updated_planets = {}
+    for name, data in sorted_planets:
+        curr_abs_deg = float(data[0])
+        
+        diff = abs(curr_abs_deg - last_abs_degree)
+        if diff > 180: diff = 360 - diff 
+        
+        # 5 dereceden yakınsa katman değiştir
+        if diff < 5.0:
+            current_level = (current_level + 1) % len(levels)
+        else:
+            current_level = 0
+            
+        new_data = list(data)
+        new_data.append(levels[current_level]) # En sona offseti ekle
+        updated_planets[name] = new_data
+        
+        last_abs_degree = curr_abs_deg
+        
+    return updated_planets
 
 @app.route('/api/get_synastry_data', methods=['POST'])
 def get_synastry_data():
@@ -1218,20 +1444,100 @@ def get_synastry_data():
         raw_c1 = active_charts[id1]
         raw_c2 = active_charts[id2]
 
+        # YARDIMCI FONKSİYONLAR
         def safe_float(val, default=0.0):
             try:
-                if val is None: return default
-                return float(val)
+                return float(val) if val is not None else default
             except:
                 return default
 
         def safe_int(val, default=0):
             try:
-                if val is None: return default
-                return int(val)
+                return int(val) if val is not None else default
             except:
                 return default
 
+        def get_or_calculate_full_data(chart_meta):
+            name = chart_meta.get('name', 'Bilinmeyen')
+            
+            if chart_meta.get('planets') and isinstance(chart_meta['planets'], dict) and len(chart_meta['planets']) > 0:
+                print(f"✅ HAZIR VERİ BULUNDU: {name}")
+                return chart_meta
+
+            print(f"⚠️ VERİ EKSİK, HESAPLANIYOR: {name}")
+            
+            year = safe_int(chart_meta.get('year'), 2000)
+            month = safe_int(chart_meta.get('month'), 1)
+            day = safe_int(chart_meta.get('day'), 1)
+            hour = safe_int(chart_meta.get('hour'), 12)
+            minute = safe_int(chart_meta.get('minute'), 0)
+            
+            lat = safe_float(chart_meta.get('lat') or chart_meta.get('latitude'), 0.0)
+            lon = safe_float(chart_meta.get('lon') or chart_meta.get('longitude'), 0.0)
+            tz = safe_float(chart_meta.get('tz') or chart_meta.get('tz_offset'), 3.0)
+
+            if lat == 0.0 and lon == 0.0:
+                lat, lon, tz = 41.0082, 28.9784, 3.0
+
+            zodiac_type = chart_meta.get('zodiac_type') or chart_meta.get('zodiac') or 'Astronomik'
+            h_sys_name = chart_meta.get('house_system') or chart_meta.get('house_system_name') or 'Placidus'
+            house_code = ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(h_sys_name, 'P')
+
+            try:
+                _, calculated_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
+                    year, month, day, hour, minute, tz, lat, lon, None, house_code, zodiac_type
+                )
+                
+                full_chart = chart_meta.copy()
+                if calculated_data:
+                    full_chart.update(calculated_data) 
+                    full_chart['zodiac_type'] = zodiac_type
+                
+                return full_chart
+
+            except Exception as inner_e:
+                print(f"   ❌ MOTOR HATASI: {inner_e}")
+                return chart_meta
+
+        # 1. VERİLERİ ÇEK/HESAPLA
+        c1_full = get_or_calculate_full_data(raw_c1)
+        c2_full = get_or_calculate_full_data(raw_c2)
+
+        # --- ÇAKIŞMA ÖNLEYİCİ DEVRE DIŞI (Frontend kendi algoritmasını kullanıyor) ---
+        # if 'planets' in c1_full:
+        #     c1_full['planets'] = astronomik_cakisma_onleyici(c1_full['planets'])
+        # if 'planets' in c2_full:
+        #     c2_full['planets'] = astronomik_cakisma_onleyici(c2_full['planets'])
+        # -------------------------------------------------------
+
+        # --- KOMPOZİT İSE HESAPLA ---
+        if calc_type == 'Kompozit':
+            # ... (mevcut kompozit kodun buraya gelecek) ...
+            pass
+
+        # SİNASTRİ PAKETİ
+        synastry_package = {
+            'type': 'synastry',
+            'chart1': c2_full,  # DIŞ çark
+            'chart2': c1_full,  # İÇ çark
+            'houses': c1_full.get('houses', {}),
+            'cusps': c1_full.get('houses', {}),
+            'boundaries': c1_full.get('boundaries', []),
+            'map_type': 'synastry' # MongoDB için tipini de ekledik
+        }
+        
+        return jsonify({
+            'success': True,
+            'is_composite': False,
+            'data': synastry_package,
+            'id1': id1, 'id2': id2
+        })
+
+    except Exception as e:
+        print(f"GENEL SİNASTRİ HATASI: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)})
+    
         # --- HESAPLAMA VE VERİ KURTARMA FONKSİYONU ---
         def get_or_calculate_full_data(chart_meta):
             name = chart_meta.get('name', 'Bilinmeyen')
@@ -1815,16 +2121,72 @@ def home():
                 house_code = ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(h_sys, 'P')
                 res_text, chart_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(year, month, day, hour, minute, tz_offset, lat, lon, None, house_code, zodiac)
                 if chart_data:
-                    new_chart = {'id': len(session.get('active_charts', [])) + 1, 'name': name, 'year': year, 'month': month, 'day': day, 'hour': hour, 'minute': minute, 'tz_offset': tz_offset, 'lat': lat, 'lon': lon, 'location_name': loc_name, 'zodiac_type': zodiac, 'house_system': h_sys, 'type': 'natal'}
-                    current_charts = session.get('active_charts', [])
-                    current_charts.insert(0, new_chart)
-                    session['active_charts'] = current_charts
+                    chart_data['map_type'] = 'natal'  # Harita tipini chart_data'ya da ekle
+                    
+                    # DÜZENLEME MODU KONTROLÜ
+                    if session.get('edit_mode') and session.get('edit_index') is not None:
+                        # DÜZENLEME MODU: Mevcut haritayı güncelle
+                        edit_index = session.get('edit_index')
+                        current_charts = session.get('active_charts', [])
+                        
+                        if 0 <= edit_index < len(current_charts):
+                            # Mevcut haritayı güncelle (ID'yi koru)
+                            existing_id = current_charts[edit_index].get('id', edit_index + 1)
+                            updated_chart = {
+                                'id': existing_id,
+                                'name': name, 
+                                'year': year, 
+                                'month': month, 
+                                'day': day, 
+                                'hour': hour, 
+                                'minute': minute, 
+                                'tz_offset': tz_offset, 
+                                'lat': lat, 
+                                'lon': lon, 
+                                'location_name': loc_name, 
+                                'zodiac_type': zodiac, 
+                                'house_system': h_sys, 
+                                'type': 'natal', 
+                                'map_type': 'natal'
+                            }
+                            
+                            current_charts[edit_index] = updated_chart
+                            session['active_charts'] = current_charts
+                            session['current_chart_index'] = edit_index
+                            session['current_chart_data'] = updated_chart
+                        
+                        # Düzenleme modunu kapat
+                        session.pop('edit_mode', None)
+                        session.pop('edit_index', None)
+                    else:
+                        # NORMAL MOD: Yeni harita ekle
+                        new_chart = {
+                            'id': len(session.get('active_charts', [])) + 1, 
+                            'name': name, 
+                            'year': year, 
+                            'month': month, 
+                            'day': day, 
+                            'hour': hour, 
+                            'minute': minute, 
+                            'tz_offset': tz_offset, 
+                            'lat': lat, 
+                            'lon': lon, 
+                            'location_name': loc_name, 
+                            'zodiac_type': zodiac, 
+                            'house_system': h_sys, 
+                            'type': 'natal', 
+                            'map_type': 'natal'
+                        }
+                        current_charts = session.get('active_charts', [])
+                        current_charts.insert(0, new_chart)
+                        session['active_charts'] = current_charts
+                        session['current_chart_index'] = 0
+                        session['current_chart_data'] = new_chart
+                    
                     sync_active_charts_to_db()
-                    session['current_chart_index'] = 0
                     session['last_report'] = res_text
                     session['last_chart'] = chart_data
-                    session['current_chart_data'] = new_chart
-                    active_tab = 'aktif' 
+                    active_tab = 'aktif'
                 else: session['report_error'] = res_text 
             except Exception as e: 
                 session['report_error'] = f"Hata: {e}"; traceback.print_exc() 
@@ -1849,6 +2211,7 @@ def home():
                 res, t_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(yr, mo, dy, hr, mn, tz, lat, lon, None, 'P', t_type)
                 
                 if t_data:
+                    t_data['map_type'] = 'transit'  # Harita tipini chart_data'ya ekle
                     transit_chart = {
                         'name': f"Transit ({dy}.{mo}.{yr} {hr}:{mn})", 
                         'year': yr, 'month': mo, 'day': dy, 'hour': hr, 'minute': mn, 
@@ -1857,7 +2220,8 @@ def home():
                         'zodiac_type': t_type,  # Düzelttiğimiz tipi kaydediyoruz
                         'house_system': 'Placidus (P)', 
                         'id': len(session.get('active_charts', [])) + 1, 
-                        'type': 'transit'
+                        'type': 'transit',
+                        'map_type': 'transit'
                     }
                     
                     current_charts = session.get('active_charts', [])
@@ -2224,9 +2588,58 @@ def delete_active_chart(index):
     
     return redirect(url_for('home', tab='aktif'))
 
+@app.route('/bulk_delete_charts', methods=['POST'])
+def bulk_delete_charts():
+    """Toplu harita silme - Büyükten küçüğe sıralı indeksleri siler"""
+    try:
+        data = request.get_json()
+        indices = data.get('indices', [])
+        
+        if not indices:
+            return jsonify({'success': False, 'error': 'Silinecek harita seçilmedi'})
+        
+        active_charts = session.get('active_charts', [])
+        
+        # Büyükten küçüğe sıralı geldiği için direkt silebiliriz
+        for index in indices:
+            if 0 <= index < len(active_charts):
+                del active_charts[index]
+        
+        # Session'ı güncelle
+        session['active_charts'] = active_charts
+        session.modified = True
+        
+        # Veritabanına kaydet
+        sync_active_charts_to_db()
+        
+        # Eğer liste boşaldıysa, session'ı temizle
+        if len(active_charts) == 0:
+            session.pop('last_chart', None)
+            session.pop('last_report', None)
+            session.pop('current_chart_data', None)
+            session['current_chart_index'] = 0
+        else:
+            # Aktif indeksi düzelt
+            current_index = session.get('current_chart_index', 0)
+            if current_index >= len(active_charts):
+                session['current_chart_index'] = len(active_charts) - 1
+        
+        return jsonify({'success': True, 'message': f'{len(indices)} harita silindi'})
+        
+    except Exception as e:
+        print(f"Toplu silme hatası: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/edit_active_chart/<int:index>')
 def edit_active_chart(index):
-    if 'active_charts' in session and len(session['active_charts']) > index: session['current_chart_data'] = session['active_charts'][index]; return redirect(url_for('home', tab='natal'))
+    if 'active_charts' in session and len(session['active_charts']) > index:
+        session['current_chart_data'] = session['active_charts'][index]
+        session['edit_mode'] = True  # Düzenleme modu aktif
+        session['edit_index'] = index  # Hangi harita düzenleniyor
+        session.modified = True
+        return redirect(url_for('home', tab='natal'))
     return redirect(url_for('home', tab='aktif'))
 
 @app.route('/edit_chart/<category>/<chart_id>')
@@ -2270,5 +2683,5 @@ def logout():
     return redirect(url_for('home'))
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000)) 
-    app.run(host='0.0.0.0', port=port, debug=False)
+    # use_reloader=False eklemek bu çakışmayı önler
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=False)
