@@ -38,12 +38,12 @@
         position: fixed;
         top: 0; left: 0; right: 0;
         height: 50px; 
-        background: #ffffff;
+        background: rgba(255, 255, 255, 0.90) !important;
         border-bottom: 1px solid #e2e8f0; 
         display: flex; 
         align-items: center; 
         justify-content: space-between; 
-        padding: 0 10px; 
+        padding: 0 10px;
         z-index: 20;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
@@ -57,88 +57,100 @@
     .main-nav { padding-top: 5px; }
     .nav-link { margin-left: 13px; text-decoration: none; color: #475569; font-size: 11px; font-weight: 500; transition: all 0.3s; }
     .nav-link:hover { color: #1565c0; }
-    .nav-link.active { color: #1565c0; border-bottom: 2px solid #1565c0; padding-bottom: 14px; font-weight: 700; }
+    .nav-link.active { color: #1565c0; border-bottom: 2px solid #1565c0; padding-bottom: 5px; font-weight: 700; }
 
-    /* TEMİZLENMİŞ ANA KONTEYNER */
+/* 1. ANA TAŞIYICI */
 .main-container { 
     position: absolute;
-    top: 35px;
-    left: 10px;  
+    top: 35px; 
+    left: 10px;   
     right: 15px; 
-    bottom: 3px; /* İstediğin 3px boşluk */
+    /* Alta tam sıfırlayıp 5px boşluk bırakmak için height calc kullanıyoruz */
+    height: calc(100vh - 70px);
     display: flex; 
     align-items: stretch; 
-    gap: 10px;
-    overflow: visible !important; 
+    gap: 10px; 
+    overflow: hidden; 
     z-index: 10;
     padding: 0;
 }
-        /* Sol-Orta-Sağ Paneller Arası Boşluk */
-        gap: 10px;
-        .sol-panel {
-    margin-right: 10px; /* Sol panelin sağından 10px ekstra boşluk iter */
-}
-        overflow: hidden;
-        z-index: 10;
-        padding: 0;
+
+/* 2. SOL PANEL (KÖŞELİ) */
+.sidebar-left { 
+    width: 220px; 
+    background:rgba(255, 255, 255, 0.90) !important;
+    border: 1px solid #e2e8f0;
+    border-radius: 0px !important; 
+    padding: 10px; 
+    display: flex; 
+    flex-direction: column; 
+    flex-shrink: 0; 
+    overflow-y: auto; 
+    height: 100%; /* Konteynere (bottom'a) kadar uzanır */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
 }
 
-    /* SOL PANEL (KÖŞELİ) */
-    .sidebar-left { 
-        width: 220px; 
-        background: #ffffff; 
-        border: 1px solid #e2e8f0;
-        border-radius: 0px !important; 
-        padding: 10px; 
-        display: flex; 
-        flex-direction: column; 
-        flex-shrink: 0; 
-        overflow-y: auto; 
-        height: 100%; 
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
-    }
+/* 3. ORTA ALAN */
+.chart-content { 
+    flex: 1; 
+    padding: 0; 
+    overflow-y: auto; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    background-color: transparent; 
+    position: relative; 
+    height: 100%; /* Konteynere (bottom'a) kadar uzanır */
+}
     
-    /* ORTA ALAN */
-    .chart-content { 
-        flex: 1; 
-        padding: 0; 
-        overflow-y: auto; 
-        display: flex; 
-        flex-direction: column; 
-        align-items: center; 
-        background-color: transparent; 
-        position: relative; 
-    }
+/* SAĞ PANEL (KÖŞELİ) */
+.right-sidebar-wrapper { 
+    display: flex; 
+    flex-direction: row; 
+    align-items: flex-start; 
+    height: 100%; /* Konteynere (bottom'a) kadar uzanır */
+    flex-shrink: 0; 
+}
     
-    /* SAĞ PANEL (KÖŞELİ) */
-    .right-sidebar-wrapper { display: flex; flex-direction: row; align-items: flex-start; height: 100%; flex-shrink: 0; }
-    
-    .sidebar-form-card { 
-        width: 220px; 
-        height: 100%; 
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 0px !important; 
-        padding: 10px; 
-        overflow-y: auto; 
-        transition: width 0.3s ease; 
-        color: #1e293b;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-    .right-sidebar-wrapper.collapsed .sidebar-form-card { width: 0px !important; padding: 0px !important; border: none !important; overflow: hidden; }
-    
-    /* Panel Açma/Kapama Butonu (KÖŞELİ) */
-    #right-panel-toggle { 
-        width: 20px; height: 50px; 
-        background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; 
-        border-radius: 0px; 
-        display: flex; align-items: center; justify-content: center; cursor: pointer; margin-top: 40vh; z-index: 100; box-shadow: -2px 0 4px rgba(0,0,0,0.1); 
-    }
+.sidebar-form-card { 
+    width: 220px; 
+    height: 100%; 
+    background: rgba(255, 255, 255, 0.90) !important;
+    border: 1px solid #e2e8f0;
+    border-radius: 0px !important; 
+    padding: 10px; 
+    overflow-y: auto; 
+    transition: width 0.3s ease; 
+    color: #1e293b;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
 
+.right-sidebar-wrapper.collapsed .sidebar-form-card { 
+    width: 0px !important; 
+    padding: 0px !important; 
+    border: none !important; 
+    overflow: hidden; 
+}
+    
+/* Panel Açma/Kapama Butonu (KÖŞELİ) */
+#right-panel-toggle { 
+    width: 20px; 
+    height: 50px; 
+    background: linear-gradient(135deg, #3b82f6, #2563eb); 
+    color: white; 
+    border-radius: 0px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    cursor: pointer; 
+    margin-top: 40vh; 
+    z-index: 100; 
+    box-shadow: -2px 0 4px rgba(0,0,0,0.1); 
+}
     /* --- KARTLAR VE BİLEŞENLER (KÖŞELİ) --- */
     
     .time-control-card { 
-        background-color: #fff; 
+        background-color: rgba(255, 255, 255, 0.90) !important; 
         border: 1px solid #e1e8ed; 
         border-radius: 0px; 
         padding: 10px; 
@@ -147,7 +159,7 @@
     }
 
     .sidebar-info-card { 
-        background-color: #f0f7ff; 
+        background-color: rgba(255, 255, 255, 0.90) !important; 
         border: 1px solid #cce0f5; 
         border-radius: 0px; 
         padding: 10px; 
@@ -157,16 +169,22 @@
     }
 
     .chart-info-overlay { 
-        width: 100%; 
-        background: #ffffff; 
-        border: 1px solid #e2e8f0;
-        border-radius: 0px; 
-        padding: 12px 20px; 
-        display: flex; align-items: center; gap: 20px; flex-shrink: 0; 
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-    .chart-info-name { font-size: 13px; font-weight: 800; color: #1565c0; text-transform: uppercase; }
-    .chart-info-details-group { display: flex; align-items: center; gap: 13px; font-size: 11px; color: #334155; }
+    width: 100%; 
+    background: rgba(255, 255, 255, 0.98) !important; 
+    border: 1px solid #e2e8f0 !important;
+    /* Sol-üst, Sağ-üst, Sağ-alt, Sol-alt sırasıyla hepsini 0 yapıyoruz */
+    border-radius: 0px 0px 0px 0px !important; 
+    padding: 12px 20px; 
+    display: flex; 
+    align-items: center; 
+    gap: 20px; 
+    flex-shrink: 0; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    margin-bottom: 5px;
+}
+
+    .chart-info-name { font-size: 12px; font-weight: 800; color: #1565c0; text-transform: uppercase; }
+    .chart-info-details-group { display: flex; align-items: center; gap: 13px; font-size: 10px; color: #334155; }
     .chart-info-item i { color: #4a90e2; width: 12px; margin-right: 5px; }
 
     /* --- FORM ELEMANLARI --- */
@@ -178,14 +196,14 @@
         border-radius: 0px; 
         font-size: 11px; 
         height: 28px; 
-        background-color: #f0f7ff; 
+        background-color: rgba(255, 255, 255, 0.90) !important; 
         color: #333; 
         transition: all 0.2s; 
     }
     
     .form-group input:focus, .form-group select:focus, .date-jump-input:focus { 
         border-color: #4a90e2; 
-        background-color: #ffffff; 
+        background-color: rgba(255, 255, 255, 0.90) !important; 
         outline: none; 
     }
 
@@ -196,19 +214,39 @@
 
     .info-row i { width: 16px; color: #4a90e2; text-align: center; margin-right: 5px; } 
 
-/* 1. ANA TAŞIYICI: İçindeki içeriğin aşağı kaymasına izin vermeli */
-.main-container { 
-    position: absolute;
-    top: 35px;
-    left: 10px;
-    right: 15px;
-    bottom: 0;
-    display: flex; 
-    align-items: stretch; 
-    gap: 10px;
-    /* BURAYI DEĞİŞTİRDİK: Taşmaya izin veriyoruz */
-    overflow: visible !important; 
-}
+
+        .vertical-action-strip {
+            width: 35px; 
+            background: rgba(255, 255, 255, 0.90) !important;
+            border-right: 1px solid #e2e8f0;
+            margin-left: -5px; /* Standart boşluğu 5px daraltarak sola çeker */
+            margin-right: 8px; /* Sağdaki (orta alanla olan) mesafeyi korur */
+            display: flex !important;
+            flex-direction: column !important; 
+            align-items: center !important;
+            justify-content: flex-start !important;
+            padding-top: 20px;
+            gap: 15px;
+            height: 100%;
+            flex-shrink: 0;
+        }
+
+        .v-strip-btn {
+            width: 28px;
+            height: 28px;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #475569;
+            font-size: 14px;
+        }
+
+        .v-strip-btn:hover {
+            color: #1565c0;
+        }
 
 /* 2. ORTA SÜTUN: Kendi içinde kaydırma çubuğu oluşturmalı */
 .chart-content { 
@@ -219,32 +257,47 @@
     background: transparent; 
     position: relative; 
     /* BURASI ÇOK ÖNEMLİ: Yandan aşağı kaydırma buradan gelir */
-    overflow-y: auto !important; 
+    overflow-y: hidden !important; /* Dış kutunun kaymasını engelle, sabit kalsın */
     height: 100%; /* Ekran yüksekliğine sabitle ki taşanı kaydırsın */
+}
+
+/* --- YENİ EKLENEN KAYDIRMA ALANI --- */
+.chart-scroll-container {
+    width: 100%;
+    flex: 1;                /* Kalan tüm boşluğu doldur */
+    overflow-y: auto;       /* Sadece burada kaydırma çubuğu çıksın */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+    /* Ana taşıyıcıyı sabitle */
+.chart-content {
+    overflow-y: hidden !important; 
 }
 
 /* 3. HARİTA ARKASINDAKİ ŞEFFAF ALAN */
 .chart-wheel-placeholder { 
     width: 100% !important; 
     /* Harita 620px ise, şeffaf alan 660px'de bitsin, aşağı uzamasın */
-    height: 610px !important; 
-    min-height: 610px !important;
+    height: 570px !important; 
+    min-height: 570px !important;
     
     display: flex; 
     justify-content: center; 
     align-items: center; 
     flex-shrink: 0; /* Aşağıdaki raporlar haritayı yukarı sıkıştırmasın */
     
-    background: rgba(255, 255, 255, 0.90) !important; 
+    background: rgba(255, 255, 255, 0.98) !important; 
     border-left: 1px solid rgba(226, 232, 240, 0.6);
     border-right: 1px solid rgba(226, 232, 240, 0.6);
     border-bottom: 1px solid rgba(226, 232, 240, 0.6);
-    margin: 0; 
+    border-radius: 0px !important;
+    margin: 0;
 }
 
 #astroChart { 
-    width: 600px !important; 
-    height: 600px !important; 
+    width: 560px !important; 
+    height: 560px !important; 
     display: block;
 }
 
@@ -259,7 +312,7 @@
         background: rgba(30, 41, 59, 0.95);
         color: white;
         padding: 4px 8px;
-        border-radius: 4px;
+        border-radius: 0px;
         font-size: 10px;
         font-weight: 500;
         pointer-events: none;
@@ -358,7 +411,7 @@
         width: 90%;
         max-width: 600px; /* Genişlik sınırı */
         max-height: 85vh; /* Ekran boyunu taşmasın */
-        border-radius: 8px; /* Köşeleri yuvarla */
+        border-radius: 0px; /* Köşeleri yuvarla */
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); /* Derin gölge */
         padding: 20px;
         position: relative;
@@ -389,7 +442,7 @@
         border: 1px solid #e2e8f0;
         border-radius: 4px;
         overflow-y: auto;
-        background-color: #f8fafc;
+        background-color: rgba(255, 255, 255, 0.90) !important;
     }
 
     .chart-select-item {
@@ -473,7 +526,7 @@
         width: 180px;              /* Genişlik */
         background-color: #fff;    /* Beyaz arka plan */
         border: 1px solid #ddd;    /* İnce gri kenarlık */
-        border-radius: 6px;        /* Köşeleri yuvarlatma */
+        border-radius: 0px;        /* Köşeleri yuvarlatma */
         box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Hafif gölge efekti */
         padding: 5px 0;            /* İç boşluk */
     } 
@@ -511,7 +564,7 @@
         right: 0;
         background: white;
         border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        border-radius: 0px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         min-width: 200px;
         z-index: 10000;
@@ -581,7 +634,7 @@
         width: 100%;
         padding: 8px 12px;
         border: 1px solid #e2e8f0;
-        border-radius: 4px;
+        border-radius: 0px;
         font-size: 13px;
     }
 
@@ -698,32 +751,34 @@
         <aside class="sidebar-left" style="background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; display: flex; flex-direction: column; gap: 5px; overflow: hidden;">
     
             <!-- 1. KART: ZAMAN KAPSÜLÜ -->
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; flex-shrink: 0; display: flex; flex-direction: column;">
-                <form action="/set_active_time" method="POST" style="margin-bottom: 8px; display: flex; flex-direction: column; gap: 5px;">
-                    {% if current_chart_data %}
-                        <input type="datetime-local" name="target_date" class="date-jump-input" required value="{{ current_chart_data.year }}-{{ '%02d'|format(current_chart_data.month) }}-{{ '%02d'|format(current_chart_data.day) }}T{{ '%02d'|format(current_chart_data.hour) }}:{{ '%02d'|format(current_chart_data.minute) }}" style="width: 100%;">
-                    {% else %}
-                        <input type="datetime-local" name="target_date" class="date-jump-input" style="width: 100%;">
-                    {% endif %}
-                    <button type="submit" class="btn-jump" style="width: 100%;">GİT</button>
-                </form>
+            {% if current_chart_data and current_chart_data.type in ['natal', 'transit'] %}
+    <div style="background: rgba(255, 255, 255, 0.90) !important; border: 1px solid #e2e8f0; padding: 10px; flex-shrink: 0; display: flex; flex-direction: column;">
+        <form action="/set_active_time" method="POST" style="margin-bottom: 8px; display: flex; flex-direction: column; gap: 5px;">
+            {% if current_chart_data %}
+                <input type="datetime-local" name="target_date" class="date-jump-input" required value="{{ current_chart_data.year }}-{{ '%02d'|format(current_chart_data.month) }}-{{ '%02d'|format(current_chart_data.day) }}T{{ '%02d'|format(current_chart_data.hour) }}:{{ '%02d'|format(current_chart_data.minute) }}" style="width: 100%;">
+            {% else %}
+                <input type="datetime-local" name="target_date" class="date-jump-input" style="width: 100%;">
+            {% endif %}
+            <button type="submit" class="btn-jump" style="width: 100%;">GİT</button>
+        </form>
 
-                <div class="time-control-row">
-                    <button class="time-btn" onclick="adjustTime(-1)"><i class="fas fa-chevron-left"></i></button>
-                    <select id="timeStepSelect" class="time-select" onchange="saveTimeStep()" style="flex: 1; text-align: center;">
-                        <option value="minute">Dakika</option>
-                        <option value="hour">Saat</option>
-                        <option value="day">Gün</option>
-                        <option value="week">Hafta</option>
-                        <option value="month">Ay</option>
-                        <option value="year">Yıl</option>
-                    </select>
-                    <button class="time-btn" onclick="adjustTime(1)"><i class="fas fa-chevron-right"></i></button>
-                </div>
-            </div>
+        <div class="time-control-row">
+            <button class="time-btn" onclick="adjustTime(-1)"><i class="fas fa-chevron-left"></i></button>
+            <select id="timeStepSelect" class="time-select" onchange="saveTimeStep()" style="flex: 1; text-align: center;">
+                <option value="minute">Dakika</option>
+                <option value="hour">Saat</option>
+                <option value="day">Gün</option>
+                <option value="week">Hafta</option>
+                <option value="month">Ay</option>
+                <option value="year">Yıl</option>
+            </select>
+            <button class="time-btn" onclick="adjustTime(1)"><i class="fas fa-chevron-right"></i></button>
+        </div>
+    </div>
+{% endif %}
 
             <!-- 2. KART: TRANSİT BİLGİLERİ -->
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; flex-shrink: 0; display: flex; flex-direction: column;">
+            <div style="background: rgba(255, 255, 255, 0.90) !important; border: 1px solid #e2e8f0; padding: 10px; flex-shrink: 0; display: flex; flex-direction: column;">
                 <div class="sidebar-info-card" style="margin-bottom: 5px;">
                     <div class="info-row" title="Anlık Zaman"><i class="far fa-clock"></i><span id="bar_datetime">...</span></div>
                     <div class="info-row" title="Konum"><i class="fas fa-map-marker-alt"></i><span id="bar_location_display" class="info-clickable" onclick="openSidebarLocationSearch()">İstanbul</span></div>
@@ -736,7 +791,7 @@
             </div>
 
             <!-- 3. KART: DİĞER MENÜLER -->
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; flex: 1; display: flex; flex-direction: column; overflow-y: auto;">
+            <div style="background: rgba(255, 255, 255, 0.90) !important; border: 1px solid #e2e8f0; padding: 10px; flex: 1; display: flex; flex-direction: column; overflow-y: auto;">
                 <div style="display: flex; flex-direction: column; gap: 2px;">
                     <a href="javascript:void(0)" onclick="openProgressionModal()" class="sidebar-link">İlerletilmiş Haritalar</a>
                     <a href="javascript:void(0)" onclick="openReturnModal()" class="sidebar-link">Dönüş Haritaları</a>
@@ -746,70 +801,88 @@
             </div>
 
         </aside>
+        
+        <div class="vertical-action-strip">
+    <button class="v-strip-btn" data-tooltip="En Yakın Yeni Ay/Dolunay" onclick="handleQuickJump('/api/find_nearest_lunation')">
+        <i class="fas fa-moon"></i>
+    </button>
+    
+    <button class="v-strip-btn" data-tooltip="En Yakın Tutulma" onclick="handleQuickJump('/api/find_nearest_eclipse')">
+        <i class="fas fa-sun"></i>
+    </button>
+    
+    <button class="v-strip-btn" data-tooltip="Anlık Gökyüzü (Transit)" onclick="setNowTransit()">
+        <i class="fas fa-clock"></i>
+    </button>
+    <button class="v-strip-btn" data-tooltip="Anlık İkili Gökyüzü (Transit)" onclick="setNowDoubleTransit()">
+        <i class="fas fa-user-clock"></i>
+    </button>
+    <button class="v-strip-btn" data-tooltip="Hızlı Sinastri" onclick="openQuickSynastry()">
+        <i class="fas fa-user-friends"></i>
+    </button>
+</div>
 
         <main class="chart-content">
-            {% if not is_logged_in %}
-                <div style="margin-top:50px; text-align:center;"><h2>Hoş Geldiniz</h2><p>Lütfen devam etmek için giriş yapın veya kayıt olun.</p></div>
-            {% else %}
-                {% if current_chart_data %}
-                <div class="chart-info-overlay">
-    <span class="chart-info-name">{{ current_chart_data.name }}</span>
-    
-    <div class="chart-info-details-group">
-        {% if current_chart_data.type in ['synastry', 'composite'] and current_chart_data.natal_meta_1 and current_chart_data.natal_meta_2 %}
-            {# Sinastri/Kompozit için iki haritanın tarihlerini göster #}
-            <div class="chart-info-item">
-                <i class="fas fa-user"></i>
-                <span>1: {{ current_chart_data.natal_meta_1.day }}.{{ current_chart_data.natal_meta_1.month }}.{{ current_chart_data.natal_meta_1.year }} {{ "%02d"|format(current_chart_data.natal_meta_1.hour) }}:{{ "%02d"|format(current_chart_data.natal_meta_1.minute) }}</span>
-            </div>
-            <div class="chart-info-item">
-                <i class="fas fa-user-friends"></i>
-                <span>2: {{ current_chart_data.natal_meta_2.day }}.{{ current_chart_data.natal_meta_2.month }}.{{ current_chart_data.natal_meta_2.year }} {{ "%02d"|format(current_chart_data.natal_meta_2.hour) }}:{{ "%02d"|format(current_chart_data.natal_meta_2.minute) }}</span>
-            </div>
-        {% else %}
-            {# Normal haritalar için standart bilgileri göster #}
-            <div class="chart-info-item"><i class="far fa-calendar-alt"></i><span>{{ current_chart_data.day }}.{{ current_chart_data.month }}.{{ current_chart_data.year }} {{ "%02d"|format(current_chart_data.hour) }}:{{ "%02d"|format(current_chart_data.minute) }}</span></div>
-            <div class="chart-info-item"><i class="fas fa-map-marker-alt"></i><span>{{ current_chart_data.location_name }}</span></div>
-            <div class="chart-info-item"><i class="fas fa-globe"></i><span>{{ current_chart_data.zodiac_type }} | UTC {{ current_chart_data.tz_offset }}</span></div>
-        {% endif %}
-    </div>
-
-    {# --- YENİ EKLENEN DEĞİŞTİR BUTONU --- #}
-    {# Sadece Sinastri (Dual/İkili) haritalarında görünür, kompozitte gözükmez #}
-    {% if current_chart_data.type in ['synastri', 'synastry'] %}
-    <button onclick="swapSynastryCharts()" 
-            title="İç ve Dış Haritanın Yerini Değiştir"
-            style="margin-left: auto; background: #e67e22; color: white; border: none; border-radius: 4px; padding: 6px 12px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <i class="fas fa-exchange-alt"></i> <span>DEĞİŞTİR</span>
-    </button>
-    {% endif %}
-    
-</div>
-{% endif %}
-                
-                <div id="customTooltip" class="custom-tooltip"></div>
-                <div class="chart-wheel-placeholder">
-                    {% if last_chart %}
-                        <svg id="astroChart" viewBox="0 0 700 700"></svg>
-                    {% else %}
-                        <p style="padding: 20px; text-align: center; color: #777; margin-top: 50px;">Harita bekleniyor...</p>
-                    {% endif %}
-                </div>
-                
-                <div id="aktif_haritalar" class="tab-content">
-                    {% include 'active_charts_list.html' ignore missing %}
-                </div>
-                <div id="hesaplama_raporu" class="tab-content active" style="display:block; width:100%; padding:0 20px;">
-                    {% if report_success %}
-                        <div class="report-container">
-                            {% include 'report_output.html' ignore missing %}
+    {% if not is_logged_in %}
+            <h2>Hoş Geldiniz</h2>
+            <p>Lütfen devam etmek için giriş yapın veya kayıt olun.</p>
+        </div>
+    {% else %}
+        {% if current_chart_data %}
+            <div class="chart-info-overlay">
+                <span class="chart-info-name">{{ current_chart_data.name }}</span>
+                <div class="chart-info-details-group">
+                    {% if current_chart_data.type in ['synastry', 'composite'] and current_chart_data.natal_meta_1 and current_chart_data.natal_meta_2 %}
+                        <div class="chart-info-item">
+                            <i class="fas fa-user"></i>
+                            <span>1: {{ current_chart_data.natal_meta_1.day }}.{{ current_chart_data.natal_meta_1.month }}.{{ current_chart_data.natal_meta_1.year }} {{ "%02d"|format(current_chart_data.natal_meta_1.hour) }}:{{ "%02d"|format(current_chart_data.natal_meta_1.minute) }}</span>
                         </div>
-                    {% elif report_success == False %}
-                        <div class="alert error">❌ {{ report_error }}</div>
+                        <div class="chart-info-item">
+                            <i class="fas fa-user-friends"></i>
+                            <span>2: {{ current_chart_data.natal_meta_2.day }}.{{ current_chart_data.natal_meta_2.month }}.{{ current_chart_data.natal_meta_2.year }} {{ "%02d"|format(current_chart_data.natal_meta_2.hour) }}:{{ "%02d"|format(current_chart_data.natal_meta_2.minute) }}</span>
+                        </div>
+                    {% else %}
+                        <div class="chart-info-item"><i class="far fa-calendar-alt"></i><span>{{ current_chart_data.day }}.{{ current_chart_data.month }}.{{ current_chart_data.year }} {{ "%02d"|format(current_chart_data.hour) }}:{{ "%02d"|format(current_chart_data.minute) }}</span></div>
+                        <div class="chart-info-item"><i class="fas fa-map-marker-alt"></i><span>{{ current_chart_data.location_name }}</span></div>
+                        <div class="chart-info-item"><i class="fas fa-globe"></i><span>{{ current_chart_data.zodiac_type }} | UTC {{ current_chart_data.tz_offset }}</span></div>
                     {% endif %}
                 </div>
-            {% endif %}
-        </main>
+
+                {% if current_chart_data.type in ['synastri', 'synastry'] %}
+                <button onclick="swapSynastryCharts()" title="İç ve Dış Haritanın Yerini Değiştir" style="margin-left: auto; background: #e67e22; color: white; border: none; border-radius: 0px; padding: 4px 8px; font-size: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 24px;">
+                    <i class="fas fa-exchange-alt" style="font-size: 9px;"></i> <span>DEĞİŞTİR</span>
+                </button>
+                {% endif %}
+            </div>
+        {% endif %}
+        
+        <div class="chart-scroll-container">
+            <div id="customTooltip" class="custom-tooltip"></div>
+            
+            <div class="chart-wheel-placeholder">
+                {% if last_chart %}
+                    <svg id="astroChart" viewBox="0 0 700 700"></svg>
+                {% else %}
+                    <p style="padding: 20px; text-align: center; color: #777; margin-top: 50px;">Harita bekleniyor...</p>
+                {% endif %}
+            </div>
+            
+            <div id="aktif_haritalar" class="tab-content">
+                {% include 'active_charts_list.html' ignore missing %}
+            </div>
+
+            <div id="hesaplama_raporu" class="tab-content active" style="display:block; width:100%; padding:0 20px;">
+                {% if report_success %}
+                    <div class="report-container">
+                        {% include 'report_output.html' ignore missing %}
+                    </div>
+                {% elif report_success == False %}
+                    <div class="alert error">❌ {{ report_error }}</div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+</main>
 
         <div class="right-sidebar-wrapper" id="rightSidebarWrapper">
             <div id="right-panel-toggle" onclick="toggleRightPanel()"><i class="fas fa-chevron-right"></i></div>
@@ -1778,6 +1851,7 @@ function drawSynastryRingDetailed(planets, isOuter) {
 
     {% include 'return_module.html' ignore missing %}
     {% include 'synastry_module.html' ignore missing %}
+    {% include 'progression_module.html' ignore missing %}
 
 </body>
 </html>
