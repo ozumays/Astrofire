@@ -2,8 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from flask_session import Session 
 import os 
 import json
-import datetime 
-from datetime import timedelta 
+from datetime import datetime, timedelta # En sağlam yöntem budur.
 import traceback 
 import random 
 import math
@@ -210,7 +209,7 @@ def harita_kaydet_buluta(kullanici_adi, harita_ismi, koordinatlar):
             "kullanici": kullanici_adi,
             "harita_adi": harita_ismi,
             "koordinatlar": koordinatlar,
-            "tarih": datetime.datetime.now()
+            "tarih": datetime.now()
         }
         maps_col.insert_one(yeni_veri)
         print(f"☁️ [BULUT] {harita_ismi} MongoDB'ye kaydedildi!")
@@ -551,12 +550,6 @@ def admin_edit_chart(id):
                 target['asc_sign'] = new_asc; target['sun_sign'] = new_sun
             save_json_data(DATA_FILE, charts)
     except Exception as e: print(f"Edit Hatası: {e}")
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/admin/delete_chart/<int:id>')
-def admin_delete_chart(id):
-    if not session.get('admin_access'): return redirect(url_for('admin_login_page'))
-    charts = [c for c in load_json_data(DATA_FILE) if c['id'] != id]; save_json_data(DATA_FILE, charts)
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/add_course', methods=['POST'])
@@ -983,7 +976,7 @@ def search_location():
     try:
         d = request.get_json()
         city = d.get('city')
-        now = datetime.datetime.now()
+        now = datetime.now()
         
         # Tarihi al
         try:
@@ -1899,10 +1892,10 @@ def api_calculate_progression():
         house_code = ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(source_chart.get('house_system', 'Placidus'), 'P')
 
         # Hedef Zaman (Bugün veya seçilen tarih)
-        now = datetime.datetime.now()
+        now = datetime.now()
         if data.get('target_date'):
             try:
-                dt_target = datetime.datetime.strptime(data.get('target_date'), '%Y-%m-%dT%H:%M')
+                dt_target = datetime.strptime(data.get('target_date'), '%Y-%m-%dT%H:%M')
                 now = dt_target
             except: pass
 
@@ -1949,12 +1942,22 @@ def api_calculate_progression():
             title = f"İkincil İlerletim ({now.day}.{now.month}.{now.year})"
             
             # Progressed tarih hesabı
-            from datetime import date
-            birth_date = date(natal_year, natal_month, natal_day)
-            target_date_obj = date(now.year, now.month, now.day)
-            days_diff = (target_date_obj - birth_date).days
-            prog_calc_date = datetime.datetime(natal_year, natal_month, natal_day) + timedelta(days=days_diff)
-            prog_year, prog_month, prog_day = prog_calc_date.year, prog_calc_date.month, prog_calc_date.day
+from datetime import datetime, timedelta, date
+
+# 'now' tanımlı değilse bugünü alalım (Hata vermemesi için)
+now = datetime.now() 
+
+birth_date = date(natal_year, natal_month, natal_day)
+target_date_obj = date(now.year, now.month, now.day)
+
+# Gün farkı hesabı
+days_diff = (target_date_obj - birth_date).days
+
+# DÜZELTME: datetime modül hatası giderildi ve natal_hour/minute varsa eklendi
+prog_calc_date = datetime(natal_year, natal_month, natal_day) + timedelta(days=days_diff)
+
+# Sonuçların atanması
+prog_year, prog_month, prog_day = prog_calc_date.year, prog_calc_date.month, prog_calc_date.day
 
         # C) SOLAR ARC
         else: # solar_arc
@@ -2371,106 +2374,10 @@ def set_active_time():
     chart = active_charts[idx]
     
     try:
-        # 1. HEDEF ZAMANI AL
-        dt = datetime.datetime.strptime(request.form.get('target_date'), '%Y-%m-%dT%H:%M')
+        # 1. HEDEF ZAMANI AL (Düzeltme: datetime.datetime yerine datetime kullanıldı)
+        dt = datetime.strptime(request.form.get('target_date'), '%Y-%m-%dT%H:%M')
         
         # --- SİNASTRİ KONTROLÜ VE İLERLETME ---
-        if chart.get('type') in ['synastry', 'composite']:
-            
-            meta1 = chart.get('natal_meta_1')
-            meta2 = chart.get('natal_meta_2')
-            
-            if not meta1 or not meta2: raise Exception("Sinastri meta verileri eksik.")
-
-            # İÇ ÇARK (NATAL - meta1): HER ZAMAN SABİT DOĞUM TARİHİYLE HESAPLA
-            _, data1 = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
-                meta1['year'], meta1['month'], meta1['day'], meta1['hour'], meta1['minute'], 
-                float(meta1['tz_offset']), float(meta1['lat']), float(meta1['lon']), None, 
-                ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(meta1.get('house_system'), 'P'), 
-                meta1.get('zodiac_type', 'Astronomik')
-            )
-            
-            # DIŞ ÇARK (PROGRESSED - meta2): YENİ ZAMANLA HESAPLA (İLERLER)
-            _, data2 = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
-                dt.year, dt.month, dt.day, dt.hour, dt.minute, 
-                float(meta2['tz_offset']), float(meta2['lat']), float(meta2['lon']), None, 
-                ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(meta2.get('house_system'), 'P'), 
-                meta2.get('zodiac_type', 'Astronomik')
-            )
-            
-            # İsim ve zodyak bilgisini ekle
-            data1['name'] = meta1['name']
-            data1['zodiac_type'] = meta1.get('zodiac_type', 'Astronomik')
-            data2['name'] = meta2['name']
-            data2['zodiac_type'] = meta2.get('zodiac_type', 'Astronomik')
-            
-            # Sinastri paketini doğru yapıda oluştur
-            # chart1 = DIŞ çark (ilerleyen, meta2) 
-            # chart2 = İÇ çark (sabit, meta1)
-            synastry_package = {
-                'type': 'synastry',
-                'chart1': data2,  # DIŞ ÇARK (İlerletilmiş)
-                'chart2': data1,  # İÇ ÇARK (Sabit)
-                'houses': data1.get('houses', {}),
-                'cusps': data1.get('cusps', {}),
-                'boundaries': data1.get('boundaries', [])
-            }
-            
-            # Session'ı güncelle
-            chart['saved_data'] = synastry_package
-            
-            # Layout.html için güncel zamanı kaydet (chart2'nin zamanı)
-            chart['name'] = f"Sinastri: {meta1['name']} & {meta2['name']}"
-            chart['year'] = dt.year 
-            chart['month'] = dt.month
-            chart['day'] = dt.day
-            chart['hour'] = dt.hour
-            chart['minute'] = dt.minute
-
-            res = "Sinastri İlerletildi"
-            data = synastry_package
-            
-        else:
-            # Natal Harita Seçiliyse: Sadece o haritayı ilerlet (Eski Mantık)
-            chart.update({'year': dt.year, 'month': dt.month, 'day': dt.day, 'hour': dt.hour, 'minute': dt.minute})
-            res, data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
-                chart['year'], chart['month'], chart['day'], chart['hour'], chart['minute'], 
-                float(chart['tz_offset']), float(chart['lat']), float(chart['lon']), None, 
-                ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(chart.get('house_system'), 'P'), 
-                chart.get('zodiac_type', 'Astronomik')
-            )
-            
-        # Ortak Session Güncelleme
-        active_charts[idx] = chart; 
-        session['active_charts'] = active_charts; 
-        session['last_chart'] = data; 
-        session['last_report'] = res; 
-        session['current_chart_data'] = chart
-
-    except Exception as e: 
-        session['report_error'] = str(e)
-        traceback.print_exc()
-
-    return redirect(url_for('home', tab='aktif'))
-
-@app.route('/adjust_active_time', methods=['POST']) 
-def adjust_active_time():
-    active_charts = session.get('active_charts', []); idx = session.get('current_chart_index', 0)
-    if not active_charts or idx >= len(active_charts): return redirect(url_for('home', tab='aktif'))
-    chart = active_charts[idx]
-    
-    try:
-        u = request.form.get('unit'); a = int(request.form.get('amount')); dt = datetime.datetime(chart['year'], chart['month'], chart['day'], chart['hour'], chart['minute'])
-        
-        # Zamanı ayarla
-        if u == 'minute': dt += relativedelta(minutes=a)
-        elif u == 'hour': dt += relativedelta(hours=a)
-        elif u == 'day': dt += relativedelta(days=a)
-        elif u == 'week': dt += relativedelta(weeks=a)
-        elif u == 'month': dt += relativedelta(months=a)
-        elif u == 'year': dt += relativedelta(years=a)
-        
-        # --- SİNASTRİ/İLERLETİM KONTROLÜ ---
         if chart.get('type') in ['synastry', 'composite']:
             
             meta1 = chart.get('natal_meta_1')
@@ -2514,14 +2421,99 @@ def adjust_active_time():
             chart['saved_data'] = synastry_package
             
             # Layout.html için güncel zamanı kaydet
-            chart['year'] = dt.year
+            chart['name'] = f"Sinastri: {meta1['name']} & {meta2['name']}"
+            chart['year'] = dt.year 
             chart['month'] = dt.month
             chart['day'] = dt.day
             chart['hour'] = dt.hour
             chart['minute'] = dt.minute
-            
+
             res = "Sinastri İlerletildi"
             data = synastry_package
+            
+        else:
+            # Natal Harita Seçiliyse: Sadece o haritayı ilerlet (Eski Mantık)
+            chart.update({'year': dt.year, 'month': dt.month, 'day': dt.day, 'hour': dt.hour, 'minute': dt.minute})
+            res, data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
+                chart['year'], chart['month'], chart['day'], chart['hour'], chart['minute'], 
+                float(chart['tz_offset']), float(chart['lat']), float(chart['lon']), None, 
+                ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(chart.get('house_system'), 'P'), 
+                chart.get('zodiac_type', 'Astronomik')
+            )
+            
+        # Ortak Session Güncelleme
+        active_charts[idx] = chart; 
+        session['active_charts'] = active_charts; 
+        session['last_chart'] = data; 
+        session['last_report'] = res; 
+        session['current_chart_data'] = chart
+        session.modified = True # KRİTİK: Değişikliği zorla kaydeder
+
+    except Exception as e: 
+        session['report_error'] = str(e)
+        traceback.print_exc()
+
+    return redirect(url_for('home', tab='aktif'))
+
+@app.route('/adjust_active_time', methods=['POST']) 
+def adjust_active_time():
+    active_charts = session.get('active_charts', []); idx = session.get('current_chart_index', 0)
+    if not active_charts or idx >= len(active_charts): return redirect(url_for('home', tab='aktif'))
+    chart = active_charts[idx]
+    
+    try:
+        u = request.form.get('unit'); a = int(request.form.get('amount'))
+        # DÜZELTME: datetime.datetime yerine SADECE datetime kullanıldı
+        dt = datetime(chart['year'], chart['month'], chart['day'], chart['hour'], chart['minute'])
+        
+        # Zamanı ayarla
+        if u == 'minute': dt += relativedelta(minutes=a)
+        elif u == 'hour': dt += relativedelta(hours=a)
+        elif u == 'day': dt += relativedelta(days=a)
+        elif u == 'week': dt += relativedelta(weeks=a)
+        elif u == 'month': dt += relativedelta(months=a)
+        elif u == 'year': dt += relativedelta(years=a)
+        
+        # --- SİNASTRİ/İLERLETİM KONTROLÜ ---
+        if chart.get('type') in ['synastry', 'composite']:
+            
+            meta1 = chart.get('natal_meta_1')
+            meta2 = chart.get('natal_meta_2')
+            
+            if not meta1 or not meta2: raise Exception("Sinastri meta verileri eksik.")
+
+            # İÇ ÇARK (NATAL - meta1): HER ZAMAN SABİT DOĞUM TARİHİYLE HESAPLA
+            _, data1 = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
+                meta1['year'], meta1['month'], meta1['day'], meta1['hour'], meta1['minute'], 
+                float(meta1['tz_offset']), float(meta1['lat']), float(meta1['lon']), None, 
+                ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(meta1.get('house_system'), 'P'), 
+                meta1.get('zodiac_type', 'Astronomik')
+            )
+            
+            # DIŞ ÇARK (PROGRESSED - meta2): YENİ ZAMANLA HESAPLA (İLERLER)
+            _, data2 = ASTRO_MOTOR_NESNES_I.calculate_chart_data(
+                dt.year, dt.month, dt.day, dt.hour, dt.minute, 
+                float(meta2['tz_offset']), float(meta2['lat']), float(meta2['lon']), None, 
+                ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(meta2.get('house_system'), 'P'), 
+                meta2.get('zodiac_type', 'Astronomik')
+            )
+            
+            # İsim ve zodyak bilgisini ekle
+            data1['name'] = meta1['name']
+            data1['zodiac_type'] = meta1.get('zodiac_type', 'Astronomik')
+            data2['name'] = meta2['name']
+            data2['zodiac_type'] = meta2.get('zodiac_type', 'Astronomik')
+            
+            # Sinastri paketini oluştur
+            synastry_package = {
+                'type': 'synastry',
+                'chart1': data2, 'chart2': data1,
+                'houses': data1.get('houses', {}), 'cusps': data1.get('cusps', {}), 'boundaries': data1.get('boundaries', [])
+            }
+            
+            chart['saved_data'] = synastry_package
+            chart['year'] = dt.year; chart['month'] = dt.month; chart['day'] = dt.day; chart['hour'] = dt.hour; chart['minute'] = dt.minute
+            res = "Sinastri İlerletildi"; data = synastry_package
             
         else:
             # Natal Harita Seçiliyse: (Eski Mantık)
@@ -2530,6 +2522,7 @@ def adjust_active_time():
             
         # Ortak Session Güncelleme
         active_charts[idx] = chart; session['active_charts'] = active_charts; session['last_chart'] = data; session['last_report'] = res; session['current_chart_data'] = chart
+        session.modified = True # KRİTİK
     except Exception as e: session['report_error'] = str(e); traceback.print_exc()
     return redirect(url_for('home', tab='aktif'))
 
@@ -2546,7 +2539,7 @@ def set_active_chart(index):
         else:
             txt, data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(sel['year'], sel['month'], sel['day'], sel['hour'], sel['minute'], float(sel['tz_offset']), float(sel['lat']), float(sel['lon']), None, ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(sel.get('house_system'), 'P'), sel.get('zodiac_type', 'Astronomik'))
             session['last_chart'] = data; session['last_report'] = txt
-            
+        session.modified = True
     return redirect(url_for('home', tab='aktif'))
 
 @app.route('/delete_active_chart/<int:index>')
