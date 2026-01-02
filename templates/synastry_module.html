@@ -1,76 +1,377 @@
-<div id="synastryModal" class="modal-overlay" style="display:none; align-items:center; justify-content:center; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999;">
-    <div class="synastry-modal-box" style="width: 900px; height: 580px; max-width: 95%; display:flex; flex-direction:column; background:white; border-radius:8px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.2); font-family: 'Segoe UI', sans-serif;">
+<style>
+    /* =========================================
+       1. MODAL ÇERÇEVESİ (GİZLİ KATMAN)
+       ========================================= */
+    #synastryModal {
+        display: none; 
+        align-items: center; 
+        justify-content: center; 
+        position: fixed; 
+        top: 0; left: 0; 
+        width: 100%; height: 100%; 
+        z-index: 9999;
+    }
+
+    /* =========================================
+       2. ANA MODAL KUTUSU (TASARIM & BLUR)
+       ========================================= */
+    .synastry-modal-box {
+        /* Boyutlar */
+        width: 700px !important; 
+        height: 60vh !important;
+        max-width: 95vw; 
         
-        <div class="synastry-header" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); padding:12px 15px; color:white; display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-weight:700; font-size:13px; letter-spacing:0.5px;"><i class="fas fa-layer-group"></i> Karşılaştırmalı Analiz</span>
-            <span style="cursor:pointer; font-size:16px;" onclick="closeSynastryModal()">✕</span>
+        /* Yerleşim */
+        display: flex; 
+        flex-direction: column; 
+        position: relative; 
+        overflow: hidden; 
+        font-family: 'Segoe UI', sans-serif;
+
+        /* Dış Çerçeve ve Gölge */
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+
+        /* Arka Plan Görseli */
+        background-image: url('/static/images/synastry-bg.svg') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+    }
+
+    /* SANAL CAM KATMANI (Blur ve Beyazlık) */
+    .synastry-modal-box::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        
+        background-color: rgba(255, 255, 255, 0.089) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        
+        z-index: 0; 
+    }
+
+    /* İçeriklerin camın üstüne çıkması için */
+    .synastry-modal-box > * { 
+        position: relative; 
+        z-index: 1; 
+    }
+
+    /* =========================================
+       3. HEADER (BAŞLIK)
+       ========================================= */
+    .synastry-header {
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center;
+        flex-shrink: 0; 
+        padding: 15px; 
+        
+        background: rgba(0, 0, 0, 0.568) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2); 
+        color: rgb(233, 233, 233); 
+    }
+
+    .synastry-header-title { 
+        font-weight: 700; 
+        font-size: 14px; 
+        letter-spacing: 0.5px; 
+    }
+    
+    .synastry-close-btn { 
+        cursor: pointer; 
+        font-size: 15px; 
+        transition: 0.2s; 
+    }
+    .synastry-close-btn:hover { color: #f87171; }
+
+    /* =========================================
+       4. GÖVDE (BODY)
+       ========================================= */
+    .synastry-body {
+        display: flex; 
+        flex: 1; 
+        padding: 15px; 
+        gap: 15px; 
+        overflow: hidden; 
+    }
+
+    /* --- SOL PANEL (LİSTE) --- */
+    .syn-left-panel {
+        flex: 1.8; 
+        display: flex; 
+        flex-direction: column; 
+        border-right: 1px solid rgba(255, 255, 255, 0.2);   
+        padding-right: 10px;
+    }
+
+    /* Liste Başlıkları */
+    .syn-list-header {
+        display: grid; 
+        grid-template-columns: 2fr 1.3fr 0.9fr; 
+        padding: 0 10px 5px 10px; 
+        margin-bottom: 5px; 
+        border-bottom: 1px solid rgba(255,255,255,0.1); 
+        flex-shrink: 0;
+        position: relative; /* Sayaç için referans */
+    }
+
+    .syn-col-header {
+        font-size: 11px; /* 10px'ten 11px'e çıkarıldı */
+        font-weight: 700; 
+        color: rgba(255, 255, 255, 0.979) !important;
+        
+        /* İSTEDİĞİN GÖLGELER EKLENDİ */
+        text-shadow: 
+            0 0 1px rgba(0, 0, 0, 0.74), 
+            0 0 5px rgba(8, 0, 0, 0.171), 
+            0 0 15px rgba(255, 255, 255, 0.5), 
+            0 0 30px rgba(255, 255, 255, 0.3);
+    }
+
+    /* Sayaç (Tasarımı silindi, sadece sağa hizalı yazı) */
+    .syn-selection-count {
+        position: absolute;
+        right: 0; top: 0;
+        font-size: 10px;
+        color: #ddd;
+        /* Background, border vb. tüm tasarımlar silindi */
+    }
+
+    /* Liste Kutusu */
+    .synastry-list {
+        flex: 1; 
+        overflow-y: auto; 
+        padding: 2px;
+    }
+
+    /* Scrollbar */
+    .synastry-list::-webkit-scrollbar { width: 4px; }
+    .synastry-list::-webkit-scrollbar-thumb { 
+        background: rgba(255,255,255,0.2) !important;
+        border-radius: 5px !important;
+    }
+
+    /* --- SAĞ PANEL (SEÇENEKLER) --- */
+    .syn-right-panel {
+        flex: 1; 
+        display: flex; 
+        flex-direction: column; 
+        gap: 15px;
+    }
+
+    /* =========================================
+       5. LİSTE ÖĞELERİ (Sadece Bu Modal İçin)
+       ========================================= */
+    #synastryModal .chart-select-item {
+        display: grid; 
+        grid-template-columns: 2fr 1.3fr 0.9fr; 
+        align-items: center; 
+        padding: 12px 10px;
+        margin-bottom: 4px; 
+        font-size: 11px;
+        
+        /* Normal Görünüm */
+        background: rgba(192, 228, 243, 0.281);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.226) !important; 
+        color: rgba(1, 13, 19, 0.87) !important;
+        
+        cursor: pointer; 
+        transition: all 0.2s ease;
+    }
+
+    /* 1. HOVER DURUMU (Üzerine Gelince) */
+    #synastryModal .chart-select-item:hover {
+        background-color: rgba(7, 44, 68, 0.705) !important;
+        border: 1px solid rgba(56, 189, 248, 0.5) !important;
+        color: white !important;
+        box-shadow: inset 3px 0 0 #38bdf8 !important;
+    }
+    
+    /* 2. SEÇİLİ DURUMU (Tıklanınca) */
+    /* Hem .selected sınıfı hem de içinde seçili input varsa çalışır */
+    #synastryModal .chart-select-item.selected,
+    #synastryModal .chart-select-item:has(input:checked) {
+        background-color: rgba(7, 44, 68, 0.705) !important;
+        border: 1px solid rgba(56, 189, 248, 0.5) !important;
+        color: white !important;
+        
+        /* Sol tarafındaki mavi çizgi */
+        box-shadow: inset 3px 0 0 #38bdf8 !important;
+    }
+
+    /* Seçili Durumda Metin Parlaması */
+    #synastryModal .chart-select-item.selected .item-name,
+    #synastryModal .chart-select-item:has(input:checked) .item-name {
+        color: rgb(233, 233, 233) !important; 
+        text-shadow: 0 0 2px rgba(255, 255, 255, 0.596);
+    }
+
+    /* =========================================
+       6. SAĞ PANEL SEÇENEK KUTULARI
+       ========================================= */
+    .syn-options-box {
+        /* Sağ Çapraz Alta Doğru Gradient (Geçiş) */
+        /* Sol üstten (hafif açık) sağ alta (koyu) doğru akar */
+        background: rgba(0, 0, 0, 0) !important;
+        
+        padding: 15px; 
+        backdrop-filter: blur(5px);
+    }
+
+    .syn-options-label {
+        font-size: 11px; font-weight: 800; color: #e7e7e7 !important;
+        display: block; margin-bottom: 12px; padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.295);  
+    }
+
+    /* Radio Buton Kutuları */
+    .calc-type-item {
+        display: flex; align-items: center;
+        padding: 10px; margin-bottom: 8px;
+        
+        background: rgba(68, 33, 6, 0.356) !important;
+        backdrop-filter: blur(20px) !important;        
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(59, 29, 6, 0.123) !important;
+        
+        cursor: pointer; transition: 0.2s;
+    }
+    
+    /* Hover ve Seçili (Turuncu) */
+    .calc-type-item:hover, 
+    .calc-type-item:has(input:checked) {
+        background-color: rgba(180, 83, 9, 0.3) !important;
+        border: 1px solid rgba(245, 158, 11, 0.5) !important;
+        box-shadow: inset 1px 0 0 #f59e0b !important;
+        color: white;
+    }
+    
+    .calc-type-item input { display: none; }
+    .calc-type-item span { font-size: 11px; color: #ddd; }
+    
+    /* Seçili Radyo Buton Metin Gölgesi EKLENDİ */
+    .calc-type-item:has(input:checked) span {
+        color: rgb(233, 233, 233) !important; 
+        text-shadow: 0 0 2px rgba(255, 255, 255, 0.596);
+    }
+    /* =========================================
+       8. HESAPLA BUTONU (GÜNCELLENEN YEŞİL)
+       Yeşil Gradient Buton
+       ========================================= */
+    #btnSynCalc {
+        width: 100%; 
+        padding: 10px; 
+        
+        /* Pasif Hali (Disabled) */
+        background: rgba(55, 59, 54, 0.658) !important;  
+        color: rgba(184, 184, 184, 0.658) !important;  
+        border: 1px solid rgba(92, 94, 92, 0.658) !important;   
+        
+        border-radius: 0px; 
+        font-weight: 600; 
+        cursor: not-allowed; 
+        transition: all 0.3s ease; 
+        font-size: 11px; 
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    
+    /* Aktif Hali (Enabled - YEŞİL) */
+    #btnSynCalc:enabled {
+        /* Canlı Yeşil Gradient */
+        background: linear-gradient(135deg, #15803d 0%, #16a34a 100%) !important; 
+        border: 1px solid #22c55e !important; 
+        color: rgb(255, 255, 255) !important; 
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
+    }
+
+    #btnSynCalc:enabled:hover { 
+        background: linear-gradient(135deg, #16a34a 0%, #4ade80 100%) !important;
+        box-shadow: 0 6px 20px rgba(22, 163, 74, 0.6) !important; 
+        transform: translateY(-1px);
+        color: #ffffff !important; 
+    }
+
+    /* Scrollbar Tasarımı */
+    .synastry-list::-webkit-scrollbar { width: 4px; }
+    .synastry-list::-webkit-scrollbar-thumb { 
+        background: rgba(255,255,255,0.2) !important;
+        border-radius: 5px !important;
+    }
+    .synastry-list::-webkit-scrollbar-track { background: transparent; }
+</style>
+
+<div id="synastryModal" class="modal-overlay">
+    <div class="synastry-modal-box">
+        
+        <div class="synastry-header">
+            <span class="synastry-header-title"><i class="fas fa-layer-group"></i> Karşılaştırmalı Analiz</span>
+            <span class="synastry-close-btn" onclick="closeSynastryModal()">✕</span>
         </div>
 
-        <div class="synastry-body" style="display:flex; flex:1; padding:15px; gap:15px; overflow:hidden;">
+        <div class="synastry-body">
             
-            <div style="flex:1.8; display:flex; flex-direction:column; border-right:1px solid #eee; padding-right:10px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <h4 id="chartSelectionTitle" style="font-size:11px; color:#1565c0; margin:0; font-weight:800; text-transform:uppercase;">2 HARİTA SEÇİN</h4>
-                    <span id="selectionCount" style="font-size:10px; background:#eff6ff; color:#1e40af; padding:3px 8px; border-radius:10px; font-weight:bold; border:1px solid #dbeafe;">0/2</span>
-                </div>
+            <div class="syn-left-panel">
+    
+    <div class="syn-list-header">
+        <span class="syn-col-header">İSİM</span>
+        <span class="syn-col-header">TARİH</span>
+        <span class="syn-col-header">TİP</span>
+    </div>
+
+    <div class="synastry-list">
+        {% if active_charts %}
+            {% for chart in active_charts %}
+                {% if chart.type == 'natal' or chart.type == 'transit' %}
                 
-                <div style="display:grid; grid-template-columns: 30px 2fr 1.3fr 0.9fr; padding:0 8px 5px 8px; border-bottom:1px solid #eee; margin-bottom:5px; padding-right: 22px;">
-                    <span></span> 
-                    <span style="font-size:9px; font-weight:bold; color:#999;">İSİM</span>
-                    <span style="font-size:9px; font-weight:bold; color:#999; text-align:center;">TARİH</span>
-                    <span style="font-size:9px; font-weight:bold; color:#999; text-align:center;">TİP</span>
-                </div>
-
-                <div class="synastry-list" style="flex:1; overflow-y:auto; border:1px solid #cce0f5; background-color: #f8fbff; border-radius:4px; padding:2px;">
-                    {% if active_charts %}
-                        {% for chart in active_charts %}
-                            {% if chart.type == 'natal' or chart.type == 'transit' %}
-                            <div class="chart-select-item" 
-                                 onclick="toggleChartSelection(this, {{ loop.index0 }})" 
-                                 style="display:grid; grid-template-columns: 30px 2fr 1.3fr 0.9fr; align-items:center; padding:8px 8px; margin-bottom:2px; border-bottom:1px solid rgba(0,0,0,0.03); cursor:pointer; transition:0.1s;">
-                                
-                                <div style="display:flex; justify-content:center;">
-                                    <input type="checkbox" value="{{ loop.index0 }}" style="pointer-events:none;">
-                                </div>
-                                <div style="font-weight:700; font-size:11px; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:5px;">
-                                    {{ chart.name }}
-                                </div>
-                                <div style="font-size:10px; color:#666; text-align:center;">
-                                    {{ chart.day }}.{{ chart.month }}.{{ chart.year }}
-                                </div>
-                                <div style="text-align:center;">
-                                    <span class="zodiac-badge" style="font-size:9px; background:#fff; border:1px solid #bfdbfe; color:#1e40af; padding:0px 4px; border-radius:3px; font-weight:600; display:inline-block;">
-                                        {{ chart.zodiac_type|truncate(4, True, '') }}
-                                    </span>
-                                </div>
-                            </div>
-                            {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <div style="padding:20px; text-align:center; color:#777; font-size:11px;">Aktif harita yok.</div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div style="flex:1; display:flex; flex-direction:column; gap:15px;">
-                <div style="background:#f8fafc; padding:15px; border-radius:6px; border:1px solid #e2e8f0;">
-                    <label style="font-size:11px; font-weight:800; color:#475569; display:block; margin-bottom:10px; border-bottom:1px solid #e2e8f0; padding-bottom:5px;">HESAPLAMA TÜRÜ</label>
-                    <div style="display:flex; flex-direction:column; gap:8px;">
-                        <label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer; padding:5px;">
-                            <input type="radio" name="s_type" value="Sinastri" checked> <span style="color:#333;">Sinastri (Halkalı Görünüm)</span>
-                        </label>
-                        <label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer; padding:5px;">
-                            <input type="radio" name="s_type" value="Kompozit"> <span style="color:#333;">Kompozit (Tek Harita)</span>
-                        </label>
+                <div class="chart-select-item" onclick="toggleChartSelection(this, {{ loop.index0 }})">
+                    <input type="checkbox" value="{{ loop.index0 }}" style="display:none;" class="chart-checkbox">
+                    <div class="item-name">{{ chart.name }}</div>
+                    <div class="item-date">{{ chart.day }}.{{ chart.month }}.{{ chart.year }}</div>
+                    <div style="text-align:center;">
+                        <span class="zodiac-badge">{{ chart.zodiac_type|truncate(4, True, '') }}</span>
                     </div>
                 </div>
+                
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <div style="padding:20px; text-align:center; color:#666; font-size:11px;">Aktif harita yok.</div>
+        {% endif %}
+    </div>
+</div>
+
+            <div class="syn-right-panel">
+                <div class="syn-options-box">
+                    <label class="syn-options-label">HESAPLAMA TÜRÜ</label>
+                    
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        
+                        <label class="calc-type-item">
+                            <input type="radio" name="s_type" value="Sinastri" checked>
+                            <span>Sinastri (Halkalı Görünüm)</span>
+                        </label>
+
+                        <label class="calc-type-item">
+                            <input type="radio" name="s_type" value="Kompozit">
+                            <span>Kompozit (Tek Harita)</span>
+                        </label>
+
+                    </div>
+                </div>
+                
                 <div style="margin-top:auto;">
-                    <button type="button" id="btnSynCalc" onclick="submitSynastry()" disabled 
-                            style="width:100%; padding:12px; background:#94a3b8; color:white; border:none; border-radius:4px; font-weight:bold; cursor:not-allowed; box-shadow:none; transition:0.3s; font-size:12px; letter-spacing:0.5px;">
+                    <button type="button" id="btnSynCalc" onclick="submitSynastry()" disabled>
                         HESAPLA & KAYDET
                     </button>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
