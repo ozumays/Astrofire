@@ -3,18 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Astro-Fire Web</title>
+    <title>Astro-Fire</title>
     <!-- Meta refresh kaldırıldı - otomatik yenileme kapatıldı -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style_modern.css') }}" onerror="console.log('CSS yüklenemedi')">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-<style>
-    /* --- ASTRO SHARP THEME (USER EDITS + 3PX BOTTOM GAP) --- */
+  
+    <style>
+    /* =========================================
+       1. SIFIRLAMA VE TEMEL AYARLAR
+       ========================================= */
+    * { 
+        box-sizing: border-box; 
+    }
 
-    /* 1. SIFIRLAMA VE TEMEL AYARLAR */
-    * { box-sizing: border-box; }
-
-    .video-overlay { display: none; }
+    .video-overlay { 
+        display: none; 
+    }
 
     html, body { 
         margin: 0 !important; 
@@ -33,539 +37,90 @@
         color: #1e293b;
     }
 
-    /* 2. HEADER (Üst Menü - Yükseklik: 50px) */
+    /* =========================================
+       2. HEADER VE NAVİGASYON (Üst Menü)
+       ========================================= */
     .main-header { 
         position: fixed;
         top: 0; left: 0; right: 0;
         height: 50px; 
-        background: rgba(255, 255, 255, 0.90) !important;
-        border-bottom: 1px solid #e2e8f0; 
+        background: rgba(0, 0, 0, 0); 
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid hsla(0, 0%, 100%, 0.116);
         display: flex; 
         align-items: center; 
         justify-content: space-between; 
         padding: 0 10px;
         z-index: 20;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        box-shadow: 0 4px 30px hsla(0, 0%, 0%, 0.1);
     }
 
-    .logo-container { display: flex; align-items: center; }
-    .logo-svg { height: 40px; width: 40px; margin-right: 10px; }
-    .logo-text-wrapper { display: flex; flex-direction: column; justify-content: center; }
-    .logo-title { line-height: 1.1; font-weight: bold; color: #1565c0; font-size: 20px; }
-    .logo-subtitle { font-family: 'Garamond', serif; font-size: 11px; color: #64748b; padding-top: 2px; }
-    
-    .main-nav { padding-top: 5px; }
-    .nav-link { margin-left: 13px; text-decoration: none; color: #475569; font-size: 11px; font-weight: 500; transition: all 0.3s; }
-    .nav-link:hover { color: #1565c0; }
-    .nav-link.active { color: #1565c0; border-bottom: 2px solid #1565c0; padding-bottom: 5px; font-weight: 700; }
-
-/* 1. ANA TAŞIYICI */
-.main-container { 
-    position: absolute;
-    top: 35px; 
-    left: 10px;   
-    right: 15px; 
-    /* Alta tam sıfırlayıp 5px boşluk bırakmak için height calc kullanıyoruz */
-    height: calc(100vh - 70px);
-    display: flex; 
-    align-items: stretch; 
-    gap: 10px; 
-    overflow: hidden; 
-    z-index: 10;
-    padding: 0;
-}
-
-/* 2. SOL PANEL (KÖŞELİ) */
-.sidebar-left { 
-    width: 220px; 
-    background:rgba(255, 255, 255, 0.90) !important;
-    border: 1px solid #e2e8f0;
-    border-radius: 0px !important; 
-    padding: 10px; 
-    display: flex; 
-    flex-direction: column; 
-    flex-shrink: 0; 
-    overflow-y: auto; 
-    height: 100%; /* Konteynere (bottom'a) kadar uzanır */
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
-}
-
-/* 3. ORTA ALAN */
-.chart-content { 
-    flex: 1; 
-    padding: 0; 
-    overflow-y: auto; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    background-color: transparent; 
-    position: relative; 
-    height: 100%; /* Konteynere (bottom'a) kadar uzanır */
-}
-    
-/* SAĞ PANEL (KÖŞELİ) */
-.right-sidebar-wrapper { 
-    display: flex; 
-    flex-direction: row; 
-    align-items: flex-start; 
-    height: 100%; /* Konteynere (bottom'a) kadar uzanır */
-    flex-shrink: 0; 
-}
-    
-.sidebar-form-card { 
-    width: 220px; 
-    height: 100%; 
-    background: rgba(255, 255, 255, 0.90) !important;
-    border: 1px solid #e2e8f0;
-    border-radius: 0px !important; 
-    padding: 10px; 
-    overflow-y: auto; 
-    transition: width 0.3s ease; 
-    color: #1e293b;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-}
-
-.right-sidebar-wrapper.collapsed .sidebar-form-card { 
-    width: 0px !important; 
-    padding: 0px !important; 
-    border: none !important; 
-    overflow: hidden; 
-}
-    
-/* Panel Açma/Kapama Butonu (KÖŞELİ) */
-#right-panel-toggle { 
-    width: 20px; 
-    height: 50px; 
-    background: linear-gradient(135deg, #3b82f6, #2563eb); 
-    color: white; 
-    border-radius: 0px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    cursor: pointer; 
-    margin-top: 40vh; 
-    z-index: 100; 
-    box-shadow: -2px 0 4px rgba(0,0,0,0.1); 
-}
-    /* --- KARTLAR VE BİLEŞENLER (KÖŞELİ) --- */
-    
-    .time-control-card { 
-        background-color: rgba(255, 255, 255, 0.90) !important; 
-        border: 1px solid #e1e8ed; 
-        border-radius: 0px; 
-        padding: 10px; 
-        margin-bottom: 15px; 
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
-    }
-
-    .sidebar-info-card { 
-        background-color: rgba(255, 255, 255, 0.90) !important; 
-        border: 1px solid #cce0f5; 
-        border-radius: 0px; 
-        padding: 10px; 
-        margin-bottom: 10px; 
-        font-size: 11px; 
-        color: #556677; 
-    }
-
-    .chart-info-overlay { 
-    width: 100%; 
-    background: rgba(255, 255, 255, 0.98) !important; 
-    border: 1px solid #e2e8f0 !important;
-    /* Sol-üst, Sağ-üst, Sağ-alt, Sol-alt sırasıyla hepsini 0 yapıyoruz */
-    border-radius: 0px 0px 0px 0px !important; 
-    padding: 12px 20px; 
-    display: flex; 
-    align-items: center; 
-    gap: 20px; 
-    flex-shrink: 0; 
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    margin-bottom: 5px;
-}
-
-    .chart-info-name { font-size: 12px; font-weight: 800; color: #1565c0; text-transform: uppercase; }
-    .chart-info-details-group { display: flex; align-items: center; gap: 13px; font-size: 10px; color: #334155; }
-    .chart-info-item i { color: #4a90e2; width: 12px; margin-right: 5px; }
-
-    /* --- FORM ELEMANLARI --- */
-    .form-group label { font-size: 10px; margin-bottom: 2px; font-weight: 600; color: #556677; text-transform: uppercase; }
-
-    .form-group input, .form-group select, .date-jump-input, .time-select { 
-        padding: 4px 6px; 
-        border: 1px solid #cce0f5; 
-        border-radius: 0px; 
-        font-size: 11px; 
-        height: 28px; 
-        background-color: rgba(255, 255, 255, 0.90) !important; 
-        color: #333; 
-        transition: all 0.2s; 
-    }
-    
-    .form-group input:focus, .form-group select:focus, .date-jump-input:focus { 
-        border-color: #4a90e2; 
-        background-color: rgba(255, 255, 255, 0.90) !important; 
-        outline: none; 
-    }
-
-    .btn-jump { height: 28px; background-color: #27ae60; color: white; border: none; border-radius: 0px; padding: 0 10px; font-size: 10px; font-weight: bold; cursor: pointer; }
-    .btn-jump:hover { background-color: #219150; }
-    
-    .time-btn { background-color: #4a90e2; color: white; border: none; border-radius: 0px; width: 28px; height: 28px; cursor: pointer; display:flex; align-items:center; justify-content:center; }
-
-    .info-row i { width: 16px; color: #4a90e2; text-align: center; margin-right: 5px; } 
-
-
-        .vertical-action-strip {
-            width: 35px; 
-            background: rgba(255, 255, 255, 0.90) !important;
-            border-right: 1px solid #e2e8f0;
-            margin-left: -5px; /* Standart boşluğu 5px daraltarak sola çeker */
-            margin-right: 8px; /* Sağdaki (orta alanla olan) mesafeyi korur */
-            display: flex !important;
-            flex-direction: column !important; 
-            align-items: center !important;
-            justify-content: flex-start !important;
-            padding-top: 20px;
-            gap: 15px;
-            height: 100%;
-            flex-shrink: 0;
-        }
-
-        .v-strip-btn {
-            width: 28px;
-            height: 28px;
-            display: flex !important;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: #475569;
-            font-size: 14px;
-        }
-
-        .v-strip-btn:hover {
-            color: #1565c0;
-        }
-
-/* 2. ORTA SÜTUN: Kendi içinde kaydırma çubuğu oluşturmalı */
-.chart-content { 
-    flex: 1; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    background: transparent; 
-    position: relative; 
-    /* BURASI ÇOK ÖNEMLİ: Yandan aşağı kaydırma buradan gelir */
-    overflow-y: hidden !important; /* Dış kutunun kaymasını engelle, sabit kalsın */
-    height: 100%; /* Ekran yüksekliğine sabitle ki taşanı kaydırsın */
-}
-
-/* --- YENİ EKLENEN KAYDIRMA ALANI --- */
-.chart-scroll-container {
-    width: 100%;
-    flex: 1;                /* Kalan tüm boşluğu doldur */
-    overflow-y: auto;       /* Sadece burada kaydırma çubuğu çıksın */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-    /* Ana taşıyıcıyı sabitle */
-.chart-content {
-    overflow-y: hidden !important; 
-}
-
-/* 3. HARİTA ARKASINDAKİ ŞEFFAF ALAN */
-.chart-wheel-placeholder { 
-    width: 100% !important; 
-    /* Harita 620px ise, şeffaf alan 660px'de bitsin, aşağı uzamasın */
-    height: 570px !important; 
-    min-height: 570px !important;
-    
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    flex-shrink: 0; /* Aşağıdaki raporlar haritayı yukarı sıkıştırmasın */
-    
-    background: rgba(255, 255, 255, 0.98) !important; 
-    border-left: 1px solid rgba(226, 232, 240, 0.6);
-    border-right: 1px solid rgba(226, 232, 240, 0.6);
-    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
-    border-radius: 0px !important;
-    margin: 0;
-}
-
-#astroChart { 
-    width: 560px !important; 
-    height: 560px !important; 
-    display: block;
-}
-
-    .chart-line, .house-cusp { stroke: #334155 !important; stroke-width: 1px; fill: none; }
-    .asc-line, .mc-line { stroke: #1e293b !important; stroke-width: 2px; fill: none; }
-    .house-cusp-stepped { stroke: #1565c0; stroke-width: 1.5px; fill: none; stroke-dasharray: 3,2; }
-    
-    /* TOOLTIP (Gezegen Bilgi Kutusu - KÜÇÜLTÜLMÜŞ) */
-    .custom-tooltip {
-        display: none;
-        position: fixed;
-        background: rgba(30, 41, 59, 0.95);
-        color: white;
-        padding: 4px 8px;
-        border-radius: 0px;
-        font-size: 10px;
-        font-weight: 500;
-        pointer-events: none;
-        z-index: 10000;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        white-space: nowrap;
-        border: 1px solid rgba(255,255,255,0.2);
-    }
-    
-    .tooltip-title {
-        display: block;
-        font-weight: bold;
-        font-size: 11px;
-        margin-bottom: 2px;
-        color: #fbbf24;
-    }
-    
-    .tooltip-detail {
-        display: block;
-        font-size: 10px;
-        color: #e0e7ff;
-    }
-/* DERECE (Büyük ve Kalın) */
-    .cusp-degree, .planet-degree { 
-        font-size: 15px; 
-        font-weight: 500; /* Kalın */
-        fill: #1e293b !important; 
-        font-family: Helvetica, Arial, sans-serif; 
-    } 
-    
-    /* DAKİKA (Küçük ve İnce) */
-    .cusp-minute, .planet-minute { 
-        font-size: 13px; /* Daha küçük */
-        font-weight: 400; /* Normal */
-        fill: #64748b !important; 
-        font-family: Helvetica, Arial, sans-serif; 
-    }
-    .house-label { font-size: 10px; fill: #1565c0 !important; font-weight: bold; } 
-    .planet-retrograde { font-size: 12px; fill: #dc2626; font-weight: bold; } 
-
-    .chart-list-item { display: block; padding: 10px; margin-bottom: 6px; background-color: #f8f9fa; border: 1px solid #e2e8f0; border-radius: 0px; text-decoration: none; color: #334155; transition: all 0.2s; cursor: pointer; } 
-    .chart-list-item:hover { background-color: #e3f2fd; color: #1565c0; } 
-    .chart-list-item.selected { background-color: #fff !important; border: 1px solid #1565c0; border-left: 5px solid #1565c0; color: #1565c0; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    .chart-list-name { font-size: 13px; display: block; } 
-    .chart-list-date { font-size: 11px; color: #94a3b8; display: block; margin-top: 2px; }
-
-    .sidebar-title { font-size: 12px; font-weight: 700; color: #1565c0; text-transform: uppercase; margin: 10px 0; }
-    .sidebar-link { display: block; padding: 8px 0; color: #475569; text-decoration: none; font-size: 11px; font-weight: 500; margin-bottom: 8px; transition: all 0.3s; cursor: pointer; border-left: 2px solid transparent; padding-left: 8px; } 
-    .sidebar-link:hover { color: #1565c0; background-color: rgba(21, 101, 192, 0.05); } 
-    .sidebar-link.active { color: #1565c0; border-left: 2px solid #1565c0; font-weight: 700; background-color: rgba(21, 101, 192, 0.08); }
-
-    /* --- SCROLLBAR (12PX & KÖŞELİ) --- */
-    ::-webkit-scrollbar { 
-        width: 12px; 
-    }
-    ::-webkit-scrollbar-track { 
-        background: #f1f5f9; 
-    }
-    ::-webkit-scrollbar-thumb { 
-        background: #cbd5e1; 
-        border-radius: 0px; 
-        border: 2px solid #f1f5f9; 
-    }
-    ::-webkit-scrollbar-thumb:hover { 
-        background: #94a3b8; 
-    }
-
-    /* Yardımcılar */
-    .form-row { display: flex; gap: 5px; margin-bottom: 8px; } 
-    .form-group { display: flex; flex-direction: column; margin-bottom: 8px; width: 100%; }
-    .date-jump-row { display: flex; gap: 5px; margin-bottom: 8px; align-items: center; }
-    .time-control-row { display: flex; align-items: center; justify-content: space-between; gap: 3px; }
-    .top-info-bar { display:none; } 
-    .modal-overlay { display: none; }
-
-    /* --- MODAL (SEÇİM KUTUSU) TASARIMI --- */
-    
-    /* 1. Ekranı Kaplayan Karartma Katmanı */
-    .modal-overlay {
-        display: none; /* JS ile açılacak */
-        position: fixed; /* Ekrana sabitle */
-        top: 0;
-        left: 0;
-        width: 100%;
+    .logo-container {
+        display: flex;
+        align-items: center;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.5); /* Yarı saydam siyah arka plan */
-        z-index: 20000; /* En üst katmanlarda olsun */
-        align-items: center; /* Dikey ortala */
-        justify-content: center; /* Yatay ortala */
-        backdrop-filter: blur(2px); /* Arkadaki haritayı hafif buzla */
     }
 
-    /* 2. Beyaz Seçim Kutusu */
-    .modal-box {
-        background-color: #ffffff !important; /* ARKA PLAN BEYAZ (Zorunlu) */
-        width: 90%;
-        max-width: 600px; /* Genişlik sınırı */
-        max-height: 85vh; /* Ekran boyunu taşmasın */
-        border-radius: 0px; /* Köşeleri yuvarla */
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); /* Derin gölge */
-        padding: 20px;
-        position: relative;
-        overflow-y: auto; /* İçerik uzunsa scroll çıksın */
+    .logo-link {
         display: flex;
-        flex-direction: column;
-        color: #334155;
-        border: 1px solid #e2e8f0;
-    }
-
-    /* Modal Başlığı */
-    .modal-box h4 {
-        margin-top: 0;
-        margin-bottom: 15px;
-        font-size: 16px;
-        color: #1565c0;
-        border-bottom: 2px solid #f1f5f9;
-        padding-bottom: 10px;
-        text-transform: uppercase;
-        font-weight: 800;
-    }
-
-    /* Liste Elemanları (Gezegen isimleri) */
-    .synastry-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        border: 1px solid #e2e8f0;
-        border-radius: 4px;
-        overflow-y: auto;
-        background-color: rgba(255, 255, 255, 0.90) !important;
-    }
-
-    .chart-select-item {
-        padding: 10px;
-        border-bottom: 1px solid #e2e8f0;
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: 500;
-        transition: all 0.2s;
-        background-color: #ffffff;
-        display: flex;
-        justify-content: space-between;
         align-items: center;
+        text-decoration: none;
     }
 
-    .chart-select-item:last-child {
-        border-bottom: none;
+    .logo-svg-main {
+        height: 50px; 
+        width: auto; 
+        display: block;
+        object-fit: contain;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        transition: opacity 0.3s ease;
     }
 
-    .chart-select-item:hover {
-        background-color: #e0f2fe; /* Üzerine gelince mavi */
-        color: #0284c7;
-        padding-left: 15px; /* Kayma efekti */
+    .logo-svg-main:hover {
+        opacity: 0.9; 
     }
 
-    /* Kapat Butonu */
-    .close-modal-btn {
-        margin-top: 15px;
-        padding: 8px 15px;
-        background-color: #ef4444; /* Kırmızı */
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: bold;
-        align-self: flex-end; /* Sağa yasla */
-        transition: background 0.2s;
-    }
+    .main-nav { padding-top: 10px; }
 
-    .close-modal-btn:hover {
-        background-color: #dc2626;
+    .nav-link { 
+        margin-left: 13px; 
+        text-decoration: none; 
+        color: #ffffff; 
+        font-size: 12px; 
+        font-weight: 500; 
+        transition: all 0.3s; 
+        opacity: 0.8;
+    }
+    .nav-link:hover { 
+        opacity: 1; color: #ffffff;
+        border-bottom: 2px solid #ffffff;
+        text-shadow: 
+            0 0 1px rgb(230, 230, 230),    /* Keskin hat */
+            0 0 5px rgb(230, 230, 230),    /* Orta parlama */
+            0 0 15px rgba(255, 255, 255, 0.5),   /* Geniş yayılım */
+            0 0 30px rgba(255, 255, 255, 0.3);   /* Uzak atmosfer */
     }
     
-    /* Geri Dön Butonu */
-    .back-btn {
-        cursor: pointer;
-        color: #1565c0;
-        font-size: 12px;
-        font-weight: bold;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-    }
-    .back-btn:hover {
-        text-decoration: underline;
+    .nav-link.active { 
+        opacity: 1; 
+        color: #ffffff; 
+        border-bottom: 2px solid #ffffff; 
+        padding-bottom: 5px; 
+        font-weight: 700; 
     }
 
-    /* Kıstırılmış Burç Sembolü Stili */
-.intercepted-sign-glyph {
-    font-size: 22px !important;
-    fill: #e67e22 !important; /* Turuncu yaparak önce bir göründüğünden emin olalım */
-    font-family: "Arial", sans-serif;
-    font-weight: bold;
-    text-anchor: middle;
-    dominant-baseline: middle;
-    z-index: 999; /* En üstte tut */
-    pointer-events: none;
-}
-
-/* Eğer kıstırılmış olduğunu daha çok vurgulamak istersen */
-.intercepted-sign-glyph.highlight {
-    fill: #e67e22 !important; /* Turuncu tonu */
-}
-    /* --- TRANSİT MENÜSÜ TASARIMI (EKLENDİ) --- */
-
-    /* Menünün kendisi (gizli başlar, JavaScript ile açılır) */
-    .transit-context-menu { 
-        display: none;             /* Varsayılan olarak gizli */
-        position: fixed;           /* EKRANDA SABİT DURMASI İÇİN 'absolute' YERİNE 'fixed' YAPTIM */
-        z-index: 9999;             /* Diğer her şeyin üstünde görünsün */
-        width: 180px;              /* Genişlik */
-        background-color: #fff;    /* Beyaz arka plan */
-        border: 1px solid #ddd;    /* İnce gri kenarlık */
-        border-radius: 0px;        /* Köşeleri yuvarlatma */
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Hafif gölge efekti */
-        padding: 5px 0;            /* İç boşluk */
-    } 
-
-    /* Menü öğeleri (Astronomik Transit, Drakonik Transit) */
-    .transit-menu-item { 
-        display: block; 
-        padding: 6px 12px;         /* Öğeler arası boşluk */
-        text-decoration: none;     /* Alt çizgiyi kaldır */
-        color: #333;               /* Metin rengi (koyu gri) */
-        font-size: 12px;           /* Yazı boyutu */
-        cursor: pointer;           /* Fare imleci el işareti olsun */
-        transition: background-color 0.2s; /* Hover efekti için geçiş */
-        border-bottom: 1px solid #f5f5f5; /* Hafif çizgi */
-    } 
-    
-    .transit-menu-item:last-child {
-        border-bottom: none;
-    }
-
-    /* Menü öğelerinin üzerine gelindiğindeki efekt */
-    .transit-menu-item:hover { 
-        background-color: #f0f7ff; /* Açık mavi arka plan */
-        color: #1565c0;            /* Koyu mavi metin rengi */
-    }
-
-    /* --- KULLANICI DROPDOWN MENÜ STİLLERİ --- */
-    .user-dropdown-trigger:hover {
-        background-color: #f8fafc;
-    }
-
+    /* Kullanıcı Dropdown Menü */
     .user-dropdown-menu {
         position: absolute;
-        top: 45px;
+        top: 43px;
         right: 0;
-        background: white;
-        border: 1px solid #e2e8f0;
+        background: rgba(26, 26, 26, 0.90) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 0px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        box-shadow: 0 15px 35px rgba(255, 255, 255, 0.2);
         min-width: 200px;
         z-index: 10000;
         overflow: hidden;
@@ -576,126 +131,1398 @@
         align-items: center;
         gap: 10px;
         padding: 12px 16px;
-        color: #334155;
+        color: #ffffff;
         text-decoration: none;
         font-size: 13px;
-        transition: background 0.2s;
-        border-bottom: 1px solid #f1f5f9;
+        transition: background 0.3s;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
-
-    .user-dropdown-menu a:last-child {
-        border-bottom: none;
-    }
-
+    .user-dropdown-menu a:last-child { border-bottom: none; }
     .user-dropdown-menu a:hover {
-        background-color: #f8fafc;
+        background: rgba(228, 228, 228, 0.658);
+        color: #ffffff;
     }
-
     .user-dropdown-menu a i {
         width: 18px;
         text-align: center;
         font-size: 14px;
+        color: #ffffffcc;
     }
 
+    /* Premium Üyelik Butonu */
     .premium-menu-item {
-        background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.8), rgba(217, 119, 6, 0.8)) !important;
+        backdrop-filter: blur(4px);
         color: white !important;
         font-weight: bold;
     }
-
     .premium-menu-item:hover {
-        background: linear-gradient(135deg, #d97706, #b45309) !important;
+        background: linear-gradient(135deg, #f59e0b, #d97706) !important;
     }
-
     .dropdown-divider {
         height: 1px;
-        background: #e2e8f0;
+        background: rgba(255, 255, 255, 0.1);
         margin: 0;
     }
 
-    /* Profil ve Destek Modal Stilleri */
-    .profile-modal, .support-modal {
-        max-width: 500px;
+    /* =========================================
+       3. ANA İSKELET (LAYOUT & GRID)
+       ========================================= */
+    .main-container { 
+        position: absolute;
+        top: 45px; /* DÜZELTİLDİ: Header boyu kadar boşluk */
+        left: 10px;   
+        right: 15px; 
+        height: calc(100vh - 75px);
+        display: flex; 
+        align-items: stretch; 
+        gap: 10px; 
+        overflow: hidden; 
+        z-index: 10;
+        padding: 0;
     }
 
+    .chart-content { 
+        flex: 1; 
+        min-width: 0; /* Flexbox sıkışmasını önler */
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        background: transparent; 
+        position: relative; 
+        overflow: hidden; 
+        height: 100%;
+        /* EKLEMEN GEREKEN KODLAR: */
+        justify-content: flex-start !important; /* İçeriği dikeyde en tepeye yasla */
+        padding-top: 0px !important;            /* Üst boşluğu sıfırla */
+    }
+
+    .right-sidebar-wrapper { 
+        display: flex; 
+        flex-direction: row; 
+        align-items: flex-start; 
+        height: 100%; 
+        flex-shrink: 0;
+        transition: all 0.2s ease; 
+        position: relative; 
+        z-index: 50;
+    }
+
+    /* =========================================
+       4. SOL PANEL GENEL YAPISI VE KUTULAR
+       ========================================= */
+    
+    /* 1. ANA SOL PANEL (DIŞ TAŞIYICI) */
+    .sidebar-left { 
+        width: 210px !important;
+        min-width: 210px !important;
+        max-width: 210px !important;
+        height: 100%; 
+        background: transparent !important; 
+        border: none !important;
+        backdrop-filter: none !important;
+        padding: 10px; 
+        overflow-y: auto; 
+        flex-shrink: 0;
+        
+        display: flex;
+        flex-direction: column;
+        gap: 15px; /* Kutular arası boşluk */
+    }
+
+    .sidebar-left > *:first-child {
+        margin-top: 0 !important;
+    }
+
+    /* 2. TÜM KUTULAR İÇİN ORTAK "ZAMAN KAPSÜLÜ" TASARIMI */
+    /* Time Capsule, Info Box ve Bottom Menu birebir aynı görünür */
+    .time-capsule-container,
+    .transit-info-card-box, 
+    .transit-info-container,
+    .bottom-menu-container {
+        /* Senin verdiğin kodlar: */
+        background: rgba(0, 0, 0, 0.274) !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 12px;
+        margin-bottom: 0; /* Parent gap kullanıldığı için margin'e gerek yok */
+        display: flex;
+        flex-direction: column;
+        gap: 5px; 
+        box-shadow: 1px 0px 3px rgba(138, 71, 17, 0.616);
+        border-radius: 0px; /* İçeriklerle uyumlu olması için köşeli */
+
+        /* GENİŞLEME İÇİN EKLENEN KRİTİK KODLAR: */
+        width: 100% !important;        /* İçinde bulunduğu 250px'in tamamını kapla */
+        box-sizing: border-box;       /* Padding (iç boşluk) genişliği bozmasın */
+        align-self: stretch;          /* Flex yapısı içinde kendini sona kadar gerer */
+    }
+
+    /* =========================================
+       5. İÇERİK DETAYLARI VE ZAMAN KAPSÜLÜ ÖZEL
+       ========================================= */
+
+    /* --- A. ZAMAN KAPSÜLÜ İÇ ELEMANLARI --- */
+    .time-control-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 5px;
+        margin-bottom: 5px; /* Alt satırla (form) arasını açar */
+    }
+
+    .time-btn {
+        background: rgba(0, 0, 0, 0.61) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        width: 25px;
+        height: 25px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0px; /* Köşeli */
+    }
+    .time-btn:hover {
+        color: #ffffff; 
+        background: rgb(196, 92, 7) !important; 
+        box-shadow: 0 0 15px rgb(196, 92, 7);
+        
+        /* DÜZELTME: Sondaki fazladan virgül kaldırıldı */
+        box-shadow: 
+            0 0 1px rgb(230, 230, 230),    /* Keskin hat */
+            0 0 3px rgb(230, 230, 230),    /* Orta parlama */
+            0 0 7px rgba(255, 255, 255, 0.5),   /* Geniş yayılım */
+    }
+
+    .time-select {
+        flex: 1;
+        background: rgba(0, 0, 0, 0.61) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white !important;
+        height: 25px;
+        text-align: center;
+        text-align-last: center; 
+        outline: none;
+        font-size: 11px;
+        cursor: pointer;
+        appearance: none; 
+        border-radius: 0px;
+    }
+
+    .time-select:hover {
+        color: #fffffff6; 
+        background: rgb(196, 92, 7) !important; 
+        box-shadow: 0 0 15px rgb(196, 92, 7);
+        
+        /* DÜZELTME: Sondaki fazladan virgül kaldırıldı */
+        text-shadow: 
+            0 0 8px rgba(230, 230, 230, 0.884),    /* Keskin hat */
+    }
+
+    /* 1. Kapsayıcı Form Düzenlemesi */
+    .time-form-group {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 5px;               /* Tarih alanı ile buton arasındaki boşluk */
+        width: 100%;            /* Kutunun tam genişliği */
+        align-items: center;    /* Dikeyde tam hizalama */
+        justify-content: space-between; /* Tarih alanını sola, butonu sağa yaslar ama paylaştırır */
+    }
+
+    /* 2. Tarih Giriş Alanı */
+    .date-jump-input {
+        flex: 1;                /* Kalan boşluğu kaplamasını sağlar */
+        background: rgba(0, 0, 0, 0.61) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: rgb(228, 218, 218);
+        padding: 0 5px;
+        outline: none;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 10px;
+        font-weight: 720 !important;
+        text-align: center; 
+        border-radius: 0; 
+        height: 24px;
+        box-sizing: border-box;
+        min-width: 0;           /* Esneklik için gerekli */
+        text-shadow: 
+            0 0 2px rgba(0, 0, 0, 0.74),    /* Keskin hat */
+    }
+
+    .date-jump-input:hover { 
+        color: #fffffff6; 
+        background: rgb(196, 92, 7) !important; 
+        box-shadow: 0 0 15px rgb(196, 92, 7);
+        
+        /* DÜZELTME: Sondaki fazladan virgül kaldırıldı */
+        text-shadow: 
+            0 0 8px rgba(230, 230, 230, 0.884),    /* Keskin hat */
+    }
+
+    /* 3. GİT Butonu (Tam Ortalanmış Hali) */
+    .btn-jump {
+        background: rgba(196, 92, 7, 0.747) !important;  
+        color: rgb(236, 236, 230);
+        border: none;
+        padding: 0; 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-weight: 900;
+        font-size: 10px;
+        letter-spacing: 1px;
+        width: 35px;            /* Sabit genişlik */
+        height: 24px;           /* Input ile aynı */
+        cursor: pointer;
+        transition: all 0.3s;
+        text-transform: uppercase;
+        border-radius: 0; 
+        flex-shrink: 0;         /* Daralmasını engeller */
+
+        /* İÇERİK ORTALAMA */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        /* DIŞ ORTALAMA (Tarih ve Sağ Kenar Arası) */
+        margin-left: 5px;       /* Tarih kutusundan 5px uzaklık */
+        margin-right: 2px;      /* Sağ çerçeveden 2px uzaklık (Görsel denge için) */
+    }
+
+    .btn-jump:hover {
+        background: rgb(196, 92, 7) !important; 
+        box-shadow: 0 0 15px rgb(196, 92, 7); 
+    }
+
+    /* --- B. BİLGİ KARTI İÇ ELEMANLARI (GÜNCELLENDİ) --- */
+    
+    /* 1. YENİ: İlk 3 bilgiyi saran BEYAZ KARE */
+    .info-group-wrapper {
+        border: 0.5px solid rgba(255, 255, 255, 0.25); /* Beyaz Çerçeve */
+        background: rgba(0, 0, 0, 0.233);      /* Çok hafif iç dolgu */
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        padding: 10px;                              /* İç boşluk */
+        border-radius: 0px;                         /* Köşeler */
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    /* 2. Satır Ayarları */
+    .info-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        color: #ffffff;
+        padding: 6px 0;
+        border-bottom: 1px solid rgba(255,255,255,0.1); /* Satır arası çizgi */
+        opacity: 0.9;
+    }
+    
+    /* Karenin içindeki son satırın alt çizgisini kaldır */
+    .info-group-wrapper .info-row:last-child { 
+        border-bottom: none; 
+    }
+    
+    /* Genel İkon Ayarı */
+    .info-row i {
+        width: 15px;
+        text-align: center;
+    }
+
+    /* 1. ANLIK ZAMAN İKONU (Açık Mavi/Buz Rengi) */
+    .info-row[title="Anlık Zaman"] i {
+        color: #108383 !important; 
+    }
+
+    /* 2. KONUM İKONU (Kırmızı/Harita Rengi) */
+    .info-row[title="Konum"] i {
+        color: #af1c1c !important; 
+    }
+
+    /* 3. ASC İKONU (Altın/Güneş Rengi) */
+    .info-row[title="ASC"] i {
+        color: #beb30d !important; 
+    }
+    
+    /* 3. Transit Menüsü Alanı (Karenin Altında) */
+    .info-card-menu-area {
+        margin-top: 3px;       /* Kare ile arası boşluk */
+        padding-top: 5px;
+        border-top: none;      /* Üst çizgiyi kaldırdık, çünkü karenin çerçevesi var */
+    }
+
+    /* Tıklanabilir Konum Yazısı Efekti */
+    .info-clickable {
+        cursor: pointer; /* Mouse el işareti olsun */
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 10; /* Tıklamayı garantiye al */
+    }
+
+    .info-clickable:hover {
+        color: #ffffff; 
+        background: transparent !important;
+        transform: translateX(4px); /* Hafif kayma */
+        
+        /* DÜZELTME: Sondaki fazladan virgül kaldırıldı */
+        text-shadow: 
+            0 0 1px rgb(230, 230, 230),    /* Keskin hat */
+            0 0 5px rgb(230, 230, 230),    /* Orta parlama */
+            0 0 15px rgba(255, 255, 255, 0.5),   /* Geniş yayılım */
+            0 0 30px rgba(255, 255, 255, 0.3);   /* Uzak atmosfer */
+    }
+
+    /* --- C. MENÜ LİNKLERİ (KUTUSUZ) --- */
+    .sidebar-link { 
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 0; 
+        color: rgb(255, 255, 255); 
+        text-decoration: none; 
+        font-size: 12px; 
+        font-weight: 500; 
+        transition: all 0.3s; 
+        cursor: pointer; 
+        
+        /* Kutusuz görünüm ayarları */
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0;
+        margin: 0;
+    } 
+
+    .sidebar-link:hover { 
+        color: #ffffff; 
+        background: transparent !important;
+        transform: translateX(4px); /* Hafif kayma */
+        
+        /* DÜZELTME: Sondaki fazladan virgül kaldırıldı */
+        text-shadow: 
+            0 0 1px rgb(230, 230, 230),    /* Keskin hat */
+            0 0 5px rgb(230, 230, 230),    /* Orta parlama */
+            0 0 15px rgba(255, 255, 255, 0.5),   /* Geniş yayılım */
+            0 0 30px rgba(255, 255, 255, 0.3);   /* Uzak atmosfer */
+    }
+    
+    .sidebar-link i {
+        color: rgb(196, 92, 7) !important;
+        width: 16px;
+        text-align: center;
+        transition: color 0.2s;
+        text-shadow: none !important;
+    }
+    .sidebar-link:hover i { color: #ff9f43 !important; }
+
+    .sidebar-link.active { 
+        color: rgb(196, 92, 7) !important;
+        font-weight: 700; 
+    }
+    
+    /* Yan Başlıklar */
+    .sidebar-title { 
+        font-size: 11px; 
+        font-weight: 800; 
+        color: #ffffff; 
+        text-transform: uppercase; 
+        margin: 5px 0; 
+        letter-spacing: 1px; 
+        opacity: 0.9; 
+    }
+
+    /* 1. SİNASTRİ MODALİ */
+#synastryModal .synastry-modal-box {
+    background-image: url('/static/images/synastry-bg.svg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+/* 2. GÖKYÜZÜ OLAYLARI MODALİ */
+#celestialEventsModal .synastry-modal-box {
+    background-image: url('/static/images/celestial-bg.svg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+/* 3. SEÇİM MODALİ */
+#selectionModal .modal-box {
+    background-image: url('/static/images/selection-bg.svg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+/* 3. RETURN MODALİ */
+#returnModal .modal-box {
+    background-image: url('/static/images/return-bg.svg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+/* ============================================================
+   1. ANA KUTU (Sadece Resim ve Çerçeve)
+   ============================================================ */
+#synastryModal .synastry-modal-box, 
+#celestialEventsModal .synastry-modal-box, 
+#selectionModal .modal-box
+#returnModal .modal-box {
+    /* Boyutlar */
+    width: 700px !important; 
+    height: 60vh !important;
+    max-width: 95vw; 
+    
+    /* Yerleşim */
+    display: flex;
+    flex-direction: column;
+    position: relative; /* Sanal katman buna göre hizalanacak */
+    overflow: hidden;   /* Taşmaları gizle */
+
+    /* RESİM AYARLARI (Burada renk veya blur YOK) */
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+
+    /* Dış Çerçeve ve Gölge */
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+/* ============================================================
+   2. SANAL CAM KATMANI (BEYAZ RENK + BLUR BURADA)
+   ============================================================ */
+/* Bu kod, resmin üzerine otomatik olarak bir "cam" yerleştirir */
+#synastryModal .synastry-modal-box::before, 
+#celestialEventsModal .synastry-modal-box::before, 
+#selectionModal .modal-box::before
+#returnModal .modal-box::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0; /* Kutuyu tamamen kapla */
+    
+    /* İŞTE İSTEDİĞİN AYARLAR: */
+    background-color: rgba(66, 66, 66, 0.089) !important; /* Şeffaf Beyaz Ton */
+    
+    /* BLUR (Bulanıklık) */
+    backdrop-filter: blur(10px);        
+    -webkit-backdrop-filter: blur(10px); /* Safari/Chrome için */
+    
+    z-index: 0; /* Resmin üstünde ama yazıların altında dur */
+}
+
+/* ============================================================
+   3. İÇERİĞİ KURTARMA (Yazılar Camın Altında Kalmasın)
+   ============================================================ */
+.synastry-modal-box > *, 
+.modal-box > * {
+    position: relative;
+    z-index: 1; /* Yazıları camın üzerine çıkar */
+}
+
+/* ============================================================
+   5. VARSAYILAN ARKA PLANLARI TEMİZLEME
+   ============================================================ */
+#synastryModal .synastry-body, 
+#synastryModal .synastry-header,
+#celestialEventsModal .synastry-body, 
+#celestialEventsModal .synastry-header,
+#selectionModal .modal-box h4,
+#selectionModal .synastry-list,
+#selectionModal .selection-list {
+    background: transparent !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* İçerik akışı */
+.synastry-body, #selectionModal .modal-box > div:last-child {
+    flex: 1;
+    overflow-y: auto;
+}
+
+    /* =========================================
+       6. ORTA ALAN (Harita ve Rapor)
+       ========================================= */
+    .chart-scroll-container {
+        /* Genişliği daraltıyoruz ki Scroll çubuğu içeriğin hemen yanında çıksın */
+        width: 800px; 
+        max-width: 98%; /* Mobilde taşmasın */
+        height: 100%; 
+    
+        /* 🔥 KRİTİK AYARLAR BURADA */
+        overflow-y: auto;       /* Scroll bu kutuda olsun */
+        overflow-x: hidden;     /* Yan scroll'u engelle */
+        display: flex;
+        flex-direction: column; /* ✅ YAN YANA DEĞİL, ALT ALTA DİZ */
+        align-items: center;    /* İçerikleri ortala */
+    
+        /* Scrollbarın içerikle yapışık durması için padding */
+        padding-right: 5px;
+        /* EKLEMEN GEREKEN KODLAR: */
+        justify-content: flex-start !important; /* İçeriği en baştan başlat */
+        margin-top: 0 !important;
+    }
+
+    /* 3. HARİTA SARMALAYICI (İçerideki yapı) */
+    .chart-inner-wrapper {
+        width: 100%; /* Üstteki 650px'i doldur */
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-shrink: 0; /* Büzüşmeyi engelle */
+    }
+
+    /* DÜZELTİLMİŞ HARİTA KUTUSU (Tek ve Sağlam) */
+    .chart-wheel-placeholder { 
+        width: 100%; 
+        height: 610px;      
+        min-height: 610px;  
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0, 0, 0, 0);
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 0px;
+        backdrop-filter: blur(10px);            
+        position: relative;
+        outline: none !important;
+    }
+
+    #astroChart { 
+        width: 580px !important; 
+        height: 580px !important; 
+        display: block;
+    }
+
+    #hesaplama_raporu {
+        width: 100% !important; 
+        display: block;
+        margin-top: 20px;       
+        margin-bottom: 50px;    
+        background: transparent; 
+    }
+
+    /* =========================================
+       7. BİLGİ KUTUCUKLARI (Overlay)
+       ========================================= */
+    .chart-info-overlay {
+        position: absolute !important; 
+        top: 10px !important;
+        left: 10px !important;
+        z-index: 20;
+        height: auto !important;      
+        width: auto !important;        
+        max-width: 250px !important;   
+        white-space: normal !important; 
+        word-wrap: break-word !important; 
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border: none !important;
+        display: flex !important;
+        flex-direction: column !important; 
+        gap: 4px !important; 
+        align-items: flex-start !important;
+        padding: none !important;
+    }
+
+    .chart-info-name-row {
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        color: #ffffff;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 2px;
+        font-style: normal !important;
+    }
+
+    .chart-type-label {
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        color: rgb(196, 92, 7) !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+        font-style: normal !important;
+    }
+
+    .chart-info-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        font-size: 11px !important;
+        color: #ffffff !important;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        line-height: 1.5 !important;
+        white-space: normal !important; 
+        word-break: keep-all !important;
+        font-style: normal !important;
+        margin-bottom: 4px !important; 
+    }
+
+    .chart-info-row i {
+        flex-shrink: 0 !important; 
+        width: 14px !important;
+        color: rgb(196, 92, 7) !important;
+        text-align: center;
+    }
+
+    .chart-action-container {
+        position: absolute !important;
+        top: 15px !important;
+        right: 15px !important; 
+        z-index: 25; 
+    }
+
+    .glass-change-btn {
+        background: #0d8abb !important;
+        border: 1px solid #0d8abb !important;
+        color: #ffffff;
+        padding: 6px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 10px;
+        font-weight: 900;
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.2s ease;
+    }
+
+    /* =========================================
+   8. SAĞ PANEL (Formlar)
+   ========================================= */
+.right-sidebar-wrapper.collapsed .sidebar-form-card {
+    width: 0px !important;       
+    padding: 0px !important;    
+    border: none !important;    
+    opacity: 0;                  
+    overflow: hidden;            
+    margin: 0 !important;
+}
+
+.sidebar-form-card { 
+    width: 235px; 
+    height: 100%; 
+    background: rgba(148, 181, 194, 0.281);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(85, 120, 138, 0.2);
+    border-radius: 0px !important; 
+    padding: 10px; 
+    overflow-y: auto; 
+    overflow-x: hidden; 
+    white-space: normal; 
+    transition: all 0.3s ease; 
+    color: #ffffff;
+    box-shadow: 2px 2px 32px rgba(255, 255, 255, 0.63);
+    /* HATA DÜZELTİLDİ: Virgül kaldırıldı, noktalı virgül eklendi */
+    text-shadow: 0 0 1px rgba(0, 0, 0, 0.74);
+}
+
+#right-panel-toggle { 
+    width: 20px; 
+    height: 50px; 
+    background: rgba(0, 0, 0, 0); 
+    backdrop-filter: blur(13px);
+    color: rgb(0, 0, 0); 
+    border: 1px solid rgba(255, 255, 255, 0.733);
+    border-right: none; 
+    border-radius: 4px 0 0 4px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    cursor: pointer; 
+    margin-top: 40vh; 
+    z-index: 100; 
+    transition: all 0.2s ease;
+}
+
+.sidebar-form-card input, 
+.sidebar-form-card select {
+    background: rgba(255, 255, 255, 0.295) !important;
+    color: rgb(24, 24, 24) !important;                    
+    border: 1px solid rgba(48, 48, 48, 0.2) !important; 
+    padding: 8px !important;
+    margin-bottom: 0px !important;
+    width: 100% !important;
+    border-radius: 0px !important;
+}
+
+.sidebar-form-card label {
+    color: rgb(24, 24, 24) !important;   
+    font-weight: bold;
+    font-size: 11px;
+}
+
+/* --- HARİTA KARTLARI LİSTESİ --- */
+
+/* Liste Konteyneri */
+.synastry-list {
+    list-style: none; 
+    padding: 0; 
+    margin: 0;
+    border: none; /* Çerçeveyi kaldırdım, kartlar konuşsun */
+    background: transparent !important;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Kartlar arası genel boşluk */
+}
+
+/* KARTIN KENDİSİ (Alt alta dizilim için Flex Column) */
+.chart-list-item { 
+    display: flex !important;           
+    flex-direction: column !important;  /* İsim, Tarih, Tip alt alta */
+    justify-content: center;
+    align-items: flex-start;            /* Sola yasla */
+    gap: 4px;                           /* Satırlar arası ince boşluk */
+    
+    padding: 6px 10px;                 /* İçerisi ferah olsun */
+    margin-bottom: 5px !important;                   /* Gap kullandığımız için margin'e gerek yok */
+    
+    background: rgba(207, 225, 233, 0.24) !important;
+    border: 1px solid rgba(255, 255, 255, 0.548) !important;
+    border-radius: 0px;
+    backdrop-filter: blur(10px);  
+    text-decoration: none; 
+    transition: all 0.3s ease; 
+    cursor: pointer;
+    
+    /* Kartın Yüksekliği İçeriğe Göre Uzayabilsin */
+    height: auto !important;
+    min-height: 70px; 
+}
+
+/* HOVER */
+.chart-list-item:hover { 
+    background: rgba(15, 45, 56, 0.4) !important; /* Biraz daha koyulaştırdım */
+    border: 1px solid rgba(3, 23, 31, 0.4) !important; /* Biraz daha koyulaştırdım *
+    transform: translateY(-2px); /* Hafif yukarı kalkma efekti */
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15); 
+} 
+
+/* SEÇİLİ (SELECTED) */
+.chart-list-item.selected { 
+    background: rgba(15, 45, 56, 0.6) !important; /* Seçilince iyice belirgin olsun */
+    border: 1px solid rgba(3, 23, 31, 0.4) !important;
+    border-left: 5px solid rgba(3, 23, 31, 0.4) !important;
+    padding-left: 10px; /* Çizgi gelince yazı kaymasın */
+}
+
+/* --- İÇ METİNLER --- */
+
+/* 1. İSİM */
+.chart-list-name { 
+    font-size: 13px;
+    color: #1a2e35 !important; /* Koyu renk (okunabilirlik için) */
+    font-weight: 550; 
+    display: block; 
+    width: 100%;
+    line-height: 1.5 !important; /* Satır yüksekliğini artırarak metni ferahlatır */
+}
+
+/* Hover ve Seçilide İsim Rengi */
+.chart-list-item:hover .chart-list-name,
+.chart-list-item.selected .chart-list-name {
+    color: #ffffff !important;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* 2. TARİH */
+.chart-list-date {
+    font-size: 11px;
+    font-weight: 500;
+    color: #192a33 !important; 
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-top: 2px;
+    line-height: 1.5 !important; /* Satır yüksekliğini artırarak metni ferahlatır */
+}
+
+/* Hover ve Seçilide Tarih Rengi */
+.chart-list-item:hover .chart-list-date,
+.chart-list-item.selected .chart-list-date {
+    color: #e0e0e0 !important;
+}
+
+/* 3. TİP (Alt satır) */
+.chart-list-type {
+    display: block;
+    font-size: 10px;
+    color: #546e7a !important; 
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+    margin-top: 4px;
+    border-top: 1px solid rgba(0,0,0,0.1); /* Tip ile tarih arasına ince çizgi */
+    width: 100%;
+    padding-top: 3px;
+    line-height: 1.5 !important; /* Satır yüksekliğini artırarak metni ferahlatır */
+}
+
+/* Hover ve Seçilide Tip Rengi */
+.chart-list-item:hover .chart-list-type,
+.chart-list-item.selected .chart-list-type {
+    color: #bbbbbb !important;
+    border-top: 1px solid #bbbbbb !important;
+}
+
+.tab-button {
+    flex: 1;
+    text-align: center;
+    padding: 8px 5px;      /* Kutuyu daralttık */
+    text-decoration: none;
+    font-size: 12px !important; /* İstediğin 13px boyutu */
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.863); /* Pasifken hafif sönük */
+    transition: all 0.3s ease;
+    border-radius: 0px !important;
+}
+
+.tab-button:hover {
+    /* Arka planı tamamen temizledik */
+    background: transparent !important; 
+    
+    /* Yazı rengini parlamayı taşıyabilmesi için saf beyaza çekiyoruz */
+    color: rgba(1, 13, 17, 0.863); /* Pasifken hafif sönük */
+    
+    /* Senin ana rengine uyumlu (soğuk beyaz ve petrol ışıltılı) yanma efekti */
+    text-shadow: 0 0 1px rgb(11, 77, 88),       /* Keskin harf hattı */
+                 0 0 7px rgb(179, 206, 211),     /* Orta parlama */
+                 4 4 20px rgba(1, 13, 17, 0.863); /* Pasifken hafif sönük */        /* Ana petrol renginin derin gölgesi */
+                 0 0 30px rgba(134, 239, 255, 0.4);    /* Dışa vuran çok hafif turkuaz/petrol ışığı */
+                 
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    font-weight: 700; /* Parlama anında harfler daha dolgun dursun */
+}
+
+/* AKTİF (SEÇİLİ) SEKME */
+.tab-button.active {
+    color: rgba(1, 13, 17, 0.863); /* Pasifken hafif sönük */
+    border-bottom: 2px solid rgba(1, 13, 17, 0.863); /* Pasifken hafif sönük */
+}
+
+    /* Profil Form Elemanları */
     .profile-form-group {
-        margin-bottom: 15px;
+        margin-bottom: 15px !important; 
     }
-
     .profile-form-group label {
         display: block;
         font-size: 12px;
-        font-weight: 600;
-        color: #475569;
-        margin-bottom: 5px;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        opacity: 0.9;
+        text-shadow: 1px 1px 1px rgb(184, 184, 184);
     }
-
     .profile-form-group input {
         width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #e2e8f0;
+        padding: 10px 12px;
+        background: rgba(0, 0, 0, 0.425) !important; /* Okunabilirlik için biraz kararttım */
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 5px 5px 20px rgba(0,0,0,0.5);
         border-radius: 0px;
-        font-size: 13px;
+        font-size: 12px;
+        color: rgb(255, 255, 255);
+        outline: none;
     }
-
+    .profile-form-group input:focus {
+        border-color: #ffffff;
+    }
     .profile-image-preview {
         width: 100px;
         height: 100px;
         border-radius: 50%;
         object-fit: cover;
-        border: 3px solid #1565c0;
+        border: 2px solid #ffffff;
         margin: 10px auto;
         display: block;
+        box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
     }
-
     .support-link-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 12px;
-        background: #f8fafc;
-        border-radius: 6px;
+        background: rgba(26, 26, 26, 0.90) !important;
+        border-radius: 0px; 
         margin-bottom: 10px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid rgba(26, 26, 26, 0.90) !important; 
+        color: #ffffff;
+        transition: all 0.3s;
     }
-
     .support-link-item:hover {
-        background: #e0f2fe;
-        border-color: #0284c7;
+        background: rgba(26, 26, 26, 0.90) !important;
+        border-color: rgba(26, 26, 26, 0.90) !important;
+        color: #ffffff;
+        transform: translateX(5px);
     }
 
-    .btn-primary {
-        background: #1565c0;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 4px;
+    /* =========================================
+       9. SVG VE HARİTA ÇİZGİLERİ
+       ========================================= */
+    .cusp-degree, .planet-degree { 
+        font-size: 15px; 
+        font-weight: 500; 
+        fill: #292929 !important; 
+        font-family: Helvetica, Arial, sans-serif; 
+    } 
+    .cusp-minute, .planet-minute { 
+        font-size: 13px; 
+        font-weight: 400; 
+        fill: #707174 !important; 
+        font-family: Helvetica, Arial, sans-serif; 
+    }
+
+    .house-cusp {
+        stroke: #292929 !important; 
+        stroke-width: 1px !important;
+        opacity: 0.8;
+    }
+
+    .asc-line, .ic-line, .dsc-line, .mc-line {
+        stroke: #292929 !important; 
+        stroke-width: 2.2px !important; 
+        opacity: 1 !important;
+    }
+
+    .house-cusp-stepped {
+        stroke: #64748b !important;
+        stroke-width: 1px !important;
+        stroke-dasharray: 2,2; 
+    }
+
+    .chart-line, 
+    svg circle.chart-line {
+        stroke: #334155 !important;    
+        stroke-width: 1.5px !important; 
+        stroke-dasharray: none !important; 
+        opacity: 1 !important;
+        fill: none !important;
+    }
+    
+    .house-label { font-size: 10px; fill: #292929 !important; font-weight: bold; } 
+    .planet-retrograde { font-size: 12px; fill: #dc2626; font-weight: bold; } 
+
+    .intercepted-sign-glyph {
+        font-size: 22px !important;
+        fill: rgb(196, 92, 7) !important; 
+        font-family: "Arial", sans-serif;
         font-weight: bold;
+        text-anchor: middle;
+        dominant-baseline: middle;
+        filter: drop-shadow(0 0 5px rgba(0,0,0,0.5));
+    }
+    .intercepted-sign-glyph.highlight {
+        fill: rgb(196, 92, 7) !important; 
+    }
+    
+/* =========================================
+   SAĞ TIK VE CONTEXT MENU TASARIMI
+========================================= */
+
+/* Menülerin Ortak Sınıfı */
+.transit-context-menu {
+    display: none;
+    position: fixed !important; 
+    background: rgba(26, 26, 26, 0.95) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 0px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    z-index: 999999 !important; 
+    padding: 5px 0;
+    min-width: 180px;
+    pointer-events: all;
+}
+
+/* Menü İçeriği */
+.transit-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 15px;
+    color: #ffffff !important;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+}
+
+.transit-menu-item:last-child {
+    border-bottom: none;
+}
+
+.transit-menu-item:hover {
+    background: rgba(196, 92, 7, 0.8) !important;
+    color: #ffffff !important;
+    padding-left: 20px;
+}
+
+.transit-menu-item i {
+    width: 18px;
+    text-align: center;
+    font-size: 14px;
+}
+
+/* Harita Alanını Sabitleyen ve Görünür Kılan Ek */
+.chart-wheel-placeholder {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important; /* Fixed olmamalı */
+}
+
+#astroChart {
+    display: block !important;
+    visibility: visible !important;
+}
+
+    /* =========================================
+       10. EKSTRALAR VE MODALLAR (En Alt)
+       ========================================= */
+    
+    /* Dikey Buton Şeridi (Sol) */
+    .vertical-action-strip {
+        width: 35px; 
+        background: rgba(0, 0, 0, 0) !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-right: 1px solid rgba(255, 255, 255, 0.15);
+        margin-left: -5px; 
+        margin-right: 8px; 
+        display: flex !important;
+        flex-direction: column !important; 
+        align-items: center !important;
+        justify-content: flex-start !important;
+        padding-top: 20px;
+        gap: 15px;
+        height: 100%;
+        flex-shrink: 0;
+    }
+
+    .v-strip-btn {
+        width: 28px;
+        height: 28px;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+    .v-strip-btn:hover { color: #ffffff; transform: scale(1.1); }
+
+    /* Modallar */
+    .modal-overlay {
+        display: none; 
+        position: fixed; 
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.4); 
+        z-index: 20000; 
+        align-items: center; 
+        justify-content: center; 
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    .modal-box {
+        background: rgba(26, 26, 26, 0.90) !important;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        width: 90%;
+        max-width: 600px; 
+        max-height: 85vh; 
+        border-radius: 0px; 
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); 
+        padding: 25px;
+        position: relative;
+        overflow-y: auto; 
+        display: flex;
+        flex-direction: column;
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-box h4 {
+        margin-top: 0; margin-bottom: 15px;
+        font-size: 16px; color: #ffffff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding-bottom: 10px;
+        text-transform: uppercase;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .modal-close {
+        position: absolute !important;
+        top: 15px !important;
+        right: 15px !important;
+        background: none !important;
+        border: none !important;
+        color: #ffffff !important;
+        font-size: 24px !important;
+        cursor: pointer !important;
+        opacity: 0.7;
+        transition: all 0.3s;
+        line-height: 1;
+        z-index: 999;
+    }
+    .modal-close:hover {
+        opacity: 1;
+        color: #ef4444 !important; 
+        transform: rotate(90deg);
+    }
+
+    .chart-select-item {
+        padding: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         cursor: pointer;
         font-size: 13px;
-        transition: background 0.2s;
+        font-weight: 500;
+        transition: all 0.2s;
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .chart-select-item:hover {
+        background: rgba(255, 255, 255, 0.2); 
+        padding-left: 20px; 
     }
 
-    .btn-primary:hover {
-        background: #0f4c8a;
+    .close-modal-btn {
+        margin-top: 15px;
+        padding: 10px 20px;
+        background: rgba(239, 68, 68, 0.8); 
+        backdrop-filter: blur(4px);
+        color: white;
+        border: none;
+        border-radius: 0px; 
+        cursor: pointer;
+        font-weight: bold;
+        align-self: flex-end;
+        transition: all 0.2s;
     }
+    .close-modal-btn:hover { background: #ef4444; transform: scale(1.05); }
+
+    .back-btn { color: #ffffff; opacity: 0.8; font-size: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+    .back-btn:hover { opacity: 1; text-decoration: underline; }
+
+    /* Primary Buton */
+    .btn-primary {
+        background: rgb(196, 92, 7) !important;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 10px 20px;
+        border-radius: 0px;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    .btn-primary:hover {
+        background: rgb(59, 139, 6) !important;
+        box-shadow: 0 6px 20px rgba(21, 121, 1, 0.3);
+        transform: translateY(-1px);
+    }
+    .btn-primary:active {
+        transform: translateY(0px);
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 13px; }
+    ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+    ::-webkit-scrollbar-thumb { 
+        background: rgba(255, 253, 253, 0.87); 
+        border-radius: 0px; 
+        border: 2px solid rgb(255, 255, 255); 
+        background-clip: padding-box;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.63); }
+
+    /* Tooltip */
+    .custom-tooltip {
+        display: none;
+        position: fixed;
+        background: rgba(15, 23, 42, 0.75) !important; 
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: #000000;
+        padding: 4px 8px;
+        border-radius: 0px;
+        font-size: 10px;
+        font-weight: 500;
+        pointer-events: none;
+        z-index: 10000;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        white-space: nowrap;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .tooltip-title {
+        display: block;
+        font-weight: bold;
+        font-size: 10px;
+        margin-bottom: 2px;
+        color: #fbbf24; 
+    }
+    .tooltip-detail {
+        display: block;
+        font-size: 10px;
+        color: rgba(19, 19, 19, 0.9);
+    }
+    
+    /* --- SOL MENÜ POP-UP TASARIMI --- */
+
+/* 1. Dış Taşıyıcı (Görünmez Katman) */
+#sidebarLocationModal {
+    z-index: 999999 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+}
+
+/* 2. Kutu Tasarımı (170px Sabit) */
+#sidebarLocationModal .modal-box {
+    position: absolute !important;
+    width: 170px !important;       /* SABİT 170PX */
+    background: rgba(0, 0, 0, 0.822) !important; /* Okunabilirlik için biraz kararttım */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 5px 5px 20px rgba(0,0,0,0.5);
+    margin: 0 !important;
+    border-radius: 0px;            /* Keskin köşe */
+    padding: 10px !important;      /* İçerik kenarlara yapışmasın */
+    box-sizing: border-box !important; /* Padding genişliğe dahil olsun */
+}
+
+/* Kapatma Butonu (Sağ üst köşe) */
+#sidebarLocationModal .modal-close {
+    top: 2px !important;
+    right: 5px !important;
+    font-size: 16px !important;
+    color: #ccc !important;
+}
+
+/* Başlık */
+#sidebarLocationModal h4 {
+    font-size: 13px !important;
+    margin: 0 0 8px 0 !important; /* Sadece alta boşluk */
+    letter-spacing: 0.5px;
+    white-space: nowrap;          /* Başlık alt satıra kaymasın */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 15px;
+    padding-bottom: 3px;          /* Kapatma butonuyla çakışmasın */
+}
+
+/* Arama Alanı Kapsayıcısı (Yan Yana Dizme) */
+#sidebarLocationModal .modal-box > div {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 3px !important;          /* Input ve buton arası 3px */
+    width: 100% !important;
+}
+
+/* Şehir Adı Input (Otomatik Kalan Yeri Kaplar) */
+#sidebar_city_input {
+    flex: 1 !important;           /* Kalan tüm boşluğu doldurur */
+    min-width: 0 !important;      /* Dar alanda sıkışabilmesini sağlar */
+    font-size: 11px !important;
+    padding: 0 5px !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    height: 24px !important;      /* Yükseklik */
+    outline: none !important;
+    border-radius: 0 !important;
+}
+
+/* BUL Butonu (Sabit Genişlik) */
+#sidebarLocationModal .btn-primary {
+    width: 35px !important;       /* Sabit 35px */
+    flex-shrink: 0 !important;    /* Asla daralmasın */
+    font-size: 10px !important;
+    height: 24px !important;      /* Input ile aynı boy */
+    padding: 0 !important;        /* İç boşluk sıfır */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ff9f43 !important; /* Turuncu */
+    border: none !important;
+    cursor: pointer;
+}
+
+#sidebarLocationModal .btn-primary:hover {
+    background: #ffb167 !important; /* Biraz daha açık turuncu */
+    box-shadow: 0 0 10px rgba(255, 159, 67, 0.6); /* Turuncu parlama */
+    transform: scale(1.02); /* Çok hafif büyüme */
+    transition: all 0.2s ease;
+}
+
+/* Sonuç Listesi */
+#sidebarResultList {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-top: 5px !important;   /* Input ile arası */
+}
+
+/* Liste Elemanları */
+#sidebarResultList li {
+    padding: 6px 4px !important;
+    font-size: 11px !important;
+    line-height: 1.2;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: #ddd;
+    word-wrap: break-word;        /* Uzun şehir isimleri alt satıra geçsin */
+}
+
+#sidebarResultList li:hover {
+    background: rgba(255, 159, 67, 0.2);
+    color: #fff;
+}
+
 </style>
 </head>
 <body>
-    <video autoplay muted loop playsinline id="bg-video">
-        <source src="{{ url_for('static', filename='videos/space.mp4') }}" type="video/mp4">
-    </video>
-    
-    <div class="video-overlay"></div>
-
     <header class="main-header">
         <div class="logo-container">
-            <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Logo" class="logo-svg" onerror="this.style.display='none'">
-            <div class="logo-text-wrapper">
-                <span class="logo-title">ASTROFIRE</span>
-                <span class="logo-subtitle">Özümay Akademi</span>
-            </div>
-        </div>
+    <a href="{{ url_for('home') }}" class="logo-link">
+        <img src="{{ url_for('static', filename='images/logo.svg') }}" 
+             alt="AstroFire" 
+             class="logo-svg-main" 
+             onerror="this.style.display='none'">
+    </a>
+</div>
         
         <nav class="main-nav">
             <a href="{{ url_for('page_data') }}" class="nav-link {% if active_page == 'data' %}active{% endif %}">DATA</a>
@@ -710,13 +1537,13 @@
             {% if is_logged_in %} 
                 <div class="user-dropdown-trigger" onclick="toggleUserMenu(event)" style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:5px 10px; border-radius:4px; transition:background 0.2s;">
                     {% if user_profile_image %}
-                        <img src="{{ url_for('static', filename='uploads/profiles/' ~ user_profile_image) }}" alt="Profil" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:2px solid #1565c0;">
+                        <img src="{{ url_for('static', filename='uploads/profiles/' ~ user_profile_image) }}" alt="Profil" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:2px solid rgb(255, 255, 255)0.00011)0.00011);">
                     {% else %}
-                        <div style="width:30px; height:30px; border-radius:50%; background:#e0e0e0; display:flex; align-items:center; justify-content:center; border:2px solid #1565c0;">
+                        <div style="width:30px; height:30px; border-radius:50%; background:rgba(212, 208, 208, 0.87); display:flex; align-items:center; justify-content:center; border:2px solid rgb(255, 255, 255);">
                             <i class="fas fa-user" style="color:#666; font-size:14px;"></i>
                         </div>
                     {% endif %}
-                    <span style="font-size:13px; font-weight:bold; color:#334155;">{{ display_name }}</span>
+                    <span style="font-size:13px; font-weight:bold; color:#e7e7e7;">{{ display_name }}</span>
                     <i class="fas fa-chevron-down" style="font-size:10px; color:#666;"></i>
                 </div>
                 
@@ -747,241 +1574,221 @@
     </header>
 
     {% block content %}
-    <div class="main-container">
-        <aside class="sidebar-left" style="background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; display: flex; flex-direction: column; gap: 5px; overflow: hidden;">
-    
-            <!-- 1. KART: ZAMAN KAPSÜLÜ -->
-            {% if current_chart_data and current_chart_data.type in ['natal', 'transit'] %}
-    <div style="background: rgba(255, 255, 255, 0.90) !important; border: 1px solid #e2e8f0; padding: 10px; flex-shrink: 0; display: flex; flex-direction: column;">
-        <form action="/set_active_time" method="POST" style="margin-bottom: 8px; display: flex; flex-direction: column; gap: 5px;">
-            {% if current_chart_data %}
-                <input type="datetime-local" name="target_date" class="date-jump-input" required value="{{ current_chart_data.year }}-{{ '%02d'|format(current_chart_data.month) }}-{{ '%02d'|format(current_chart_data.day) }}T{{ '%02d'|format(current_chart_data.hour) }}:{{ '%02d'|format(current_chart_data.minute) }}" style="width: 100%;">
-            {% else %}
-                <input type="datetime-local" name="target_date" class="date-jump-input" style="width: 100%;">
-            {% endif %}
-            <button type="submit" class="btn-jump" style="width: 100%;">GİT</button>
-        </form>
+<div class="main-container">
 
+    <aside class="sidebar-left">
+    
+    {% if current_chart_data and (current_chart_data.type in ['natal', 'transit', 'progression', 'synastry', 'composite'] or 'progression' in current_chart_data.type or 'solar_arc' in current_chart_data.type or 'secondary' in current_chart_data.type) %}
+    <div class="time-capsule-container">
         <div class="time-control-row">
             <button class="time-btn" onclick="adjustTime(-1)"><i class="fas fa-chevron-left"></i></button>
-            <select id="timeStepSelect" class="time-select" onchange="saveTimeStep()" style="flex: 1; text-align: center;">
+            <select id="timeStepSelect" class="time-select" onchange="saveTimeStep()">
                 <option value="minute">Dakika</option>
                 <option value="hour">Saat</option>
-                <option value="day">Gün</option>
+                <option value="day" selected>Gün</option>
                 <option value="week">Hafta</option>
                 <option value="month">Ay</option>
                 <option value="year">Yıl</option>
             </select>
             <button class="time-btn" onclick="adjustTime(1)"><i class="fas fa-chevron-right"></i></button>
         </div>
+        <form action="/set_active_time" method="POST" class="time-form-group">
+            <input type="datetime-local" name="target_date" class="date-jump-input" required 
+                   value="{{ current_chart_data.year }}-{{ '%02d'|format(current_chart_data.month) }}-{{ '%02d'|format(current_chart_data.day) }}T{{ '%02d'|format(current_chart_data.hour) }}:{{ '%02d'|format(current_chart_data.minute) }}">
+            <button type="submit" class="btn-jump">GİT</button>
+        </form>
     </div>
-{% endif %}
+    {% endif %}
 
-            <!-- 2. KART: TRANSİT BİLGİLERİ -->
-            <div style="background: rgba(255, 255, 255, 0.90) !important; border: 1px solid #e2e8f0; padding: 10px; flex-shrink: 0; display: flex; flex-direction: column;">
-                <div class="sidebar-info-card" style="margin-bottom: 5px;">
-                    <div class="info-row" title="Anlık Zaman"><i class="far fa-clock"></i><span id="bar_datetime">...</span></div>
-                    <div class="info-row" title="Konum"><i class="fas fa-map-marker-alt"></i><span id="bar_location_display" class="info-clickable" onclick="openSidebarLocationSearch()">İstanbul</span></div>
-                    <div class="info-row" title="ASC"><i class="fas fa-arrow-up"></i><span>ASC: <b id="bar_asc_degree">--</b></span></div>
-                </div>
-                
-                <a href="javascript:void(0)" onclick="openTransitMenu(event)" class="sidebar-link {% if active_tab == 'instant_transit' %}active{% endif %}" style="margin: 0; padding: 6px 8px;">
-                    <i class="fas fa-satellite"></i> Transit
-                </a>
+    <div class="transit-info-card-box">
+        <div class="info-group-wrapper">
+            <div class="info-row" title="Anlık Zaman">
+                <i class="far fa-clock"></i>
+                <span id="bar_datetime">...</span>
             </div>
 
-            <!-- 3. KART: DİĞER MENÜLER -->
-            <div style="background: rgba(255, 255, 255, 0.90) !important; border: 1px solid #e2e8f0; padding: 10px; flex: 1; display: flex; flex-direction: column; overflow-y: auto;">
-                <div style="display: flex; flex-direction: column; gap: 2px;">
-                    <a href="javascript:void(0)" onclick="openProgressionModal()" class="sidebar-link">İlerletilmiş Haritalar</a>
-                    <a href="javascript:void(0)" onclick="openReturnModal()" class="sidebar-link">Dönüş Haritaları</a>
-                    <a href="javascript:void(0)" onclick="openCelestialModal()" class="sidebar-link">Tutulmalar & Ay Evreleri</a>
-                    <a href="javascript:void(0)" onclick="openSynastryModal()" class="sidebar-link {% if active_tab == 'sinastri' %}active{% endif %}">Sinastri</a>
-                </div>
+            <div class="info-row" title="Konum">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="bar_location_display" class="info-clickable" onclick="openSidebarLocationSearch()">İstanbul</span>
             </div>
 
-        </aside>
-        
-        <div class="vertical-action-strip">
-    <button class="v-strip-btn" data-tooltip="En Yakın Yeni Ay/Dolunay" onclick="handleQuickJump('/api/find_nearest_lunation')">
-        <i class="fas fa-moon"></i>
-    </button>
-    
-    <button class="v-strip-btn" data-tooltip="En Yakın Tutulma" onclick="handleQuickJump('/api/find_nearest_eclipse')">
-        <i class="fas fa-sun"></i>
-    </button>
-    
-    <button class="v-strip-btn" data-tooltip="Anlık Gökyüzü (Transit)" onclick="setNowTransit()">
-        <i class="fas fa-clock"></i>
-    </button>
-    <button class="v-strip-btn" data-tooltip="Anlık İkili Gökyüzü (Transit)" onclick="setNowDoubleTransit()">
-        <i class="fas fa-user-clock"></i>
-    </button>
-    <button class="v-strip-btn" data-tooltip="Hızlı Sinastri" onclick="openQuickSynastry()">
-        <i class="fas fa-user-friends"></i>
-    </button>
-</div>
-
-        <main class="chart-content">
-    {% if not is_logged_in %}
-            <h2>Hoş Geldiniz</h2>
-            <p>Lütfen devam etmek için giriş yapın veya kayıt olun.</p>
+            <div class="info-row" title="ASC">
+                <i class="fas fa-arrow-up"></i>
+                <span>ASC: <b id="bar_asc_degree">--</b></span>
+            </div>
         </div>
-    {% else %}
-        {% if current_chart_data %}
-            <div class="chart-info-overlay">
-                <span class="chart-info-name">{{ current_chart_data.name }}</span>
-                <div class="chart-info-details-group">
-                    {% if current_chart_data.type in ['synastry', 'composite'] and current_chart_data.natal_meta_1 and current_chart_data.natal_meta_2 %}
-                        <div class="chart-info-item">
-                            <i class="fas fa-user"></i>
-                            <span>1: {{ current_chart_data.natal_meta_1.day }}.{{ current_chart_data.natal_meta_1.month }}.{{ current_chart_data.natal_meta_1.year }} {{ "%02d"|format(current_chart_data.natal_meta_1.hour) }}:{{ "%02d"|format(current_chart_data.natal_meta_1.minute) }}</span>
-                        </div>
-                        <div class="chart-info-item">
-                            <i class="fas fa-user-friends"></i>
-                            <span>2: {{ current_chart_data.natal_meta_2.day }}.{{ current_chart_data.natal_meta_2.month }}.{{ current_chart_data.natal_meta_2.year }} {{ "%02d"|format(current_chart_data.natal_meta_2.hour) }}:{{ "%02d"|format(current_chart_data.natal_meta_2.minute) }}</span>
-                        </div>
-                    {% else %}
-                        <div class="chart-info-item"><i class="far fa-calendar-alt"></i><span>{{ current_chart_data.day }}.{{ current_chart_data.month }}.{{ current_chart_data.year }} {{ "%02d"|format(current_chart_data.hour) }}:{{ "%02d"|format(current_chart_data.minute) }}</span></div>
-                        <div class="chart-info-item"><i class="fas fa-map-marker-alt"></i><span>{{ current_chart_data.location_name }}</span></div>
-                        <div class="chart-info-item"><i class="fas fa-globe"></i><span>{{ current_chart_data.zodiac_type }} | UTC {{ current_chart_data.tz_offset }}</span></div>
-                    {% endif %}
-                </div>
-
-                {% if current_chart_data.type in ['synastri', 'synastry'] %}
-                <button onclick="swapSynastryCharts()" title="İç ve Dış Haritanın Yerini Değiştir" style="margin-left: auto; background: #e67e22; color: white; border: none; border-radius: 0px; padding: 4px 8px; font-size: 10px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); height: 24px;">
-                    <i class="fas fa-exchange-alt" style="font-size: 9px;"></i> <span>DEĞİŞTİR</span>
-                </button>
-                {% endif %}
-            </div>
-        {% endif %}
         
-        <div class="chart-scroll-container">
-            <div id="customTooltip" class="custom-tooltip"></div>
-            
-            <div class="chart-wheel-placeholder">
-                {% if last_chart %}
-                    <svg id="astroChart" viewBox="0 0 700 700"></svg>
-                {% else %}
-                    <p style="padding: 20px; text-align: center; color: #777; margin-top: 50px;">Harita bekleniyor...</p>
-                {% endif %}
+        <div class="info-card-menu-area">
+            <a href="javascript:void(0)" onclick="openTransitMenu(event)" class="sidebar-link transit-link">
+                <i class="fas fa-satellite"></i> Transit Menüsü
+            </a>
+        </div>
+    </div>
+
+    <div class="bottom-menu-container">
+        <a href="javascript:void(0)" onclick="openProgressionModal()" class="sidebar-link"><i class="fas fa-history"></i> İlerletilmiş Haritalar</a>
+        <a href="javascript:void(0)" onclick="openReturnModal()" class="sidebar-link"><i class="fas fa-redo"></i> Dönüş Haritaları</a>
+        <a href="javascript:void(0)" onclick="openCelestialModal()" class="sidebar-link"><i class="fas fa-moon"></i> Tutulmalar & Ay Evreleri</a>
+        <a href="javascript:void(0)" onclick="openSynastryModal()" class="sidebar-link {% if active_tab == 'sinastri' %}active{% endif %}"><i class="fas fa-user-friends"></i> Sinastri</a>
+    </div>
+
+</aside>
+
+    <main class="chart-content">
+        {% if not is_logged_in %}
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; min-height: 500px;">
+                <div style="background:rgba(255,255,255,0.95); padding:40px; border:1px solid #e2e8f0; box-shadow:0 10px 30px rgba(0,0,0,0.1); text-align:center; max-width:500px;">
+                    <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="AstroFire" style="width:80px; margin-bottom:20px;">
+                    <h2 style="color:#1565c0; margin-bottom:10px;">AstroFire'a Hoş Geldiniz</h2>
+                    <p style="color:#556677; margin-bottom:25px; line-height:1.6;">Lütfen giriş yapın.</p>
+                    <a href="{{ url_for('login') }}" class="btn-primary" style="text-decoration:none; padding:12px 25px;">Giriş Yap</a>
+                </div>
+            </div>
+        {% else %}
+            <div class="chart-scroll-container">
+                <div id="customTooltip" class="custom-tooltip"></div>
+                
+                <div class="chart-inner-wrapper"> 
+                    
+                    <div class="chart-wheel-placeholder">
+                        {% if last_chart %}
+                            {% if current_chart_data %}
+                                <div class="chart-info-overlay">
+                                    {% if current_chart_data.type in ['synastry', 'synastri', 'composite', 'progression', 'progressed', 'synastry_transit'] and current_chart_data.natal_meta_1 and current_chart_data.natal_meta_2 %}
+                                        <div class="chart-info-name-row">
+                                            <span>{{ current_chart_data.natal_meta_1.name }}</span>
+                                            <span style="color: #fbbf24; font-weight:300; margin: 0 4px;">&</span>
+                                            <span>{{ current_chart_data.natal_meta_2.name }}</span>
+                                        </div>
+                                        <div class="chart-type-label">
+                                            {% if current_chart_data.type == 'composite' %}KOMPOZİT
+                                            {% elif 'synastr' in current_chart_data.type %}SİNASTRİ
+                                            {% elif 'progress' in current_chart_data.type %}PROGRESS
+                                            {% else %}{{ current_chart_data.type|upper }}{% endif %}
+                                        </div>
+                                        <div class="chart-info-row">
+                                            <i class="fas fa-user person-icon"></i>
+                                            <span>1: {{ current_chart_data.natal_meta_1.day }}.{{ current_chart_data.natal_meta_1.month }}.{{ current_chart_data.natal_meta_1.year }}</span>
+                                        </div>
+                                        <div class="chart-info-row">
+                                            <i class="fas fa-user-friends person-icon"></i>
+                                            <span>2: {{ current_chart_data.natal_meta_2.day }}.{{ current_chart_data.natal_meta_2.month }}.{{ current_chart_data.natal_meta_2.year }}</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="chart-info-name-row">{{ current_chart_data.name }}</div>
+                                        <div class="chart-type-label">{{ current_chart_data.type|upper }}</div>
+                                        <div class="chart-info-row">
+                                            <i class="far fa-calendar-alt"></i>
+                                            <span>{{ current_chart_data.day }}.{{ current_chart_data.month }}.{{ current_chart_data.year }} {{ "%02d"|format(current_chart_data.hour) }}:{{ "%02d"|format(current_chart_data.minute) }}</span>
+                                        </div>
+                                        <div class="chart-info-row">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <span>
+                                                {% if current_chart_data.location_name %}
+                                                    {{ current_chart_data.location_name.split(',')[:2] | join(',') }}
+                                                {% else %}Konum Belirsiz{% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="chart-info-row">
+                                            <i class="fas fa-globe"></i>
+                                            <span>{{ current_chart_data.zodiac_type or 'Tropikal' }} | UTC {{ current_chart_data.tz_offset }}</span>
+                                        </div>
+                                    {% endif %}
+                                </div> 
+
+                                {% if current_chart_data.type in ['synastri', 'synastry', 'synastry_transit'] %}
+                                    <div class="chart-action-container">
+                                        <button type="button" onclick="swapSynastryCharts(this, '{{ current_chart_data.natal_meta_1.id }}', '{{ current_chart_data.natal_meta_2.id }}')" class="glass-change-btn" title="İç ve Dış Haritanın Yerini Değiştir">
+                                            <i class="fas fa-exchange-alt" style="color:#ffffff;"></i> <span>DEĞİŞTİR</span>
+                                        </button>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+
+                            <svg id="astroChart" viewBox="0 0 700 700"></svg>
+                        
+                        {% else %}
+                            <p style="padding: 20px; text-align: center; color: #777; margin-top: 50px;">Harita bekleniyor...</p>
+                        {% endif %} 
+                    </div> 
+
+                    <div id="hesaplama_raporu" class="tab-content active" style="width: 100%;">
+                        {% if report_success %}
+                            {% include 'report_output.html' ignore missing %}
+                        {% elif report_success == False %}
+                            <div class="alert error">❌ {{ report_error }}</div>
+                        {% endif %}
+                    </div>
+
+                </div> </div> {% endif %}
+    </main>
+
+    <div class="right-sidebar-wrapper" id="rightSidebarWrapper">
+        <div id="right-panel-toggle" onclick="toggleRightPanel()"><i class="fas fa-chevron-right"></i></div>
+        <aside class="sidebar-form-card" id="rightSidebar">
+            <div class="tab-navigation">
+                <a href="{{ url_for('home', tab='natal') }}" class="tab-button {% if active_tab == 'natal' %}active{% endif %}">Harita Aç</a>
+                <a href="{{ url_for('home', tab='aktif') }}" class="tab-button {% if active_tab == 'aktif' %}active{% endif %}">Aktif ({{ active_charts|length }})</a>
             </div>
             
-            <div id="aktif_haritalar" class="tab-content">
+            <div id="natal" class="tab-content {% if active_tab == 'natal' %}active{% endif %}">
+                <form id="natalForm" method="POST" action="{{ url_for('home', tab='natal') }}">
+                    {% include 'natal_form_fields.html' ignore missing %}
+                    <button type="submit" class="btn-primary" style="width:100%; margin-top:10px;">HESAPLA</button>
+                </form>
+            </div>
+            
+            <div id="aktif" class="tab-content {% if active_tab == 'aktif' %}active{% endif %}">
                 {% include 'active_charts_list.html' ignore missing %}
             </div>
-
-            <div id="hesaplama_raporu" class="tab-content active" style="display:block; width:100%; padding:0 20px;">
-                {% if report_success %}
-                    <div class="report-container">
-                        {% include 'report_output.html' ignore missing %}
-                    </div>
-                {% elif report_success == False %}
-                    <div class="alert error">❌ {{ report_error }}</div>
-                {% endif %}
-            </div>
-        </div>
-    {% endif %}
-</main>
-
-        <div class="right-sidebar-wrapper" id="rightSidebarWrapper">
-            <div id="right-panel-toggle" onclick="toggleRightPanel()"><i class="fas fa-chevron-right"></i></div>
-            <aside class="sidebar-form-card" id="rightSidebar">
-                <div class="tab-navigation">
-                    <a href="{{ url_for('home', tab='natal') }}" class="tab-button {% if active_tab == 'natal' %}active{% endif %}">Harita Aç</a>
-                    <a href="{{ url_for('home', tab='aktif') }}" class="tab-button {% if active_tab == 'aktif' %}active{% endif %}">Aktif ({{ active_charts|length }})</a>
-                </div>
-                <div id="natal" class="tab-content {% if active_tab == 'natal' %}active{% endif %}">
-                    <form id="natalForm" method="POST" action="{{ url_for('home', tab='natal') }}">
-                        {% include 'natal_form_fields.html' ignore missing %}
-                        <button type="submit" class="btn-primary" style="width:100%; background:#27ae60; color:white; padding:8px; border:none; border-radius:4px; font-weight:bold; margin-top:10px;">HESAPLA</button>
-                    </form>
-                </div>
-                <div id="aktif" class="tab-content {% if active_tab == 'aktif' %}active{% endif %}">
-                    {% include 'active_charts_list.html' ignore missing %}
-                </div>
-            </aside>
-        </div>
+        </aside>
     </div>
-    {% endblock %}
 
-    <input type="hidden" id="bar_lat" value="41.0082"><input type="hidden" id="bar_lon" value="28.9784"><input type="hidden" id="bar_tz" value="3.0"><input type="hidden" id="bar_loc_name" value="İstanbul, Türkiye">
-    <form id="instantTransitForm" method="POST" action="{{ url_for('home', tab='instant_transit') }}" style="display:none;"><input type="hidden" name="bar_year" id="form_bar_year"><input type="hidden" name="bar_month" id="form_bar_month"><input type="hidden" name="bar_day" id="form_bar_day"><input type="hidden" name="bar_hour" id="form_bar_hour"><input type="hidden" name="bar_minute" id="form_bar_minute"><input type="hidden" name="bar_lat" id="form_bar_lat"><input type="hidden" name="bar_lon" id="form_bar_lon"><input type="hidden" name="bar_tz" id="form_bar_tz"><input type="hidden" name="bar_loc_name" id="form_bar_loc_name"><input type="hidden" name="transit_type" id="form_transit_type"></form>
-    <form id="timeAdjustForm" method="POST" action="/adjust_active_time" style="display:none;"><input type="hidden" name="unit" id="time_adjust_unit"><input type="hidden" name="amount" id="time_adjust_amount"></form>
-    
-    <div id="locationModal" class="modal-overlay"><div class="modal-box"><h4 id="locationModalTitle">Konum Seçin</h4><div style="display:flex; gap:5px; margin-bottom:10px;"><input type="text" id="modal_city_input" placeholder="Şehir adı..." style="flex:1;"><button onclick="searchInModal()" style="background:#1565c0; color:white; border:none; border-radius:4px; padding:0 15px; cursor:pointer;">BUL</button></div><p id="modal-loading" style="display:none; color:#666;">Aranıyor...</p><ul id="locationResultList" class="location-list"></ul><button class="close-modal-btn" onclick="closeLocationModal()">Kapat</button></div></div>
-    <!-- TRANSİT MENÜSÜ -->
+</div>
+
+<input type="hidden" id="bar_lat" value="41.0082"><input type="hidden" id="bar_lon" value="28.9784"><input type="hidden" id="bar_tz" value="3.0"><input type="hidden" id="bar_loc_name" value="İstanbul, Türkiye">
+<form id="instantTransitForm" method="POST" action="{{ url_for('home', tab='instant_transit') }}" style="display:none;"><input type="hidden" name="bar_year" id="form_bar_year"><input type="hidden" name="bar_month" id="form_bar_month"><input type="hidden" name="bar_day" id="form_bar_day"><input type="hidden" name="bar_hour" id="form_bar_hour"><input type="hidden" name="bar_minute" id="form_bar_minute"><input type="hidden" name="bar_lat" id="form_bar_lat"><input type="hidden" name="bar_lon" id="form_bar_lon"><input type="hidden" name="bar_tz" id="form_bar_tz"><input type="hidden" name="bar_loc_name" id="form_bar_loc_name"><input type="hidden" name="transit_type" id="form_transit_type"></form>
+<form id="timeAdjustForm" method="POST" action="/adjust_active_time" style="display:none;"><input type="hidden" name="unit" id="time_adjust_unit"><input type="hidden" name="amount" id="time_adjust_amount"></form>
+
+<div id="locationModal" class="modal-overlay">
+    <div class="modal-box"> 
+        
+        <h4 id="locationModalTitle">Konum Seçin</h4>
+        
+        <div class="modal-search-row">
+            <input type="text" id="modal_city_input" placeholder="Şehir adı...">
+            <button class="btn-primary" onclick="searchInModal()">BUL</button>
+        </div>
+        
+        <ul id="locationResultList" class="location-list"></ul>
+    </div>
+</div>
+
+<div id="sidebarLocationModal" class="modal-overlay">
+    <div class="modal-box sidebar-modal-custom">
+        
+        <button class="modal-close" onclick="closeSidebarLocationModal()">&times;</button>
+        
+        <h4 style="color: #ff9f43; border-color: rgba(255,255,255,0.1);">
+            <i class="fas fa-map-marker-alt"></i> Canlı Konum
+        </h4>
+        
+        <div style="display:flex; gap:5px; margin-bottom: 10px;">
+            <input type="text" id="sidebar_city_input" placeholder="Şehir adı..." 
+                   style="flex: 1; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; outline: none;">
+            
+            <button onclick="searchSidebarLocation()" class="btn-primary" style="padding: 0 15px; margin:0;">BUL</button>
+        </div>
+
+        <div id="sidebar-loading" style="display:none; color: #ff9f43; font-size: 11px; text-align: center; margin-bottom:5px;">Aranıyor...</div>
+
+        <ul id="sidebarResultList" class="location-list" style="list-style: none; padding: 0; margin: 0; max-height: 200px; overflow-y: auto;"></ul>
+    </div>
+</div>
+<!-- TRANSİT MENÜSÜ -->
     <div id="transit-context-menu" class="transit-context-menu">
         <div class="transit-menu-item" onclick="submitInstantTransit('Astronomik')">Astronomik Transit</div>
         <div class="transit-menu-item" onclick="submitInstantTransit('Drakonik')">Drakonik Transit</div>
-    </div>
-    
-    <!-- HARİTA SAĞ TIK MENÜSÜ -->
-    <div id="canvas-context-menu" class="transit-context-menu" style="width: 200px;">
-        <div class="transit-menu-item" onclick="openSelectionModal('planets', 'Gezegen Seçimi')">
-            <i class="fas fa-globe" style="color:#3498db; width:20px;"></i> Gezegenleri Seç
-        </div>
-        <div class="transit-menu-item" onclick="openSelectionModal('asteroids', 'Asteroid Seçimi')">
-            <i class="fas fa-meteor" style="color:#9b59b6; width:20px;"></i> Asteroidleri Seç
-        </div>
-        <div class="transit-menu-item" onclick="openSelectionModal('fixedstars', 'Sabit Yıldız Seçimi')">
-            <i class="fas fa-star" style="color:#f1c40f; width:20px;"></i> Sabit Yıldızları Seç
-        </div>
-        <div class="transit-menu-item" onclick="openSelectionModal('angles', 'Köşe Noktaları')">
-            <i class="fas fa-compass" style="color:#e74c3c; width:20px;"></i> Köşe Noktaları
-        </div>
-    </div>
-    
-    <div id="celestialEventsModal" class="modal-overlay">
-        <div class="synastry-modal-box" style="max-width: 900px; width: 95%; max-height: 85vh; background: #fff; border-radius: 8px; display: flex; flex-direction: column; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
-            
-            <div class="synastry-header" style="padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border-radius: 8px 8px 0 0;">
-                <span style="font-weight: bold; color: #2c3e50; font-size: 16px;"><i class="fas fa-moon"></i> Gökyüzü Olayları Arşivi</span>
-                <span style="cursor:pointer; font-size:20px; color: #e74c3c;" onclick="document.getElementById('celestialEventsModal').style.display='none'">✕</span>
-            </div>
-            
-            <div class="synastry-body" style="flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto;">
-                
-                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; justify-content: center;">
-                    <input type="number" id="ce_year" placeholder="Yıl" value="2025" 
-                           style="width: 80px; padding:8px; border:1px solid #ddd; border-radius:4px; font-weight:bold; text-align: center;">
-                    
-                    <select id="ce_zodiac" style="padding:8px; border:1px solid #ddd; border-radius:4px; font-weight:bold; color:#333;">
-                        <option value="Tropikal">Tropikal</option>
-                        <option value="Astronomik">Astronomik</option>
-                        <option value="Drakonik">Drakonik</option>
-                    </select>
-
-                    <button onclick="searchCelestialEvents()" 
-                            style="background:#2c3e50; color:white; border:none; padding:8px 20px; border-radius:4px; cursor:pointer; font-weight:bold;">
-                        LİSTELE
-                    </button>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    
-                    <div style="display:flex; flex-direction:column; height: 100%;">
-                        <h5 style="margin:0 0 8px 0; color:#c0392b; font-size:13px; border-bottom:2px solid #c0392b; padding-bottom:4px; text-align: center;">
-                            <i class="fas fa-eclipse"></i> TUTULMALAR
-                        </h5>
-                        <div id="eclipseList" class="synastry-list" style="flex:1; height: 50vh; max-height: 400px; overflow-y: auto; background:#fff5f5; border: 1px solid #fadbd8; border-radius: 4px;">
-                             <p style="text-align:center; color:#999; font-size:12px; margin-top:20px;">Yıl seçip arayın.</p>
-                        </div>
-                    </div>
-                    
-                    <div style="display:flex; flex-direction:column; height: 100%;">
-                        <h5 style="margin:0 0 8px 0; color:#2980b9; font-size:13px; border-bottom:2px solid #2980b9; padding-bottom:4px; text-align: center;">
-                            <i class="far fa-moon"></i> YENİ AY & DOLUNAY
-                        </h5>
-                        <div id="phaseList" class="synastry-list" style="flex:1; height: 50vh; max-height: 400px; overflow-y: auto; background:#ebf5fb; border: 1px solid #d6eaf8; border-radius: 4px;">
-                            <p style="text-align:center; color:#999; font-size:12px; margin-top:20px;">Yıl seçip arayın.</p>
-                        </div>
-                    </div>
-
-                    
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- SİDEBAR SAĞ TIK MENÜSÜ -->
@@ -1000,90 +1807,96 @@
         </div>
     </div>
 
-    <!-- GÖRÜNÜRLÜK SEÇİM MODAL -->
-    <div id="selectionModal" class="modal-overlay">
-    <div class="modal-box" style="width: 450px; height: 500px;">
-        <h4 id="selectionModalTitle">Görünürlük Ayarları</h4>
-        
-        <div id="backBtnContainer" style="display:none; margin-bottom:10px;">
-            <span class="back-btn" onclick="goBackToFolders()"><i class="fas fa-chevron-left"></i> Kategorilere Dön</span>
+    <!-- HARİTA SAĞ TIK MENÜSÜ -->
+    <div id="canvas-context-menu" class="transit-context-menu" style="width: 200px;">
+        <div class="transit-menu-item" onclick="openSelectionModal('planets', 'Gezegen Seçimi')">
+            <i class="fas fa-globe" style="color:#3498db; width:20px;"></i> Gezegenleri Seç
         </div>
+        <div class="transit-menu-item" onclick="openSelectionModal('asteroids', 'Asteroid Seçimi')">
+            <i class="fas fa-meteor" style="color:#9b59b6; width:20px;"></i> Asteroidleri Seç
+        </div>
+        <div class="transit-menu-item" onclick="openSelectionModal('fixedstars', 'Sabit Yıldız Seçimi')">
+            <i class="fas fa-star" style="color:#f1c40f; width:20px;"></i> Sabit Yıldızları Seç
+        </div>
+        <div class="transit-menu-item" onclick="openSelectionModal('angles', 'Köşe Noktaları')">
+            <i class="fas fa-compass" style="color:#e74c3c; width:20px;"></i> Köşe Noktaları
+        </div>
+    </div>
 
+<div id="celestialEventsModal" class="modal-overlay">
+    <div class="synastry-modal-box" style="max-width: 900px; width: 95%; max-height: 85vh; background: #fff; border-radius: 8px; display: flex; flex-direction: column; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+        <div class="synastry-header" style="padding: 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border-radius: 8px 8px 0 0;">
+            <span style="font-weight: bold; color: #2c3e50; font-size: 16px;"><i class="fas fa-moon"></i> Gökyüzü Olayları Arşivi</span>
+            <span style="cursor:pointer; font-size:20px; color: #e74c3c;" onclick="document.getElementById('celestialEventsModal').style.display='none'">✕</span>
+        </div>
+        <div class="synastry-body" style="flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto;">
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; justify-content: center;">
+                <input type="number" id="ce_year" placeholder="Yıl" value="2025" style="width: 80px; padding:8px; border:1px solid #ddd; border-radius:4px; font-weight:bold; text-align: center;">
+                <select id="ce_zodiac" style="padding:8px; border:1px solid #ddd; border-radius:4px; font-weight:bold; color:#333;"><option value="Tropikal">Tropikal</option><option value="Astronomik">Astronomik</option><option value="Drakonik">Drakonik</option></select>
+                <button onclick="searchCelestialEvents()" style="background:#2c3e50; color:white; border:none; padding:8px 20px; border-radius:4px; cursor:pointer; font-weight:bold;">LİSTELE</button>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="display:flex; flex-direction:column; height: 100%;">
+                    <h5 style="margin:0 0 8px 0; color:#c0392b; font-size:13px; border-bottom:2px solid #c0392b; padding-bottom:4px; text-align: center;"><i class="fas fa-eclipse"></i> TUTULMALAR</h5>
+                    <div id="eclipseList" class="synastry-list" style="flex:1; height: 50vh; max-height: 400px; overflow-y: auto; background:#fff5f5; border: 1px solid #fadbd8; border-radius: 4px;"><p style="text-align:center; color:#999; font-size:12px; margin-top:20px;">Yıl seçip arayın.</p></div>
+                </div>
+                <div style="display:flex; flex-direction:column; height: 100%;">
+                    <h5 style="margin:0 0 8px 0; color:#2980b9; font-size:13px; border-bottom:2px solid #2980b9; padding-bottom:4px; text-align: center;"><i class="far fa-moon"></i> YENİ AY & DOLUNAY</h5>
+                    <div id="phaseList" class="synastry-list" style="flex:1; height: 50vh; max-height: 400px; overflow-y: auto; background:#ebf5fb; border: 1px solid #d6eaf8; border-radius: 4px;"><p style="text-align:center; color:#999; font-size:12px; margin-top:20px;">Yıl seçip arayın.</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="selectionModal" class="modal-overlay">
+    <div class="modal-box" style="width: 450px; height: 500px; position: relative;">
+        <button class="modal-close" onclick="closeSelectionModal()">&times;</button>
+        <h4 id="selectionModalTitle">Görünürlük Ayarları</h4>
+        <div id="backBtnContainer" style="display:none; margin-bottom:10px;"><span class="back-btn" onclick="goBackToFolders()"><i class="fas fa-chevron-left"></i> Kategorilere Dön</span></div>
         <div style="display:flex; gap:15px; flex:1; overflow:hidden;">
             <div style="flex:1; display:flex; flex-direction:column;">
                 <span style="font-size:11px; font-weight:bold; color:#27ae60; margin-bottom:5px; border-bottom:1px solid #eee;">GÖZÜKENLER</span>
                 <ul id="visibleList" class="synastry-list" style="flex:1;"></ul>
             </div>
-            
             <div style="width:1px; background:#eee;"></div>
-
             <div style="flex:1; display:flex; flex-direction:column;">
                 <span id="hiddenTitle" style="font-size:11px; font-weight:bold; color:#c0392b; margin-bottom:5px; border-bottom:1px solid #eee;">GİZLENENLER</span>
                 <ul id="hiddenList" class="synastry-list" style="flex:1;"></ul>
             </div>
         </div>
-
-        <button class="close-modal-btn" onclick="closeSelectionModal()" style="margin-top:15px; width:100%;">KAPAT VE UYGULA</button>
     </div>
 </div>
-<!-- Profil Modal -->
+
 <div id="profileModal" class="modal-overlay" style="display:none;">
-    <div class="modal-box profile-modal">
+    <div class="modal-box profile-modal" style="position: relative;">
+        <button class="modal-close" onclick="document.getElementById('profileModal').style.display='none'">&times;</button>
         <h4><i class="fas fa-user-circle"></i> Hesap Bilgileri</h4>
         <form action="/update_profile" method="POST" enctype="multipart/form-data">
-            <div class="profile-form-group">
-                <label>Profil Resmi</label>
-                {% if user_profile_image %}
-                    <img src="{{ url_for('static', filename='uploads/profiles/' ~ user_profile_image) }}" class="profile-image-preview" alt="Profil">
-                {% else %}
-                    <img src="{{ url_for('static', filename='images/default-avatar.png') }}" class="profile-image-preview" alt="Profil" onerror="this.src='https://via.placeholder.com/100'">
-                {% endif %}
-                <input type="file" name="profile_image" accept="image/*" style="margin-top:10px;">
+            <div class="profile-form-group"><label>Profil Resmi</label>
+                {% if user_profile_image %} <img src="{{ url_for('static', filename='uploads/profiles/' ~ user_profile_image) }}" class="profile-image-preview" alt="Profil">
+                {% else %} <img src="{{ url_for('static', filename='images/default-avatar.png') }}" class="profile-image-preview" alt="Profil" onerror="this.src='https://via.placeholder.com/100'"> {% endif %}
+                <input type="file" name="profile_image" accept="image/png, image/jpeg, image/jpg" style="margin-top:10px;">
             </div>
-            
-            <div class="profile-form-group">
-                <label>İsim Soyisim</label>
-                <input type="text" name="name" value="{{ display_name }}" required>
-            </div>
-            
-            <div class="profile-form-group">
-                <label>E-posta</label>
-                <input type="email" value="{{ user_email }}" disabled style="background:#f5f5f5; cursor:not-allowed;">
-                <small style="color:#666; font-size:11px;">Email değiştirilemez</small>
-            </div>
-            
-            <div class="profile-form-group">
-                <label>Telefon</label>
-                <input type="tel" name="phone" placeholder="05XX XXX XX XX">
-            </div>
-            
-            <div class="profile-form-group">
-                <label>Yeni Şifre (Boş bırakılırsa değişmez)</label>
-                <input type="password" name="new_password" placeholder="••••••••">
-            </div>
-            
-            <button type="submit" class="btn-primary" style="width:100%;">
-                <i class="fas fa-save"></i> Kaydet
-            </button>
+            <div class="profile-form-group"><label>İsim Soyisim</label><input type="text" name="name" value="{{ display_name }}" required></div>
+            <div class="profile-form-group"><label>E-posta</label><input type="email" value="{{ user_email }}" disabled style="background:#f5f5f5; cursor:not-allowed;"><small style="color:#666; font-size:11px;">Email değiştirilemez</small></div>
+            <div class="profile-form-group"><label>Telefon</label><input type="tel" name="phone" value="{{ user_phone or '' }}" placeholder="05XX XXX XX XX"></div>
+            <div class="profile-form-group"><label>Yeni Şifre (Boş bırakılırsa değişmez)</label><input type="password" name="new_password" placeholder="••••••••"></div>
+            <button type="submit" class="btn-primary" style="width:100%;"><i class="fas fa-save"></i> Kaydet</button>
         </form>
-        <button class="close-modal-btn" onclick="document.getElementById('profileModal').style.display='none'">Kapat</button>
     </div>
 </div>
 
-<!-- Destek Modal -->
 <div id="supportModal" class="modal-overlay" style="display:none;">
-    <div class="modal-box support-modal">
+    <div class="modal-box support-modal" style="position: relative;">
+        <button class="modal-close" onclick="document.getElementById('supportModal').style.display='none'">&times;</button>
         <h4><i class="fas fa-headset"></i> Destek & İletişim</h4>
         <div id="supportLinksContainer">
             {% if support_links %}
                 {% for key, link in support_links.items() %}
                     {% if link.enabled %}
                         <a href="{{ link.url }}" target="_blank" class="support-link-item">
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <i class="{{ link.icon }}" style="font-size:20px; color:#1565c0;"></i>
-                                <span style="font-weight:bold;">{{ link.title }}</span>
-                            </div>
-                            <i class="fas fa-external-link-alt" style="color:#999;"></i>
+                            <div style="display:flex; align-items:center; gap:10px;"><i class="{{ link.icon }}" style="font-size:20px; color:#1565c0;"></i><span style="font-weight:bold;">{{ link.title }}</span></div><i class="fas fa-external-link-alt" style="color:#999;"></i>
                         </a>
                     {% endif %}
                 {% endfor %}
@@ -1091,24 +1904,14 @@
                 <p style="text-align:center; color:#999; padding:20px;">Destek bilgileri yükleniyor...</p>
             {% endif %}
         </div>
-        <button class="close-modal-btn" onclick="document.getElementById('supportModal').style.display='none'">Kapat</button>
     </div>
 </div>
-                    
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <form id="loadEventForm" action="/load_celestial_event" method="POST" style="display:none;">
-        <input type="hidden" name="title" id="le_title">
-        <input type="hidden" name="year" id="le_year">
-        <input type="hidden" name="month" id="le_month">
-        <input type="hidden" name="day" id="le_day">
-        <input type="hidden" name="hour" id="le_hour">
-        <input type="hidden" name="minute" id="le_minute">
-    </form>
+<form id="loadEventForm" action="/load_celestial_event" method="POST" style="display:none;">
+    <input type="hidden" name="title" id="le_title"><input type="hidden" name="year" id="le_year"><input type="hidden" name="month" id="le_month"><input type="hidden" name="day" id="le_day"><input type="hidden" name="hour" id="le_hour"><input type="hidden" name="minute" id="le_minute">
+</form>
 
+{% endblock %}
     <script>
 
     // --- GENEL YARDIMCI FONKSİYONLAR ---
@@ -1164,15 +1967,15 @@
         if (ev.title.includes('Tutulma')) icon = '🌓';
         
         item.innerHTML = `
-            <div>
-                <span style="font-size:12px; font-weight:bold; color:${color};">${icon} ${ev.title}</span><br>
-                <span style="font-size:11px; color:#555;">${ev.sign_info}</span>
-            </div>
-            <div style="text-align:right;">
-                <span style="font-size:10px; font-weight:bold; color:#333;">${ev.date_str}</span><br>
-                <button style="margin-top:2px; background:${color}; color:white; border:none; border-radius:3px; padding:2px 6px; font-size:9px; cursor:pointer;">AÇ</button>
-            </div>
-        `;
+    <div style="display: flex; flex-direction: column; flex: 1;">
+        <span class="chart-list-name" style="color:${color};">${icon} ${ev.title}</span>
+        <span class="chart-list-date"><i class="far fa-calendar-alt"></i> ${ev.date_str}</span>
+        <span class="chart-list-type">📍 ${ev.sign_info}</span>
+    </div>
+    <div style="text-align:right;">
+        <button class="btn-jump" style="background:${color}; padding:2px 8px; font-size:9px;">AÇ</button>
+    </div>
+`;
         
         item.onclick = function() {
             document.getElementById('le_title').value = ev.title;
@@ -1260,24 +2063,183 @@
             alert('Bağlantı hatası!');
         });
     }
-    
+
+    // --- SOL MENÜ İÇİN AKILLI KONUMLANDIRMA ---
+
+    function openSidebarLocationSearch() {
+        const modal = document.getElementById('sidebarLocationModal');
+        const input = document.getElementById('sidebar_city_input');
+        const list = document.getElementById('sidebarResultList');
+        
+        // Tıklanan öğeyi referans alalım (Konum yazısı veya kutusu)
+        const triggerEl = document.getElementById('bar_location_display');
+        
+        if(modal && triggerEl) {
+            modal.style.display = 'block'; // Flex değil Block yapıyoruz
+            
+            // --- KOORDİNAT HESAPLAMA SİHRİ ---
+            // 1. Tıklanan kutunun (veya sidebar'ın) yerini bul
+            // .closest('.transit-info-card-box') diyerek tüm kutuyu baz alıyoruz
+            const parentBox = triggerEl.closest('.transit-info-card-box') || triggerEl;
+            const rect = parentBox.getBoundingClientRect();
+            
+            // 2. Modal kutusunu bul
+            const modalBox = modal.querySelector('.modal-box');
+            
+            // 3. Konumu ayarla:
+            // LEFT: Kutunun sağ kenarı (rect.right) + 5px boşluk
+            // TOP: Kutunun üst kenarı (rect.top)
+            if(modalBox) {
+                modalBox.style.left = (rect.right + 5) + 'px'; 
+                modalBox.style.top = (rect.top) + 'px';
+            }
+
+            // Inputu temizle ve odaklan
+            if(input) { 
+                input.value = ""; 
+                input.focus(); 
+                // Enter tuşu desteği
+                input.onkeypress = function(e) {
+                    if(e.key === "Enter") searchSidebarLocation();
+                };
+            }
+            if(list) list.innerHTML = "";
+            
+            // Dışarı tıklayınca kapansın (Overlay şeffaf olduğu için bu event'i wrapper'a veriyoruz)
+            modal.onclick = function(e) {
+                if(e.target === modal) closeSidebarLocationModal();
+            }
+        }
+    }
+
+    // 2. Pencereyi KAPAT
+    function closeSidebarLocationModal() {
+        document.getElementById('sidebarLocationModal').style.display = 'none';
+    }
+
+    // 3. ARAMA YAP (Sol menü için)
+    function searchSidebarLocation() {
+        const city = document.getElementById('sidebar_city_input').value;
+        if(!city) return;
+
+        document.getElementById('sidebar-loading').style.display = 'block';
+        const list = document.getElementById('sidebarResultList');
+        list.innerHTML = "";
+
+        // API isteği aynı kalabilir, backend değişmiyor
+        fetch('/api/search_location', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ city: city, source: 'bar' }) 
+        })
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('sidebar-loading').style.display = 'none';
+            
+            if(data.results && data.results.length > 0) {
+                data.results.forEach(loc => {
+                    const li = document.createElement('li');
+                    li.style.padding = "10px";
+                    li.style.borderBottom = "1px solid rgba(255,255,255,0.1)";
+                    li.style.cursor = "pointer";
+                    li.style.fontSize = "13px";
+                    li.innerHTML = `<strong>${loc.address}</strong> <span style="color:#bbb;">(UTC ${loc.tz_offset})</span>`;
+                    
+                    // Tıklayınca SADECE SOL MENÜYÜ GÜNCELLE
+                    li.onclick = function() {
+                        applySidebarLocation(loc);
+                    };
+                    
+                    // Hover efekti
+                    li.onmouseover = function() { this.style.background = "rgba(255,255,255,0.1)"; };
+                    li.onmouseout = function() { this.style.background = "transparent"; };
+                    
+                    list.appendChild(li);
+                });
+            } else {
+                list.innerHTML = "<li style='padding:10px; color: #ff7675;'>Sonuç bulunamadı.</li>";
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('sidebar-loading').style.display = 'none';
+        });
+    }
+
+    // 4. SEÇİLEN KONUMU UYGULA (Çakışma Önleyici)
+    function applySidebarLocation(loc) {
+        // Gizli inputları güncelle (Transit gönderirken bunlar kullanılıyor)
+        if(document.getElementById('bar_lat')) document.getElementById('bar_lat').value = loc.lat;
+        if(document.getElementById('bar_lon')) document.getElementById('bar_lon').value = loc.lon;
+        if(document.getElementById('bar_tz')) document.getElementById('bar_tz').value = loc.tz_offset;
+        if(document.getElementById('bar_loc_name')) document.getElementById('bar_loc_name').value = loc.address;
+        
+        // Görünür yazıyı güncelle
+        const displaySpan = document.getElementById('bar_location_display');
+        if(displaySpan) {
+            displaySpan.innerText = loc.address;
+            displaySpan.style.color = "#ff9f43"; // Değiştiğini belli etmek için turuncu yap
+        }
+
+        // LocalStorage'a kaydet (Sayfa yenilenirse hatırla)
+        localStorage.setItem('astroBarLocation', JSON.stringify({ 
+            lat: loc.lat, 
+            lon: loc.lon, 
+            tz: loc.tz_offset, 
+            name: loc.address 
+        }));
+        
+        // ASC derecesini hemen güncelle
+        if(typeof updateASC === 'function') updateASC();
+
+        // Pencereyi kapat
+        closeSidebarLocationModal();
+    }
+
     function openTransitMenu(event) { event.stopPropagation(); const menu = document.getElementById('transit-context-menu'); const rect = event.currentTarget.getBoundingClientRect(); menu.style.left = (rect.right + 5) + 'px'; menu.style.top = rect.top + 'px'; menu.style.display = 'block'; } function saveTimeStep() { const val = document.getElementById('timeStepSelect').value; localStorage.setItem('astroTimeStep', val); } function restoreState() { const s=localStorage.getItem('astroTimeStep'); if(s) { const el = document.getElementById('timeStepSelect'); if(el) el.value=s; } const l=localStorage.getItem('astroBarLocation'); if(l) { const d=JSON.parse(l); if(document.getElementById('bar_lat')) document.getElementById('bar_lat').value=d.lat; if(document.getElementById('bar_lon')) document.getElementById('bar_lon').value=d.lon; if(document.getElementById('bar_tz')) document.getElementById('bar_tz').value=d.tz; if(document.getElementById('bar_loc_name')) document.getElementById('bar_loc_name').value=d.name; if(document.getElementById('bar_location_display')) document.getElementById('bar_location_display').innerText=d.name; } } function adjustTime(factor) { document.getElementById('time_adjust_unit').value = document.getElementById('timeStepSelect').value; document.getElementById('time_adjust_amount').value = factor; document.getElementById('timeAdjustForm').submit(); } function updateASC() { const latEl = document.getElementById('bar_lat'); if(!latEl) return; const lat = latEl.value; const lon = document.getElementById('bar_lon').value; const tz = document.getElementById('bar_tz').value; const now = new Date(); fetch('/api/get_asc', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ year:now.getFullYear(), month:now.getMonth()+1, day:now.getDate(), hour:now.getHours(), minute:now.getMinutes(), lat:lat, lon:lon, tz:tz }) }).then(r=>r.json()).then(d => { if(d.success && document.getElementById('bar_asc_degree')) document.getElementById('bar_asc_degree').innerText = d.asc; }).catch(err => console.log("ASC Error", err)); }
-    function showContextMenu(event, chartIndex) { if(!event) return; event.preventDefault(); document.getElementById('canvas-context-menu').style.display = 'none'; const menu = document.getElementById('sidebar-context-menu'); menu.style.display = 'block'; menu.style.left = event.pageX + 'px'; menu.style.top = event.pageY + 'px'; document.getElementById('context-save').href = "/save_active_chart/" + chartIndex; document.getElementById('context-edit').href = "/edit_active_chart/" + chartIndex; document.getElementById('context-delete').href = "/delete_active_chart/" + chartIndex; 
+
+    // 1. SİDEBAR SAĞ TIK (Aktif Listesi)
+function showContextMenu(event, chartIndex) {
+    if(!event) return;
+    event.preventDefault(); // Varsayılan sağ tık menüsünü engelle
     
-    // Düzenle butonunu sadece natal ve transit tipleri için göster
-    const activeCharts = {{ active_charts | tojson | safe }};
-    const chart = activeCharts[chartIndex];
+    // Diğer menüleri kapat
+    const canvasMenu = document.getElementById('canvas-context-menu');
+    const transitMenu = document.getElementById('transit-context-menu');
+    if(canvasMenu) canvasMenu.style.display = 'none';
+    if(transitMenu) transitMenu.style.display = 'none';
+
+    const menu = document.getElementById('sidebar-context-menu');
+    if(!menu) return;
+
+    // Menüyü görünür yap ve konumlandır
+    menu.style.display = 'block';
+    menu.style.left = event.clientX + 'px';
+    menu.style.top = event.clientY + 'px';
+
+    // Link güncellemeleri
+    const saveLink = document.getElementById('context-save');
+    const deleteLink = document.getElementById('context-delete');
     const editBtn = document.getElementById('context-edit');
-    if(chart && (chart.type === 'natal' || chart.type === 'transit' || chart.map_type === 'natal' || chart.map_type === 'transit')) {
-        editBtn.style.display = 'block';
-    } else {
-        editBtn.style.display = 'none';
+
+    if(saveLink) saveLink.href = "/save_active_chart/" + chartIndex;
+    if(deleteLink) deleteLink.href = "/delete_active_chart/" + chartIndex;
+    
+    // --- ÖZEL İSTEK: Düzenle butonu mantığı ---
+    // Veriyi güvenli bir şekilde alıyoruz
+    const activeCharts = {{ active_charts | tojson | safe if active_charts else '[]' }};
+    const chart = activeCharts[chartIndex];
+
+    if(editBtn) {
+        // Senin istediğin şart: Natal veya Transit ise göster
+        if(chart && (chart.type === 'natal' || chart.type === 'transit' || chart.map_type === 'natal' || chart.map_type === 'transit')) {
+            editBtn.href = "/edit_active_chart/" + chartIndex;
+            editBtn.style.display = 'flex'; // Profil tasarımına uygun olması için flex
+        } else {
+            editBtn.style.display = 'none'; // Şart sağlanmazsa gizle
+        }
     }
 }
-    function showCanvasContextMenu(event) { if(!event) return; event.preventDefault(); document.getElementById('sidebar-context-menu').style.display = 'none'; const menu = document.getElementById('canvas-context-menu'); menu.style.display = 'block'; menu.style.left = event.pageX + 'px'; menu.style.top = event.pageY + 'px'; }
-    function openFormLocationSearch() { const cityInput = document.getElementById('city_search_input'); const cityVal = cityInput.value; if(!cityVal) { alert("Lütfen bir şehir adı girin."); return; } searchTarget = 'form'; document.getElementById('locationModalTitle').innerText = "Doğum Yeri Ara (UTC Hesapla)"; document.getElementById('modal_city_input').value = cityVal; document.getElementById('locationResultList').innerHTML = ""; document.getElementById('locationModal').style.display = 'flex'; document.getElementById('modal_city_input').focus(); searchInModal(); } function openSidebarLocationSearch() { searchTarget = 'bar'; document.getElementById('locationModalTitle').innerText = "Canlı Konum Değiştir (Şimdi)"; document.getElementById('modal_city_input').value = ""; document.getElementById('locationResultList').innerHTML = ""; document.getElementById('locationModal').style.display = 'flex'; document.getElementById('modal_city_input').focus(); } function closeLocationModal() { document.getElementById('locationModal').style.display = 'none'; } function searchInModal() { const city = document.getElementById('modal_city_input').value; if(!city) return; const now = new Date(); let y = now.getFullYear(); let m = now.getMonth()+1; let d = now.getDate(); let source = 'unknown'; if (searchTarget === 'form') { source = 'form'; const yInput = document.getElementById('year'); const mInput = document.getElementById('month'); const dInput = document.getElementById('day'); if (yInput && mInput && dInput && yInput.value && mInput.value && dInput.value) { y = yInput.value; m = mInput.value; d = dInput.value; } } else { source = 'bar'; } document.getElementById('modal-loading').style.display = 'block'; document.getElementById('locationResultList').innerHTML = ''; fetch('/api/search_location', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ city:city, year:y, month:m, day:d, source: source }) }).then(r => r.json()).then(d_resp => { document.getElementById('modal-loading').style.display = 'none'; const ul = document.getElementById('locationResultList'); ul.innerHTML = ''; if(d_resp.success && d_resp.results && d_resp.results.length > 0) { d_resp.results.forEach(l => { const li = document.createElement('li'); li.className = 'location-item'; let utcSign = l.tz_offset >= 0 ? "+" : ""; let utcShow = utcSign + l.tz_offset; li.innerHTML = `<strong>${l.address}</strong><br><span style='color:#666; font-size:11px;'>UTC ${utcShow} (Tarih: ${d}.${m}.${y})</span>`; li.onclick = () => { selectLocation(l); }; ul.appendChild(li); }); } else { ul.innerHTML = '<li style="padding:10px; color:red;">Sonuç bulunamadı.</li>'; } }).catch(err => { document.getElementById('modal-loading').style.display = 'none'; document.getElementById('locationResultList').innerHTML = '<li style="padding:10px; color:red;">Sunucu hatası!</li>'; }); } function selectLocation(l) { if(searchTarget === 'bar') { document.getElementById('bar_lat').value = l.lat; document.getElementById('bar_lon').value = l.lon; document.getElementById('bar_tz').value = l.tz_offset; document.getElementById('bar_loc_name').value = l.address; document.getElementById('bar_location_display').innerText = l.address; localStorage.setItem('astroBarLocation', JSON.stringify({ lat: l.lat, lon: l.lon, tz: l.tz_offset, name: l.address })); updateASC(); } else { if(document.getElementById('lat')) document.getElementById('lat').value = l.lat; if(document.getElementById('lon')) document.getElementById('lon').value = l.lon; if(document.getElementById('tz_offset')) document.getElementById('tz_offset').value = l.tz_offset; if(document.getElementById('location_name')) document.getElementById('location_name').value = l.address; if(document.getElementById('city_search_input')) document.getElementById('city_search_input').value = l.address.split(',')[0]; let utcSign = l.tz_offset >= 0 ? "+" : ""; let utcFormatted = utcSign + l.tz_offset; const displayEl = document.getElementById('selected_location_display'); if(displayEl) { displayEl.innerHTML = `<i class="fas fa-check-circle"></i> ${l.address} (UTC ${utcFormatted})`; displayEl.style.color = "#27ae60"; } const utcInp = document.getElementById('tz_offset'); if(utcInp && typeof validateUtcInput === 'function') validateUtcInput(utcInp); } closeLocationModal(); } function submitInstantTransit(type) { document.getElementById('form_transit_type').value = type; document.getElementById('form_bar_lat').value = document.getElementById('bar_lat').value; document.getElementById('form_bar_lon').value = document.getElementById('bar_lon').value; document.getElementById('form_bar_tz').value = document.getElementById('bar_tz').value; document.getElementById('form_bar_loc_name').value = document.getElementById('bar_loc_name').value; document.getElementById('instantTransitForm').submit(); }
-    let currentStarCategory = null; function closeSelectionModal() { document.getElementById('selectionModal').style.display = 'none'; currentStarCategory = null; if (typeof drawZodiac === "function") drawZodiac(); if (typeof drawAllPlanets === "function") drawAllPlanets(); } function openSelectionModal(dataType, title) { document.getElementById('canvas-context-menu').style.display = 'none'; document.getElementById('selectionModalTitle').innerText = title; document.getElementById('selectionModal').style.display = 'flex'; currentStarCategory = null; prepareSelectionData(); renderSelectionLists(dataType); } function prepareSelectionData() { if (typeof chartData === 'undefined') return; selectionData.planets.visible = []; selectionData.planets.hidden = []; selectionData.asteroids.visible = []; selectionData.asteroids.hidden = []; selectionData.fixedstars.visible = []; selectionData.fixedstars.hidden = []; for (let pName in chartData.planets) { let targetGroup = 'planets'; if (ASTEROID_CATEGORY.includes(pName)) { targetGroup = 'asteroids'; } if (visibilitySettings.hidden.includes(pName)) { selectionData[targetGroup].hidden.push({name: pName}); } else { selectionData[targetGroup].visible.push({name: pName}); } } if (chartData.fixed_stars) { for (let sName in chartData.fixed_stars) { let sData = chartData.fixed_stars[sName]; let signName = sData[3]; if (signName === "Yılancı" || signName === "Ophiuchus") signName = "Akrep"; let item = {name: sName, category: signName}; let isVisible = false; if (visibilitySettings.visible_stars.includes(sName)) { isVisible = true; } else if (ALWAYS_VISIBLE_STARS.includes(sName) && !visibilitySettings.hidden.includes(sName)) { isVisible = true; } if (isVisible) { selectionData.fixedstars.visible.push(item); } else { selectionData.fixedstars.hidden.push(item); } } } } function renderSelectionLists(dataType) { const visibleList = document.getElementById('visibleList'); const hiddenList = document.getElementById('hiddenList'); const backBtn = document.getElementById('backBtnContainer'); const hiddenTitle = document.getElementById('hiddenTitle'); visibleList.innerHTML = ''; hiddenList.innerHTML = ''; if (dataType === 'fixedstars') { if (currentStarCategory === null) { backBtn.style.display = 'none'; hiddenTitle.innerText = "Gizli (Kategoriler)"; const signs = ["Koç", "Boğa", "İkizler", "Yengeç", "Aslan", "Başak", "Terazi", "Akrep", "Yay", "Oğlak", "Kova", "Balık"]; signs.forEach(sign => { const li = document.createElement('li'); li.className = 'chart-select-item folder-item'; li.innerHTML = `<i class="fas fa-folder"></i> ${sign} Takımyıldızı`; li.onclick = () => { currentStarCategory = sign; renderSelectionLists('fixedstars'); }; hiddenList.appendChild(li); }); } else { backBtn.style.display = 'block'; hiddenTitle.innerText = `Gizli (${currentStarCategory})`; const starsInFolder = selectionData.fixedstars.hidden.filter(item => item.category === currentStarCategory); if (starsInFolder.length === 0) { hiddenList.innerHTML = '<li style="padding:10px; color:#999;">Bu kategoride gizli yıldız yok.</li>'; } else { starsInFolder.forEach(item => { const li = document.createElement('li'); li.className = 'chart-select-item'; li.style.display = 'flex'; li.style.justifyContent = 'space-between'; li.innerHTML = `<i class="fas fa-arrow-left" style="color: #27ae60;"></i> <span>${item.name}</span>`; li.onclick = () => toggleVisibility(item.name, dataType); hiddenList.appendChild(li); }); } } selectionData.fixedstars.visible.forEach((item) => { const li = document.createElement('li'); li.className = 'chart-select-item'; li.style.display = 'flex'; li.style.justifyContent = 'space-between'; li.innerHTML = `<span>${item.name}</span> <i class="fas fa-arrow-right" style="color: #c0392b;"></i>`; li.onclick = () => toggleVisibility(item.name, dataType); visibleList.appendChild(li); }); return; } backBtn.style.display = 'none'; hiddenTitle.innerText = "Gizli (Ekle)"; if (!selectionData[dataType]) return; selectionData[dataType].visible.forEach((item) => { const li = document.createElement('li'); li.className = 'chart-select-item'; li.style.display = 'flex'; li.style.justifyContent = 'space-between'; li.innerHTML = `<span>${item.name}</span> <i class="fas fa-arrow-right" style="color: #c0392b;"></i>`; li.onclick = () => toggleVisibility(item.name, dataType); visibleList.appendChild(li); }); selectionData[dataType].hidden.forEach((item) => { const li = document.createElement('li'); li.className = 'chart-select-item'; li.style.display = 'flex'; li.style.justifyContent = 'space-between'; li.innerHTML = `<i class="fas fa-arrow-left" style="color: #27ae60;"></i> <span>${item.name}</span>`; li.onclick = () => toggleVisibility(item.name, dataType); hiddenList.appendChild(li); }); } function goBackToFolders() { currentStarCategory = null; renderSelectionLists('fixedstars'); } function toggleVisibility(name, currentDataType) { if (currentDataType === 'fixedstars') { if (visibilitySettings.visible_stars.includes(name)) { const idx = visibilitySettings.visible_stars.indexOf(name); visibilitySettings.visible_stars.splice(idx, 1); } else if (ALWAYS_VISIBLE_STARS.includes(name) && !visibilitySettings.hidden.includes(name)) { visibilitySettings.hidden.push(name); } else { const hIdx = visibilitySettings.hidden.indexOf(name); if (hIdx > -1) visibilitySettings.hidden.splice(hIdx, 1); visibilitySettings.visible_stars.push(name); } } else { const index = visibilitySettings.hidden.indexOf(name); if (index > -1) { visibilitySettings.hidden.splice(index, 1); } else { visibilitySettings.hidden.push(name); } } saveVisibilitySettings(); prepareSelectionData(); renderSelectionLists(currentDataType); updateReportVisibility(); if (typeof drawZodiac === "function" && typeof chartData !== 'undefined') { const svg = document.getElementById('astroChart'); if (svg) { while (svg.firstChild) { svg.removeChild(svg.firstChild); } drawZodiac(); drawAllPlanets(); } } } function updateReportVisibility() { const hiddenList = visibilitySettings.hidden; const visibleStars = visibilitySettings.visible_stars; const rows = document.querySelectorAll('.report-row'); rows.forEach(row => { const name = row.getAttribute('data-name'); const type = row.getAttribute('data-type'); if (type === 'star') { let shouldShow = false; if (visibleStars.includes(name)) { shouldShow = true; } else if (ALWAYS_VISIBLE_STARS.includes(name) && !hiddenList.includes(name)) { shouldShow = true; } if (shouldShow) { row.style.setProperty('display', 'table-row', 'important'); } else { row.style.setProperty('display', 'none', 'important'); } } else { if (hiddenList.includes(name)) { row.style.display = 'none'; } else { row.style.display = 'table-row'; } } }); } 
-    
     // --- TOOLTIP POZİSYON DÜZELTMESİ (MOUSE İMLECİNİN TAM YANINDA) ---
     function showChartTooltip(e, name, deg, sign, min) { 
         const tooltip = document.getElementById('customTooltip'); 
@@ -1288,10 +2250,324 @@
         tooltip.style.top = (e.clientY + 2) + 'px'; 
         tooltip.style.display = 'block'; 
     }
-    
+
+    function showCanvasContextMenu(event) { if(!event) return; event.preventDefault(); document.getElementById('sidebar-context-menu').style.display = 'none'; const menu = document.getElementById('canvas-context-menu'); menu.style.display = 'block'; menu.style.left = event.pageX + 'px'; menu.style.top = event.pageY + 'px'; }
     function calculateDetails(absDeg, startDeg, signName) { let relDeg = absDeg - startDeg; if (relDeg < 0) relDeg += 360; const degrees = Math.floor(relDeg); const minutesDecimal = (relDeg - degrees) * 60; const minutes = Math.round(minutesDecimal); if (minutes === 60) { return { signName: signName, deg: degrees + 1, min: 0 }; } return { signName: signName, deg: degrees, min: minutes }; } function getRelativeDegreeJS(absDeg) { absDeg %= 360; let boundaries = []; if (typeof chartData !== 'undefined' && chartData.boundaries) { boundaries = chartData.boundaries; } else { boundaries = [ {name:"Koç", start:0, end:30}, {name:"Boğa", start:30, end:60}, {name:"İkizler", start:60, end:90}, {name:"Yengeç", start:90, end:120}, {name:"Aslan", start:120, end:150}, {name:"Başak", start:150, end:180}, {name:"Terazi", start:180, end:210}, {name:"Akrep", start:210, end:240}, {name:"Yay", start:240, end:270}, {name:"Oğlak", start:270, end:300}, {name:"Kova", start:300, end:330}, {name:"Balık", start:330, end:360} ]; } for (let i = 0; i < boundaries.length; i++) { const b = boundaries[i]; if (b.start < b.end) { if (absDeg >= b.start && absDeg < b.end) return calculateDetails(absDeg, b.start, b.name); } else { if (absDeg >= b.start || absDeg < b.end) return calculateDetails(absDeg, b.start, b.name); } } return { signName: "Bilinmeyen", deg: 0, min: 0 }; } let houseOverflowMap = {}; function calculateHouseOverflows(planetsByHouse, hBounds) { const DEG_PER_PLANET = 6.0; houseOverflowMap = {}; for(let i=1; i<=12; i++) { let housePlanets = planetsByHouse[i] || []; let count = housePlanets.length; if (count === 0) continue; let bounds = hBounds[i-1]; let houseWidth = (bounds.end - bounds.start + 360) % 360; let requiredWidth = count * DEG_PER_PLANET; if (requiredWidth > houseWidth) { let extraSpace = requiredWidth - houseWidth + 2.0; houseOverflowMap[i] = extraSpace; } else { houseOverflowMap[i] = 0; } } } function describeArc(x, y, radius, startAngle, endAngle){ var start = getCoords(radius, endAngle); var end = getCoords(radius, startAngle); var largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1"; var d = [ "M", start.x, start.y, "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y ].join(" "); return d; }
+    function openFormLocationSearch() { const cityInput = document.getElementById('city_search_input'); const cityVal = cityInput.value; if(!cityVal) { alert("Lütfen bir şehir adı girin."); return; } searchTarget = 'form'; document.getElementById('locationModalTitle').innerText = "Doğum Yeri Ara (UTC Hesapla)"; document.getElementById('modal_city_input').value = cityVal; document.getElementById('locationResultList').innerHTML = ""; document.getElementById('locationModal').style.display = 'flex'; document.getElementById('modal_city_input').focus(); searchInModal(); } 
+    function searchInModal() {
+    const city = document.getElementById('modal_city_input').value;
+    if (!city) return;
+
+    const now = new Date();
+    let y = now.getFullYear();
+    let m = now.getMonth() + 1;
+    let d = now.getDate();
+    let source = 'unknown';
+
+    if (searchTarget === 'form') {
+        source = 'form';
+        const yInput = document.getElementById('year');
+        const mInput = document.getElementById('month');
+        const dInput = document.getElementById('day');
+        if (yInput && mInput && dInput && yInput.value && mInput.value && dInput.value) {
+            y = yInput.value;
+            m = mInput.value;
+            d = dInput.value;
+        }
+    } else {
+        source = 'bar';
+    }
+
+    document.getElementById('modal-loading').style.display = 'block';
+    document.getElementById('locationResultList').innerHTML = '';
+
+    fetch('/api/search_location', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ city: city, year: y, month: m, day: d, source: source })
+    })
+    .then(r => r.json())
+    .then(d_resp => {
+        document.getElementById('modal-loading').style.display = 'none';
+        const ul = document.getElementById('locationResultList');
+        ul.innerHTML = '';
+
+        if (d_resp.success && d_resp.results && d_resp.results.length > 0) {
+            d_resp.results.forEach(l => {
+                const li = document.createElement('li');
+                li.className = 'location-item';
+                let utcSign = l.tz_offset >= 0 ? "+" : "";
+                let utcShow = utcSign + l.tz_offset;
+
+                // TASARIM KODLARI SİLİNDİ, TEMİZ YAPI EKLENDİ:
+                li.innerHTML = `
+                    <div class="loc-name">${l.address}</div>
+                    <div class="loc-details">
+                        <span class="loc-utc">UTC ${utcShow}</span>
+                        <span class="loc-coords">(${l.lat.toFixed(1)}, ${l.lon.toFixed(1)})</span>
+                    </div>
+                `;
+
+                li.onclick = () => { selectLocation(l); };
+                ul.appendChild(li);
+            });
+        } else {
+            ul.innerHTML = '<li style="padding:10px; color:red;">Sonuç bulunamadı.</li>';
+        }
+    })
+    .catch(err => {
+        document.getElementById('modal-loading').style.display = 'none';
+        document.getElementById('locationResultList').innerHTML = '<li style="padding:10px; color:red;">Sunucu hatası!</li>';
+    });
+}
+
+function selectLocation(l) {
+    if (searchTarget === 'bar') {
+        document.getElementById('bar_lat').value = l.lat;
+        document.getElementById('bar_lon').value = l.lon;
+        document.getElementById('bar_tz').value = l.tz_offset;
+        document.getElementById('bar_loc_name').value = l.address;
+        document.getElementById('bar_location_display').innerText = l.address;
+        localStorage.setItem('astroBarLocation', JSON.stringify({ lat: l.lat, lon: l.lon, tz: l.tz_offset, name: l.address }));
+        updateASC();
+    } else {
+        if (document.getElementById('lat')) document.getElementById('lat').value = l.lat;
+        if (document.getElementById('lon')) document.getElementById('lon').value = l.lon;
+        if (document.getElementById('tz_offset')) document.getElementById('tz_offset').value = l.tz_offset;
+        if (document.getElementById('location_name')) document.getElementById('location_name').value = l.address;
+        if (document.getElementById('city_search_input')) document.getElementById('city_search_input').value = l.address.split(',')[0];
+        
+        let utcSign = l.tz_offset >= 0 ? "+" : "";
+        let utcFormatted = utcSign + l.tz_offset;
+        const displayEl = document.getElementById('selected_location_display');
+        
+        if (displayEl) {
+            displayEl.innerHTML = `<i class="fas fa-check-circle"></i> ${l.address} (UTC ${utcFormatted})`;
+            displayEl.style.color = "#27ae60";
+        }
+        
+        const utcInp = document.getElementById('tz_offset');
+        if (utcInp && typeof validateUtcInput === 'function') validateUtcInput(utcInp);
+    }
+    closeLocationModal();
+}
+
+function submitInstantTransit(type) {
+    document.getElementById('form_transit_type').value = type;
+    document.getElementById('form_bar_lat').value = document.getElementById('bar_lat').value;
+    document.getElementById('form_bar_lon').value = document.getElementById('bar_lon').value;
+    document.getElementById('form_bar_tz').value = document.getElementById('bar_tz').value;
+    document.getElementById('form_bar_loc_name').value = document.getElementById('bar_loc_name').value;
+    document.getElementById('instantTransitForm').submit();
+}
+
+let currentStarCategory = null;
+
+function closeSelectionModal() {
+    document.getElementById('selectionModal').style.display = 'none';
+    currentStarCategory = null;
+    if (typeof drawZodiac === "function") drawZodiac();
+    if (typeof drawAllPlanets === "function") drawAllPlanets();
+}
+
+function openSelectionModal(dataType, title) {
+    document.getElementById('canvas-context-menu').style.display = 'none';
+    document.getElementById('selectionModalTitle').innerText = title;
+    document.getElementById('selectionModal').style.display = 'flex';
+    currentStarCategory = null;
+    prepareSelectionData();
+    renderSelectionLists(dataType);
+}
+
+function prepareSelectionData() {
+    if (typeof chartData === 'undefined') return;
+    selectionData.planets.visible = [];
+    selectionData.planets.hidden = [];
+    selectionData.asteroids.visible = [];
+    selectionData.asteroids.hidden = [];
+    selectionData.fixedstars.visible = [];
+    selectionData.fixedstars.hidden = [];
     
-    // Kullanıcı menüsü toggle
+    for (let pName in chartData.planets) {
+        let targetGroup = 'planets';
+        if (ASTEROID_CATEGORY.includes(pName)) {
+            targetGroup = 'asteroids';
+        }
+        if (visibilitySettings.hidden.includes(pName)) {
+            selectionData[targetGroup].hidden.push({ name: pName });
+        } else {
+            selectionData[targetGroup].visible.push({ name: pName });
+        }
+    }
+    
+    if (chartData.fixed_stars) {
+        for (let sName in chartData.fixed_stars) {
+            let sData = chartData.fixed_stars[sName];
+            let signName = sData[3];
+            if (signName === "Yılancı" || signName === "Ophiuchus") signName = "Akrep";
+            let item = { name: sName, category: signName };
+            let isVisible = false;
+            
+            if (visibilitySettings.visible_stars.includes(sName)) {
+                isVisible = true;
+            } else if (ALWAYS_VISIBLE_STARS.includes(sName) && !visibilitySettings.hidden.includes(sName)) {
+                isVisible = true;
+            }
+            
+            if (isVisible) {
+                selectionData.fixedstars.visible.push(item);
+            } else {
+                selectionData.fixedstars.hidden.push(item);
+            }
+        }
+    }
+}
+
+function renderSelectionLists(dataType) {
+    const visibleList = document.getElementById('visibleList');
+    const hiddenList = document.getElementById('hiddenList');
+    const backBtn = document.getElementById('backBtnContainer');
+    const hiddenTitle = document.getElementById('hiddenTitle');
+    visibleList.innerHTML = '';
+    hiddenList.innerHTML = '';
+    
+    if (dataType === 'fixedstars') {
+        if (currentStarCategory === null) {
+            backBtn.style.display = 'none';
+            hiddenTitle.innerText = "Gizli (Kategoriler)";
+            const signs = ["Koç", "Boğa", "İkizler", "Yengeç", "Aslan", "Başak", "Terazi", "Akrep", "Yay", "Oğlak", "Kova", "Balık"];
+            signs.forEach(sign => {
+                const li = document.createElement('li');
+                li.className = 'chart-select-item folder-item';
+                li.innerHTML = `<i class="fas fa-folder"></i> ${sign} Takımyıldızı`;
+                li.onclick = () => { currentStarCategory = sign; renderSelectionLists('fixedstars'); };
+                hiddenList.appendChild(li);
+            });
+        } else {
+            backBtn.style.display = 'block';
+            hiddenTitle.innerText = `Gizli (${currentStarCategory})`;
+            const starsInFolder = selectionData.fixedstars.hidden.filter(item => item.category === currentStarCategory);
+            if (starsInFolder.length === 0) {
+                hiddenList.innerHTML = '<li style="padding:10px; color:#999;">Bu kategoride gizli yıldız yok.</li>';
+            } else {
+                starsInFolder.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'chart-select-item';
+                    li.style.display = 'flex';
+                    li.style.justifyContent = 'space-between';
+                    li.innerHTML = `<i class="fas fa-arrow-left" style="color: #27ae60;"></i> <span>${item.name}</span>`;
+                    li.onclick = () => toggleVisibility(item.name, dataType);
+                    hiddenList.appendChild(li);
+                });
+            }
+        }
+        
+        selectionData.fixedstars.visible.forEach((item) => {
+            const li = document.createElement('li');
+            li.className = 'chart-select-item';
+            li.style.display = 'flex';
+            li.style.justifyContent = 'space-between';
+            li.innerHTML = `<span>${item.name}</span> <i class="fas fa-arrow-right" style="color: #c0392b;"></i>`;
+            li.onclick = () => toggleVisibility(item.name, dataType);
+            visibleList.appendChild(li);
+        });
+        return;
+    }
+    
+    backBtn.style.display = 'none';
+    hiddenTitle.innerText = "Gizli (Ekle)";
+    if (!selectionData[dataType]) return;
+    
+    selectionData[dataType].visible.forEach((item) => {
+        const li = document.createElement('li');
+        li.className = 'chart-select-item';
+        li.style.display = 'flex';
+        li.style.justifyContent = 'space-between';
+        li.innerHTML = `<span>${item.name}</span> <i class="fas fa-arrow-right" style="color: #c0392b;"></i>`;
+        li.onclick = () => toggleVisibility(item.name, dataType);
+        visibleList.appendChild(li);
+    });
+    
+    selectionData[dataType].hidden.forEach((item) => {
+        const li = document.createElement('li');
+        li.className = 'chart-select-item';
+        li.style.display = 'flex';
+        li.style.justifyContent = 'space-between';
+        li.innerHTML = `<i class="fas fa-arrow-left" style="color: #27ae60;"></i> <span>${item.name}</span>`;
+        li.onclick = () => toggleVisibility(item.name, dataType);
+        hiddenList.appendChild(li);
+    });
+}
+
+function goBackToFolders() {
+    currentStarCategory = null;
+    renderSelectionLists('fixedstars');
+}
+
+function toggleVisibility(name, currentDataType) {
+    if (currentDataType === 'fixedstars') {
+        if (visibilitySettings.visible_stars.includes(name)) {
+            const idx = visibilitySettings.visible_stars.indexOf(name);
+            visibilitySettings.visible_stars.splice(idx, 1);
+        } else if (ALWAYS_VISIBLE_STARS.includes(name) && !visibilitySettings.hidden.includes(name)) {
+            visibilitySettings.hidden.push(name);
+        } else {
+            const hIdx = visibilitySettings.hidden.indexOf(name);
+            if (hIdx > -1) visibilitySettings.hidden.splice(hIdx, 1);
+            visibilitySettings.visible_stars.push(name);
+        }
+    } else {
+        const index = visibilitySettings.hidden.indexOf(name);
+        if (index > -1) {
+            visibilitySettings.hidden.splice(index, 1);
+        } else {
+            visibilitySettings.hidden.push(name);
+        }
+    }
+    saveVisibilitySettings();
+    prepareSelectionData();
+    renderSelectionLists(currentDataType);
+    updateReportVisibility();
+    
+    if (typeof drawZodiac === "function" && typeof chartData !== 'undefined') {
+        const svg = document.getElementById('astroChart');
+        if (svg) {
+            while (svg.firstChild) { svg.removeChild(svg.firstChild); }
+            drawZodiac();
+            drawAllPlanets();
+        }
+    }
+}
+
+function updateReportVisibility() {
+    const hiddenList = visibilitySettings.hidden;
+    const visibleStars = visibilitySettings.visible_stars;
+    const rows = document.querySelectorAll('.report-row');
+    rows.forEach(row => {
+        const name = row.getAttribute('data-name');
+        const type = row.getAttribute('data-type');
+        if (type === 'star') {
+            let shouldShow = false;
+            if (visibleStars.includes(name)) {
+                shouldShow = true;
+            } else if (ALWAYS_VISIBLE_STARS.includes(name) && !hiddenList.includes(name)) {
+                shouldShow = true;
+            }
+            if (shouldShow) {
+                row.style.setProperty('display', 'table-row', 'important');
+            } else {
+                row.style.setProperty('display', 'none', 'important');
+            }
+        } else {
+            if (hiddenList.includes(name)) {
+                row.style.display = 'none';
+            } else {
+                row.style.display = 'table-row';
+            }
+        }
+    });
+}
+
 function toggleUserMenu(event) {
     event.stopPropagation();
     const menu = document.getElementById('userDropdownMenu');
