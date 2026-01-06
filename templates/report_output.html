@@ -143,127 +143,135 @@
 
 {% if last_chart %}
 
-    {% if last_chart.chart1 and last_chart.chart2 %}
-        {# ============ SİNASTRİ RAPORU ============ #}
-        <div class="report-grid">
-            <div class="report-box report-column-left">
-                <span class="report-title">{{ last_chart.chart1.name or "Harita 1" }} - Gezegen Konumları</span>
-                <table class="report-table">
-                    <thead>
-                        <tr>
-                            <th style="border-top-left-radius: 4px;">Gök Cismi</th>
-                            <th>Burç</th>
-                            <th>Konum</th>
-                            <th>R</th>
-                            <th>Ev</th>
-                            <th style="border-top-right-radius: 4px;">Genişlik</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p_name in motor.PLANET_IDS.keys() %}
-                            {% set p_data = last_chart.chart1.planets.get(p_name) %}
-                            {% if p_data and p_data|length > 5 %}
-                                <tr>
-                                    <td>
-                                        <div class="cell-flex">
-                                            {% if p_name in planet_icons %}
-                                                <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p_name]) }}" class="p-icon icon-planet" alt="{{ p_name }}">
-                                            {% endif %}
-                                            <span class="planet-name">{{ p_name }}</span>
-                                        </div>
-                                    </td>
-                                    
-                                    <td>
-                                        <div class="cell-flex">
-                                            {% if p_data[3] in zodiac_icons %}
-                                                <img src="{{ url_for('static', filename='images/semboller/' + zodiac_icons[p_data[3]]) }}" class="p-icon icon-zodiac" alt="{{ p_data[3] }}">
-                                            {% endif %}
-                                            <span>{{ p_data[3] }}</span>
-                                        </div>
-                                    </td>
-                                    
-                                    <td style="font-family: monospace;">{{ p_data[4] }}</td>
-                                    <td style="color:red; font-weight: bold; text-align:center;">{{ p_data[5] }}</td>
-                                    <td style="text-align:center;">{{ p_data[6] }}</td>
-                                    <td style="font-family: monospace; text-align:center; color:#555;">{{ const_widths.get(p_data[3], '-') }}</td>
-                                </tr>
-                            {% endif %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+    {# --- VERİ KAYNAĞI TESPİTİ (HATA ÖNLEYİCİ) --- #}
+{% set source = none %}
+{% if last_chart.chart1 and last_chart.chart2 %}
+    {# İkili Harita (Sinastri/Progres) ise iç haritayı (chart1) baz al #}
+    {% set source = last_chart.chart1 %}
+{% elif last_chart.planets %}
+    {# Tekli Harita ise doğrudan last_chart'ı kullan #}
+    {% set source = last_chart %}
+{% endif %}
 
-            <div class="report-box report-column-right">
-                <span class="report-title">{{ last_chart.chart2.name or "Harita 2" }} - Gezegen Konumları</span>
-                <table class="report-table">
-                    <thead>
-                        <tr>
-                            <th style="border-top-left-radius: 4px;">Gök Cismi</th>
-                            <th>Burç</th>
-                            <th>Konum</th>
-                            <th>R</th>
-                            <th>Ev</th>
-                            <th style="border-top-right-radius: 4px;">Genişlik</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p_name in motor.PLANET_IDS.keys() %}
-                            {% set p_data = last_chart.chart2.planets.get(p_name) %}
-                            {% if p_data and p_data|length > 5 %}
-                                <tr>
-                                    <td>
-                                        <div class="cell-flex">
-                                            {% if p_name in planet_icons %}
-                                                <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p_name]) }}" class="p-icon icon-planet" alt="{{ p_name }}">
-                                            {% endif %}
-                                            <span class="planet-name">{{ p_name }}</span>
-                                        </div>
-                                    </td>
-                                    
-                                    <td>
-                                        <div class="cell-flex">
-                                            {% if p_data[3] in zodiac_icons %}
-                                                <img src="{{ url_for('static', filename='images/semboller/' + zodiac_icons[p_data[3]]) }}" class="p-icon icon-zodiac" alt="{{ p_data[3] }}">
-                                            {% endif %}
-                                            <span>{{ p_data[3] }}</span>
-                                        </div>
-                                    </td>
-                                    
-                                    <td style="font-family: monospace;">{{ p_data[4] }}</td>
-                                    <td style="color:red; font-weight: bold; text-align:center;">{{ p_data[5] }}</td>
-                                    <td style="text-align:center;">{{ p_data[6] }}</td>
-                                    <td style="font-family: monospace; text-align:center; color:#555;">{{ const_widths.get(p_data[3], '-') }}</td>
-                                </tr>
-                            {% endif %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="report-box report-column-right">
-            <span class="report-title">MEVCUT AÇILAR</span>
+{% if last_chart.chart1 and last_chart.chart2 %}
+    {# ============ SİNASTRİ / PROGRES RAPORU ============ #}
+    <div class="report-grid">
+        <div class="report-box report-column-left">
+            <span class="report-title">{{ last_chart.chart1.name or "Harita 1" }} - Gezegen Konumları</span>
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th style="width:35%">1. Gezegen</th>
-                        <th style="width:35%">2. Gezegen</th>
-                        <th style="width:15%">Mesafe</th>
-                        <th style="width:15%">Durum</th>
+                        <th style="border-top-left-radius: 4px;">Gök Cismi</th>
+                        <th>Burç</th>
+                        <th>Konum</th>
+                        <th>R</th>
+                        <th>Ev</th>
+                        <th style="border-top-right-radius: 4px;">Genişlik</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for p_name in motor.PLANET_IDS.keys() %}
+                        {% set p_data = last_chart.chart1.planets.get(p_name) %}
+                        {% if p_data and p_data|length > 5 %}
+                            <tr>
+                                <td>
+                                    <div class="cell-flex">
+                                        {% if p_name in planet_icons %}
+                                            <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p_name]) }}" class="p-icon icon-planet" alt="{{ p_name }}">
+                                        {% endif %}
+                                        <span class="planet-name">{{ p_name }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="cell-flex">
+                                        {% if p_data[3] in zodiac_icons %}
+                                            <img src="{{ url_for('static', filename='images/semboller/' + zodiac_icons[p_data[3]]) }}" class="p-icon icon-zodiac" alt="{{ p_data[3] }}">
+                                        {% endif %}
+                                        <span>{{ p_data[3] }}</span>
+                                    </div>
+                                </td>
+                                <td style="font-family: monospace;">{{ p_data[4] }}</td>
+                                <td style="color:red; font-weight: bold; text-align:center;">{{ p_data[5] }}</td>
+                                <td style="text-align:center;">{{ p_data[6] }}</td>
+                                <td style="font-family: monospace; text-align:center; color:#555;">{{ const_widths.get(p_data[3], '-') }}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="report-box report-column-right">
+            <span class="report-title">{{ last_chart.chart2.name or "Harita 2" }} - Gezegen Konumları</span>
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th style="border-top-left-radius: 4px;">Gök Cismi</th>
+                        <th>Burç</th>
+                        <th>Konum</th>
+                        <th>R</th>
+                        <th>Ev</th>
+                        <th style="border-top-right-radius: 4px;">Genişlik</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p_name in motor.PLANET_IDS.keys() %}
+                        {% set p_data = last_chart.chart2.planets.get(p_name) %}
+                        {% if p_data and p_data|length > 5 %}
+                            <tr>
+                                <td>
+                                    <div class="cell-flex">
+                                        {% if p_name in planet_icons %}
+                                            <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p_name]) }}" class="p-icon icon-planet" alt="{{ p_name }}">
+                                        {% endif %}
+                                        <span class="planet-name">{{ p_name }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="cell-flex">
+                                        {% if p_data[3] in zodiac_icons %}
+                                            <img src="{{ url_for('static', filename='images/semboller/' + zodiac_icons[p_data[3]]) }}" class="p-icon icon-zodiac" alt="{{ p_data[3] }}">
+                                        {% endif %}
+                                        <span>{{ p_data[3] }}</span>
+                                    </div>
+                                </td>
+                                <td style="font-family: monospace;">{{ p_data[4] }}</td>
+                                <td style="color:red; font-weight: bold; text-align:center;">{{ p_data[5] }}</td>
+                                <td style="text-align:center;">{{ p_data[6] }}</td>
+                                <td style="font-family: monospace; text-align:center; color:#555;">{{ const_widths.get(p_data[3], '-') }}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {# --- MEVCUT AÇILAR (DUAL MOD İÇİN SOURCE KULLANIMI) --- #}
+    <div class="report-box report-column-right">
+        <span class="report-title">MEVCUT AÇILAR</span>
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th style="width:35%">1. Gezegen</th>
+                    <th style="width:35%">2. Gezegen</th>
+                    <th style="width:15%">Mesafe</th>
+                    <th style="width:15%">Durum</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if source and source.planets %}
                     {% set speed_order = ['Şans Noktası', 'Ay', 'Merkür', 'Venüs', 'Güneş', 'Mars', 'Jüpiter', 'Satürn'] %}
                     {% set p_list = [] %}
-                    {% for pid in speed_order %}{% if last_chart.planets.get(pid) %}{% set _ = p_list.append(pid) %}{% endif %}{% endfor %}
-                    {% for pid in motor.PLANET_IDS.keys() %}{% if last_chart.planets.get(pid) and pid not in p_list %}{% set _ = p_list.append(pid) %}{% endif %}{% endfor %}
+                    {% for pid in speed_order %}{% if source.planets.get(pid) %}{% set _ = p_list.append(pid) %}{% endif %}{% endfor %}
+                    {% for pid in motor.PLANET_IDS.keys() %}{% if source.planets.get(pid) and pid not in p_list %}{% set _ = p_list.append(pid) %}{% endif %}{% endfor %}
 
                     {% for i in range(p_list|length) %}
                         {% for j in range(i + 1, p_list|length) %}
                             {% set p1 = p_list[i] %}
                             {% set p2 = p_list[j] %}
-                            {% set d1 = last_chart.planets.get(p1) %}
-                            {% set d2 = last_chart.planets.get(p2) %}
+                            {% set d1 = source.planets.get(p1) %}
+                            {% set d2 = source.planets.get(p2) %}
                             {% set diff = (d1[0]|float - d2[0]|float)|abs %}
                             {% if diff > 180 %}{% set diff = 360 - diff %}{% endif %}
 
@@ -289,196 +297,195 @@
                             </tr>
                         {% endfor %}
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    
-    {% elif last_chart.planets %}
-        {# ============ TEKLİ HARİTA RAPORU ============ #}
-        <div class="report-grid">
-            <div class="report-box report-column-left">
-                <span class="report-title">Gezegen Konumları</span>
-                <table class="report-table">
-                    <thead>
-                        <tr>
-                            <th style="border-top-left-radius: 4px;">Gök Cismi</th>
-                            <th>Burç</th>
-                            <th>Konum</th>
-                            <th>R</th>
-                            <th>Ev</th>
-                            <th style="border-top-right-radius: 4px;">Genişlik</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p_name in motor.PLANET_IDS.keys() %}
-                            {% set p_data = last_chart.planets.get(p_name) %}
-                            {% if p_data and p_data|length > 5 %}
-                                <tr>
-                                    <td>
-                                        <div class="cell-flex">
-                                            {% if p_name in planet_icons %}
-                                                <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p_name]) }}" class="p-icon icon-planet" alt="{{ p_name }}">
-                                            {% endif %}
-                                            <span class="planet-name">{{ p_name }}</span>
-                                        </div>
-                                    </td> 
-                                    
-                                    <td>
-                                        <div class="cell-flex">
-                                            {% if p_data[3] in zodiac_icons %}
-                                                <img src="{{ url_for('static', filename='images/semboller/' + zodiac_icons[p_data[3]]) }}" class="p-icon icon-zodiac" alt="{{ p_data[3] }}">
-                                            {% endif %}
-                                            <span>{{ p_data[3] }}</span>
-                                        </div>
-                                    </td> 
-                                    
-                                    <td style="font-family: monospace;">{{ p_data[4] }}</td> 
-                                    <td style="color:red; font-weight: bold; text-align:center;">{{ p_data[5] }}</td>
-                                    <td style="text-align:center;">{{ p_data[6] }}</td> 
-                                    <td style="font-family: monospace; text-align:center; color:#555;">{{ const_widths.get(p_data[3], '-') }}</td>
-                                </tr>
-                            {% endif %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
 
-            <div class="report-box report-column-right">
-                <span class="report-title">Ev Girişleri</span>
-                <table class="report-table">
-                    <thead>
-                        <tr>
-                            <th style="border-top-left-radius: 4px;">Ev</th>
-                            <th>Burç</th>
-                            <th>Konum</th>
-                            <th style="border-top-right-radius: 4px;">Genişlik</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for i in range(1, 13) %}
-                            {% set cusp_name = 'CUSP' ~ i %}
-                            {% set cusp_deg = last_chart.houses.get(cusp_name) %}
-                            {% if cusp_deg is not none %}
-                                {% set cusp_info = get_relative_degree(cusp_deg, last_chart.get('zodiac_type', 'Astronomik')) %}
-                                <tr>
-                                    <td>{{ i }}. Ev</td>
-                                    <td>
-                                        <div class="cell-flex">
-                                            {% if cusp_info[0] in zodiac_icons %}
-                                                <img src="{{ url_for('static', filename='images/semboller/' + zodiac_icons[cusp_info[0]]) }}" class="p-icon icon-zodiac">
-                                            {% endif %}
-                                            <span>{{ cusp_info[0] }}</span>
-                                        </div>
-                                    </td> 
-                                    <td style="font-family: monospace;">{{ cusp_info[2] }}</td> 
-                                    <td style="font-family: monospace; text-align:center; color:#555;">{{ const_widths.get(cusp_info[0], '-') }}</td>
-                                </tr>
-                            {% endif %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="report-box report-column-right">
-            <span class="report-title">MEVCUT AÇILAR</span>
+{% elif last_chart.planets %}
+    {# ============ TEKLİ HARİTA RAPORU ============ #}
+    <div class="report-grid">
+        <div class="report-box report-column-left">
+            <span class="report-title">Gezegen Konumları</span>
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th style="width:35%">1. Gezegen</th>
-                        <th style="width:35%">2. Gezegen</th>
-                        <th style="width:15%">Mesafe</th>
-                        <th style="width:15%">Durum</th>
+                        <th style="border-top-left-radius: 4px;">Gök Cismi</th>
+                        <th>Burç</th>
+                        <th>Konum</th>
+                        <th>R</th>
+                        <th>Ev</th>
+                        <th style="border-top-right-radius: 4px;">Genişlik</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% set speed_order = ['Şans Noktası', 'Ay', 'Merkür', 'Venüs', 'Güneş', 'Mars', 'Jüpiter', 'Satürn'] %}
-                    {% set p_list = [] %}
-                    {% for pid in speed_order %}{% if last_chart.planets.get(pid) %}{% set _ = p_list.append(pid) %}{% endif %}{% endfor %}
-                    {% for pid in motor.PLANET_IDS.keys() %}{% if last_chart.planets.get(pid) and pid not in p_list %}{% set _ = p_list.append(pid) %}{% endif %}{% endfor %}
-
-                    {% for i in range(p_list|length) %}
-                        {% for j in range(i + 1, p_list|length) %}
-                            {% set p1 = p_list[i] %}
-                            {% set p2 = p_list[j] %}
-                            {% set d1 = last_chart.planets.get(p1) %}
-                            {% set d2 = last_chart.planets.get(p2) %}
-                            {% set diff = (d1[0]|float - d2[0]|float)|abs %}
-                            {% if diff > 180 %}{% set diff = 360 - diff %}{% endif %}
-
+                    {% for p_name in motor.PLANET_IDS.keys() %}
+                        {% set p_data = last_chart.planets.get(p_name) %}
+                        {% if p_data and p_data|length > 5 %}
                             <tr>
                                 <td>
                                     <div class="cell-flex">
-                                        {% if p1 in planet_icons %}<img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p1]) }}" class="p-icon icon-planet">{% endif %}
-                                        <div class="compact-info"><span class="planet-name">{{ p1 }}</span> {{ d1[4] }} <span class="constellation-tag">{{ d1[3]|upper }}</span></div>
+                                        {% if p_name in planet_icons %}
+                                            <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p_name]) }}" class="p-icon icon-planet" alt="{{ p_name }}">
+                                        {% endif %}
+                                        <span class="planet-name">{{ p_name }}</span>
                                     </div>
-                                </td>
+                                </td> 
                                 <td>
                                     <div class="cell-flex">
-                                        {% if p2 in planet_icons %}<img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p2]) }}" class="p-icon icon-planet">{% endif %}
-                                        <div class="compact-info"><span class="planet-name">{{ p2 }}</span> {{ d2[4] }} <span class="constellation-tag">{{ d2[3]|upper }}</span></div>
+                                        {% if p_data[3] in zodiac_icons %}
+                                            <img src="{{ url_for('static', filename='images/semboller/' + zodiac_icons[p_data[3]]) }}" class="p-icon icon-zodiac" alt="{{ p_data[3] }}">
+                                        {% endif %}
+                                        <span>{{ p_data[3] }}</span>
                                     </div>
-                                </td>
-                                <td><span class="distance-val">{{ "%.1f"|format(diff) }}°</span></td>
-                                <td>
-                                    {% if diff < 1 %}<span class="status-exact">TAM</span>
-                                    {% elif diff < 10 %}<span class="status-app">YAKIN</span>
-                                    {% else %}<span class="status-sep">UZAK</span>{% endif %}
-                                </td>
+                                </td> 
+                                <td style="font-family: monospace;">{{ p_data[4] }}</td> 
+                                <td style="color:red; font-weight: bold; text-align:center;">{{ p_data[5] }}</td>
+                                <td style="text-align:center;">{{ p_data[6] }}</td> 
+                                <td style="font-family: monospace; text-align:center; color:#555;">{{ const_widths.get(p_data[3], '-') }}</td>
                             </tr>
-                        {% endfor %}
+                        {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
-        {% if transit_forecasts %}
         <div class="report-box report-column-right">
-            <span class="report-title">KESİN VARIŞ ZAMANLARI</span>
+            <span class="report-title">Ev Girişleri</span>
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th style="width:25%">Hareketli (Hızlı)</th>
-                        <th style="width:25%">Hedef Konum</th>
-                        <th style="width:50%">Tahmini Varış Süresi</th>
+                        <th style="border-top-left-radius: 4px;">Ev</th>
+                        <th>Burç</th>
+                        <th>Konum</th>
+                        <th style="border-top-right-radius: 4px;">Genişlik</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for item in transit_forecasts %}
-                    <tr>
-                        <td>
-                            <div class="cell-flex">
-                                {% if item.mover in planet_icons %}
-                                    <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[item.mover]) }}" class="p-icon icon-planet">
-                                {% endif %}
-                                <span class="planet-name">{{ item.mover }}</span>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="cell-flex">
-                                {% if item.target in planet_icons %}
-                                    <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[item.target]) }}" class="p-icon icon-planet">
-                                {% endif %}
-                                <div class="compact-info">
-                                    <span class="deg-text">{{ "%.1f"|format(item.target_deg) }}°</span>
-                                    <span class="constellation-tag">{{ item.target_sign|upper }}</span>
+                    {% for i in range(1, 13) %}
+                        {% set cusp_name = 'CUSP' ~ i %}
+                        {% set cusp_deg = last_chart.houses.get(cusp_name) %}
+                        {% if cusp_deg is not none %}
+                            {% set cusp_info = get_relative_degree(cusp_deg, last_chart.get('zodiac_type', 'Astronomik')) %}
+                            <tr>
+                                <td>{{ i }}. Ev</td>
+                                <td>
+                                    <div class="cell-flex">
+                                        {% if cusp_info[0] in zodiac_icons %}
+                                            <img src="{{ url_for('static', filename='images/semboller/' + zodiac_icons[cusp_info[0]]) }}" class="p-icon icon-zodiac">
+                                        {% endif %}
+                                        <span>{{ cusp_info[0] }}</span>
+                                    </div>
+                                </td> 
+                                <td style="font-family: monospace;">{{ cusp_info[2] }}</td> 
+                                <td style="font-family: monospace; text-align:center; color:#555;">{{ const_widths.get(cusp_info[0], '-') }}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="report-box report-column-right">
+        <span class="report-title">MEVCUT AÇILAR</span>
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th style="width:35%">1. Gezegen</th>
+                    <th style="width:35%">2. Gezegen</th>
+                    <th style="width:15%">Mesafe</th>
+                    <th style="width:15%">Durum</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set speed_order = ['Şans Noktası', 'Ay', 'Merkür', 'Venüs', 'Güneş', 'Mars', 'Jüpiter', 'Satürn'] %}
+                {% set p_list = [] %}
+                {% for pid in speed_order %}{% if last_chart.planets.get(pid) %}{% set _ = p_list.append(pid) %}{% endif %}{% endfor %}
+                {% for pid in motor.PLANET_IDS.keys() %}{% if last_chart.planets.get(pid) and pid not in p_list %}{% set _ = p_list.append(pid) %}{% endif %}{% endfor %}
+
+                {% for i in range(p_list|length) %}
+                    {% for j in range(i + 1, p_list|length) %}
+                        {% set p1 = p_list[i] %}
+                        {% set p2 = p_list[j] %}
+                        {% set d1 = last_chart.planets.get(p1) %}
+                        {% set d2 = last_chart.planets.get(p2) %}
+                        {% set diff = (d1[0]|float - d2[0]|float)|abs %}
+                        {% if diff > 180 %}{% set diff = 360 - diff %}{% endif %}
+
+                        <tr>
+                            <td>
+                                <div class="cell-flex">
+                                    {% if p1 in planet_icons %}<img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p1]) }}" class="p-icon icon-planet">{% endif %}
+                                    <div class="compact-info"><span class="planet-name">{{ p1 }}</span> {{ d1[4] }} <span class="constellation-tag">{{ d1[3]|upper }}</span></div>
                                 </div>
-                            </div>
-                        </td>
-                        <td>
-                            {% if item.is_retro %}
-                                <span class="forecast-retro">RETRO HAREKETLİ</span>
-                            {% else %}
-                                <span class="forecast-days">➔ {{ item.days_later }} GÜN SONRA</span>
-                            {% endif %}
-                        </td>
-                    </tr>
+                            </td>
+                            <td>
+                                <div class="cell-flex">
+                                    {% if p2 in planet_icons %}<img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p2]) }}" class="p-icon icon-planet">{% endif %}
+                                    <div class="compact-info"><span class="planet-name">{{ p2 }}</span> {{ d2[4] }} <span class="constellation-tag">{{ d2[3]|upper }}</span></div>
+                                </div>
+                            </td>
+                            <td><span class="distance-val">{{ "%.1f"|format(diff) }}°</span></td>
+                            <td>
+                                {% if diff < 1 %}<span class="status-exact">TAM</span>
+                                {% elif diff < 10 %}<span class="status-app">YAKIN</span>
+                                {% else %}<span class="status-sep">UZAK</span>{% endif %}
+                            </td>
+                        </tr>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if transit_forecasts %}
+    <div class="report-box report-column-right">
+        <span class="report-title">KESİN VARIŞ ZAMANLARI</span>
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th style="width:25%">Hareketli (Hızlı)</th>
+                    <th style="width:25%">Hedef Konum</th>
+                    <th style="width:50%">Tahmini Varış Süresi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in transit_forecasts %}
+                <tr>
+                    <td>
+                        <div class="cell-flex">
+                            {% if item.mover in planet_icons %}
+                                <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[item.mover]) }}" class="p-icon icon-planet">
+                            {% endif %}
+                            <span class="planet-name">{{ item.mover }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="cell-flex">
+                            {% if item.target in planet_icons %}
+                                <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[item.target]) }}" class="p-icon icon-planet">
+                            {% endif %}
+                            <div class="compact-info">
+                                <span class="deg-text">{{ "%.1f"|format(item.target_deg) }}°</span>
+                                <span class="constellation-tag">{{ item.target_sign|upper }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if item.is_retro %}
+                            <span class="forecast-retro">RETRO HAREKETLİ</span>
+                        {% else %}
+                            <span class="forecast-days">➔ {{ item.days_later }} GÜN SONRA</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% endif %}
+{% endif %}
 
 {% else %}
     <p style="color: #777; padding: 10px;">Veri yok.</p>
