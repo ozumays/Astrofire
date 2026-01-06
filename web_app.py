@@ -2020,34 +2020,39 @@ def api_calculate_progression():
             )
             title = f"Transit ({now.day}.{now.month}.{now.year})"
 
-        # B) SECONDARY PROGRESSION (İKİNCİL İLERLETİM)
+        # B) SECONDARY PROGRESSION (İKİNCİL İLERLETİM) - DÜZELTİLDİ 🛠️
         elif technique == 'secondary':
-            # 1. Hedef Zamanı Belirle (now değişkeni daha önce tanımlanmışsa onu kullanır)
-            # target_dt, kullanıcının seçtiği veya bugünün tarihidir.
+            # 1. Hedef Zaman (Kullanıcı seçimi veya şimdi)
             target_dt = now 
             title = f"İkincil İlerletim ({target_dt.year})"
             
-            # 2. Doğum ve Hedef Zamanı datetime nesnesine çevir
+            # 2. Doğum Zamanı
             natal_dt = datetime(natal_year, natal_month, natal_day, natal_hour, natal_minute)
             
-            # 3. Farkı gün bazında bul (1 yıl fark = 1 gün ilerletim)
-            diff_seconds = (target_dt - natal_dt).total_seconds()
-            diff_days = diff_seconds / (24 * 3600)  # Toplam gün farkı (ondalıklı hassasiyet)
+            # 3. YAŞ HESABI (YIL OLARAK)
+            # İki tarih arasındaki saniye farkını alıp tropikal yıl saniyesine bölüyoruz.
+            # Böylece kişinin tam yaşını (Örn: 30.54 yıl) buluyoruz.
+            total_seconds_lived = (target_dt - natal_dt).total_seconds()
+            age_in_years = total_seconds_lived / (365.242199 * 24 * 3600)
             
-            # 4. İlerletilmiş zamanı hesapla (Doğum anına gün farkını ekle)
-            prog_calc_dt = natal_dt + timedelta(days=diff_days)
+            # 4. İLERLETİM TARİHİ HESABI (1 GÜN = 1 YIL KURALI)
+            # Bulduğumuz yaşı (Yıl), natal tarihe GÜN olarak ekliyoruz.
+            # Örn: 30 yaşındaysa, doğumundan 30 gün sonraki gökyüzü hesaplanır.
+            prog_calc_dt = natal_dt + timedelta(days=age_in_years)
             
-            # 5. Motor ile hesapla (Hedef Zodyak - Drakonik vb. dahil)
+            print(f"DEBUG: Yaş={age_in_years:.4f}, Progres Hesap Tarihi={prog_calc_dt}")
+
+            # 5. Hesaplama
             res_text, prog_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
                 prog_calc_dt.year, prog_calc_dt.month, prog_calc_dt.day, 
                 prog_calc_dt.hour, prog_calc_dt.minute, natal_tz,
                 natal_lat, natal_lon, None, house_code, target_zodiac
             )
             
-            # 6. Ekranda Hedef Tarihi (Örn: 2025) göstermek için etiketi güncelle
+            # Ekranda hedef tarihi (bugünü) göster ama harita ilerletilmiş tarihe göre olsun
             if prog_data:
                 prog_data['display_date_str'] = target_dt.strftime("%d.%m.%Y")
-        
+
         # B) SOLAR ARC (GÜNEŞ YAYI)
         else: 
             title = f"Güneş Yayı ({now.year})"
@@ -2509,24 +2514,37 @@ def adjust_active_time():
     return redirect(url_for('home', tab='aktif'))
 
 def process_time_jump(dt, chart, idx, active_charts):
-    """Hem Single hem Dual ilerletim haritalarını tekniklerine göre günceller"""
+    """
+    Hem Single hem Dual ilerletim haritalarını tekniklerine göre günceller.
+    HATA DÜZELTMESİ: Natal tarih ile Görüntülenen tarih (Display Date) ayrıştırıldı.
+    """
     chart_type = str(chart.get('type', '')).lower()
     chart_name = chart.get('name', '').lower()
     
-    # Teknik bayraklarını tanımlayalım
-    is_secondary = 'secondary' in c_type or 'secondary' in c_name or 'ikincil' in c_name
-    is_solar_arc = 'solar_arc' in c_type or 'solar_arc' in c_name or 'güneş yayı' in c_name
+    # Teknik bayrakları
+    is_secondary = 'secondary' in chart_type or 'secondary' in chart_name or 'ikincil' in chart_name
+    is_solar_arc = 'solar_arc' in chart_type or 'solar_arc' in chart_name or 'güneş yayı' in chart_name
+    
+    # --- KRİTİK ADIM: NATAL TARİHİ KORUMA ---
+    # Eğer haritada 'natal_year' yoksa (ilk kez açılıyorsa), mevcut 'year' bilgisini natal olarak etiketle.
+    # Bu sayede 'year' değişse bile doğum tarihi sabit kalır.
+    if 'natal_year' not in chart:
+        chart['natal_year'] = chart['year']
+        chart['natal_month'] = chart['month']
+        chart['natal_day'] = chart['day']
+        chart['natal_hour'] = chart['hour']
+        chart['natal_minute'] = chart['minute']
 
     res = ""
     final_data = None
 
-    # SİNASTRİ VEYA İLERLETİM KONTROLÜ
-    if chart.get('type') in ['synastry'] or 'progression' in chart_type:
+    # --- SENARYO A: DUAL MOD (SİNASTRİ / COMPOSITE / İLERLETİM) ---
+    if chart.get('type') in ['synastry'] or 'progression' in chart_type or 'saved_data' in chart:
         meta1 = chart.get('natal_meta_1')
         meta2 = chart.get('natal_meta_2')
         if not meta1 or not meta2: raise Exception("Meta verileri eksik.")
 
-        # İÇ ÇARK (Natal): Sabit
+        # 1. İÇ ÇARK (Natal): Asla değişmez, sabit doğum verisi
         _, data1 = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
             meta1['year'], meta1['month'], meta1['day'], meta1['hour'], meta1['minute'], 
             float(meta1['tz_offset']), float(meta1['lat']), float(meta1['lon']), None, 
@@ -2534,34 +2552,59 @@ def process_time_jump(dt, chart, idx, active_charts):
             meta1.get('zodiac_type', 'Astronomik')
         )
         
-        # DIŞ ÇARK: İlerletim tipine göre yeniden hesapla
-        if 'secondary' in chart_type:
-            res, data2 = ASTRO_MOTOR_NESNESİ.calculate_secondary_progression(
-                meta1['year'], meta1['month'], meta1['day'], meta1['hour'], meta1['minute'], float(meta1['tz_offset']),
-                dt.year, dt.month, dt.day,
-                float(meta2['lat']), float(meta2['lon']), 
+        if is_secondary:
+            # --- SECONDARY DÜZELTMESİ BAŞLANGIÇ ---
+            
+            # 1. Yaşanılan Gerçek Süreyi Bul (Hedef Tarih - Doğum Tarihi)
+            time_lived = dt - natal_dt 
+            lived_seconds = time_lived.total_seconds()
+            
+            # 2. Bu süreyi "İlerletilmiş Gün"e çevir (Day for a Year)
+            # Formül: (Yaşanılan Saniye / Bir Yıldaki Saniye) = Eklenecek Gün Sayısı
+            days_to_add = lived_seconds / SECONDS_IN_YEAR
+            
+            # 3. İlerletilmiş Tarihi (Progressed Date) Bul
+            # Doğum tarihine hesaplanan gün sayısını ekle
+            prog_dt = natal_dt + timedelta(days=days_to_add)
+            
+            print(f"DEBUG SEC: Hedef={dt}, Natal={natal_dt}, Eklenecek Gün={days_to_add:.4f}, ProgTarih={prog_dt}")
+
+            # 4. Motoru İlerletilmiş Tarih ile Çalıştır
+            res, data2 = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
+                prog_dt.year, prog_dt.month, prog_dt.day, prog_dt.hour, prog_dt.minute, 
+                float(meta1['tz_offset']), float(meta2['lat']), float(meta2['lon']), None, 
                 ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(meta2.get('house_system'), 'P'), 
                 meta2.get('zodiac_type', 'Astronomik')
             )
-        elif 'solar_arc' in chart_type:
+            
+            # İsimlendirme ve Gösterim
+            data2['name'] = f"İkincil İlerletim ({dt.year})"
+            data2['display_date_str'] = dt.strftime("%d.%m.%Y") # Ekranda hedef tarihi (2026) göster
+            
+        elif is_solar_arc:
+            # Solar Arc direkt motor fonksiyonunu çağırır
             res, data2 = ASTRO_MOTOR_NESNESİ.calculate_solar_arc_progression(
                 meta1['year'], meta1['month'], meta1['day'], meta1['hour'], meta1['minute'], float(meta1['tz_offset']),
-                dt.year, dt.month, dt.day,
+                dt.year, dt.month, dt.day, # Hedef Tarih
                 float(meta2['lat']), float(meta2['lon']), 
                 ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(meta2.get('house_system'), 'P'), 
                 meta2.get('zodiac_type', 'Astronomik')
             )
+            data2['name'] = f"Güneş Yayı ({dt.year})"
+            
         else:
-            # Normal Transit/Sinastri
+            # Standart Transit (Dış çark o anki gökyüzü)
             res, data2 = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
                 dt.year, dt.month, dt.day, dt.hour, dt.minute, 
                 float(meta2['tz_offset']), float(meta2['lat']), float(meta2['lon']), None, 
                 ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(meta2.get('house_system'), 'P'), 
                 meta2.get('zodiac_type', 'Astronomik')
             )
+            data2['name'] = f"Transit ({dt.strftime('%d.%m.%Y')})"
         
+        # Ekrandaki tarihi güncelle (Transit tarihi)
+        data2['display_date_str'] = dt.strftime("%d.%m.%Y %H:%M")
         data1['name'] = meta1['name']
-        data2['name'] = meta2['name']
         
         synastry_package = {
             'type': 'synastry', 'chart1': data1, 'chart2': data2,
@@ -2569,41 +2612,75 @@ def process_time_jump(dt, chart, idx, active_charts):
         }
         chart['saved_data'] = synastry_package
         final_data = synastry_package
+        
+        # Meta2'yi güncelle (Transit konumu olarak kalsın diye)
+        chart['natal_meta_2']['year'] = dt.year
+        chart['natal_meta_2']['month'] = dt.month
+        chart['natal_meta_2']['day'] = dt.day
+        chart['natal_meta_2']['hour'] = dt.hour
+        chart['natal_meta_2']['minute'] = dt.minute
+
+    # --- SENARYO B: SINGLE MOD (TEKLİ HARİTA) ---
     else:
-        # --- BURAYI GÜNCELLE: TEKLİ HARİTA (Natal/Transit/Progresyon) ---
-        if 'secondary' in chart_type:
-            res, final_data = ASTRO_MOTOR_NESNESİ.calculate_secondary_progression(
-                chart.get('natal_year', chart['year']), chart.get('natal_month', chart['month']), chart.get('natal_day', chart['day']),
-                chart['hour'], chart['minute'], float(chart['tz_offset']),
-                dt.year, dt.month, dt.day,
-                float(chart['lat']), float(chart['lon']), 
-                ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(chart.get('house_system'), 'P'), chart.get('zodiac_type', 'Astronomik')
+        # Natal bilgileri ARTIK GÜVENLİ: 'natal_year' anahtarından alıyoruz.
+        # Eğer natal_year yoksa, chart['year'] kullanılır (fallback)
+        n_year = chart.get('natal_year', chart['year'])
+        n_month = chart.get('natal_month', chart['month'])
+        n_day = chart.get('natal_day', chart['day'])
+        n_hour = chart.get('natal_hour', chart['hour'])
+        n_min = chart.get('natal_minute', chart['minute'])
+
+        natal_dt = datetime(n_year, n_month, n_day, n_hour, n_min)
+
+        if is_secondary:
+            # Single Secondary
+            age_seconds = (dt - natal_dt).total_seconds()
+            days_to_add = age_seconds / 31556925.0
+            prog_dt = natal_dt + timedelta(days=days_to_add)
+
+            res, final_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
+                prog_dt.year, prog_dt.month, prog_dt.day, prog_dt.hour, prog_dt.minute,
+                float(chart['tz_offset']), float(chart['lat']), float(chart['lon']), None,
+                ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(chart.get('house_system'), 'P'), 
+                chart.get('zodiac_type', 'Astronomik')
             )
-        elif 'solar_arc' in chart_type:
+            final_data['display_date_str'] = dt.strftime("%d.%m.%Y (Sec)")
+            final_data['name'] = f"{chart_name} (Sec. {dt.year})"
+            
+        elif is_solar_arc:
+            # Single Solar Arc
             res, final_data = ASTRO_MOTOR_NESNESİ.calculate_solar_arc_progression(
-                chart.get('natal_year', chart['year']), chart.get('natal_month', chart['month']), chart.get('natal_day', chart['day']),
-                chart['hour'], chart['minute'], float(chart['tz_offset']),
+                n_year, n_month, n_day, n_hour, n_min, float(chart['tz_offset']),
                 dt.year, dt.month, dt.day,
                 float(chart['lat']), float(chart['lon']), 
-                ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(chart.get('house_system'), 'P'), chart.get('zodiac_type', 'Astronomik')
+                ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(chart.get('house_system'), 'P'), 
+                chart.get('zodiac_type', 'Astronomik')
             )
+            final_data['display_date_str'] = dt.strftime("%d.%m.%Y (SA)")
+            final_data['name'] = f"{chart_name} (SA {dt.year})"
+
         else:
-            # Standart Natal/Transit
+            # Standart Transit (Single Mode'da Transit Harita olarak davranır)
             res, final_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
                 dt.year, dt.month, dt.day, dt.hour, dt.minute, 
                 float(chart['tz_offset']), float(chart['lat']), float(chart['lon']), None, 
                 ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(chart.get('house_system'), 'P'), 
                 chart.get('zodiac_type', 'Astronomik')
             )
+            final_data['display_date_str'] = dt.strftime("%d.%m.%Y")
 
-    # Güncelle ve Kaydet
+    # --- KAYDETME ---
+    # Ekranda "Şu an hangi zamandayız?" bilgisini tutmak için 'year/month' güncellenir.
+    # AMA 'natal_year' vb. asla dokunulmaz, böylece kök veri bozulmaz.
     chart.update({'year': dt.year, 'month': dt.month, 'day': dt.day, 'hour': dt.hour, 'minute': dt.minute})
+    
     active_charts[idx] = chart
     session['active_charts'] = active_charts
     session['last_chart'] = final_data
     session['last_report'] = res
     session['current_chart_data'] = chart
     session.modified = True
+    
     return redirect(url_for('home', tab='aktif'))
 
 @app.route('/set_active_chart/<int:index>')
