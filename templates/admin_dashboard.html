@@ -257,6 +257,19 @@
             </div>
         </div>
 
+        <section class="admin-section">
+  <h3>Destek Linkleri Yönetimi</h3>
+  <form action="/admin/update_support_links" method="POST">
+    <label>WhatsApp</label>
+    <input name="whatsapp_url" value="https://wa.me/905551234567">
+    <label>Etkin mi?</label>
+    <input type="checkbox" name="whatsapp_enabled" checked>
+    
+    <!-- Instagram, Email, YouTube, Website için aynı şekilde -->
+    <button>KAYDET</button>
+  </form>
+</section>
+
         <div id="kullanicilar" class="content-section">
             <div class="admin-card">
                 <div class="card-header">
