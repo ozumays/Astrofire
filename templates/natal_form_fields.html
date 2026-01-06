@@ -1,14 +1,32 @@
 <style>
+
+    /* GENEL FORM KUTULARI VE YAZI BOYUTU (13px) */
+    .form-group input, 
+    .form-group select, 
+    .form-control, 
+    .form-select,
+    .modal-city-input,
+    #name, #day, #month, #year, #hour, #minute {
+        font-size: 11px !important;
+        padding: 5px 8px !important; /* Kutuları daraltan kritik ayar */
+        height: 30px !important;    /* Kutu yüksekliğini sabitledik */
+        border-radius: 0px !important;
+        background: rgba(255, 255, 255, 0.295) !important;
+        color: rgb(24, 24, 24) !important;                    
+        border: 1px solid rgba(48, 48, 48, 0.2) !important;
+        width: 100%;
+        box-sizing: border-box;
+    }
     /* Validasyon Renkleri */
     .valid-utc {
         border: 2px solid #27ae60 !important;
-        background-color: #eafaf1 !important;
+        background-color: rgba(255, 255, 255, 0.2); 
         color: #27ae60 !important;
         font-weight: bold;
     }
     .invalid-utc {
         border: 2px solid #c0392b !important;
-        background-color: #f9e79f !important; 
+        background-color: rgba(255, 255, 255, 0.2); 
         color: #c0392b !important;
         font-weight: bold;
     }
@@ -19,50 +37,194 @@
         font-weight: bold;
         margin-top: 2px;
     }
+
+    /* UTC Validasyon: Doğru Giriş (Yeşil Kenarlıklı Cam) */
+.valid-utc {
+    border: 2px solid #27ae60 !important;
+    background-color: rgba(255, 255, 255, 0.4) !important;
+    color: #1e462f !important;
+    font-weight: bold !important;
+}
+
+/* UTC Validasyon: Hatalı Giriş (Kırmızı Kenarlıklı Cam) */
+.invalid-utc {
+    border: 2px solid #c0392b !important;
+    background-color: rgba(255, 255, 255, 0.4) !important;
+    color: #5c1b14 !important;
+    font-weight: bold !important;
+}
+
+/* Hata Mesajı Metni */
+.utc-error-text {
+    display: none;
+    font-size: 10px;
+    color: #c0392b;
+    font-weight: bold;
+    margin-top: 2px;
+}
+
+/* =========================================
+   SAĞ KONUM MODAL (WHITE & BLUE VERSION)
+   ========================================= */
+
+/* 1. Dış Taşıyıcı (Karartan ve Bulanıklaştıran Katman) */
+#locationModal {
+    z-index: 999999 !important;
+    background: rgba(0, 0, 0, 0.4) !important; /* Arka planı %40 siyah yapar */
+    backdrop-filter: blur(4px) !important;      /* Arka planı bulanıklaştırır */
+    -webkit-backdrop-filter: blur(4px) !important;
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    align-items: center; 
+    justify-content: center;
+}
+
+/* 2. Kutu Tasarımı (170px Sabit - Beyaz Tema) */
+#locationModal .modal-content, #locationModal .modal-box {
+    position: absolute !important;
+    width: 220px !important;
+    background: rgba(42, 115, 145, 0.384) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(175, 175, 175, 0.644); /* İnce gri çerçeve */
+    box-shadow: 5px 5px 20px rgba(255, 255, 255, 0.15);
+    margin: 0 !important;
+    border-radius: 0px;
+    padding: 10px !important;
+    box-sizing: border-box !important;
+}
+
+/* Kapatma Butonu */
+#locationModal .modal-close {
+    position: absolute !important;
+    top: 2px !important;
+    right: 5px !important;
+    font-size: 16px !important;
+    color: #031724 !important; /* Gri çarpı */
+    background: none !important;
+    border: none !important;
+    cursor: pointer;
+}
+
+#locationModal .modal-close:hover {
+    color: #05202c !important;
+    /* Parlama Efekti */
+    text-shadow: 0 0 8px rgba(13, 138, 187, 0.8), 
+                 0 0 15px rgba(13, 138, 187, 0.4);
     
-    /* Modal (Açılır Pencere) Stili */
-    .modal-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-    }
-    .modal-content {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        width: 90%;
-        max-width: 400px;
-        max-height: 80vh;
-        overflow-y: auto;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
-    .location-item {
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-    .location-item:hover {
-        background-color: #f0f8ff;
-    }
-    .location-item:last-child {
-        border-bottom: none;
-    }
-    .badge-tz {
-        background: #3498db;
-        color: white;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 0.8em;
-        margin-left: 5px;
-    }
+    /* Etkileşim: Hafif büyüme ve dönme */
+    transform: scale(1.2) rotate(90deg);
+    
+    /* Geçiş hızı */
+    transition: all 0.3s ease-in-out;
+    
+    opacity: 1 !important;
+}
+
+/* Başlık (Mavi) */
+#locationModal h4 {
+    font-size: 14px !important;
+    color: #072235 !important; /* Gri çarpı */
+    margin: 0 0 8px 0 !important;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 15px;
+    padding-bottom: 3px;
+    font-weight: bold;
+    border-bottom: 1px solid rgba(13, 138, 187, 0.15); /* Hafif mavi alt çizgi */
+}
+
+/* Arama Alanı Kapsayıcısı */
+#locationModal .modal-content > div:not(#locationResultsList),
+#locationModal .modal-box > div {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 1px !important;
+    width: 100% !important;
+}
+
+/* BUL Butonu (Mavi) */
+#locationModal button:not(.modal-close) {
+    width: 35px !important;
+    flex-shrink: 0 !important;
+    font-size: 10px !important;
+    height: 24px !important;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0d8abb !important; /* Mavi Buton */
+    color: white !important;
+    border: none !important;
+    cursor: pointer;
+}
+
+#locationModal button:not(.modal-close):hover {
+    background: #12a5df !important; /* Daha açık mavi hover */
+    box-shadow: 0 0 10px rgba(13, 138, 187, 0.3);
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+}
+
+/* Sonuç Listesi */
+#locationResultsList, #locationResultList {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-top: 1px !important;
+    padding: 0;
+    list-style: none;
+}
+
+/* Liste Elemanları (Beyaz Tema Üstü Siyah/Mavi Yazı) */
+.location-item, #locationResultList li {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 5px 6px !important;
+    cursor: pointer !important;
+    border-bottom: 1px solid #eee !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    transition: all 0.2s ease;
+}
+
+/* Şehir İsmi (Siyah) */
+.loc-name {
+    font-weight: bold !important;
+    font-size: 11px !important;
+    color: #17263d !important; /* Siyah isimler */
+    line-height: 1.1 !important;
+}
+
+/* Alt Detaylar (Gri) */
+.loc-details {
+    display: flex !important;
+    gap: 5px !important;
+    font-size: 10px !important;
+    color: #2b4264 !important; /* Siyah isimler */
+}
+
+/* UTC Vurgusu (Mavi) */
+.loc-utc {
+    color: #3e829c !important;
+    font-weight: bold !important;
+}
+
+/* Liste Hover */
+.location-item:hover, #locationResultList li:hover {
+    background: rgba(13, 138, 187, 0.08) !important; /* Çok hafif mavi hover */
+    padding-left: 8px !important;
+}
+
+/* Scrollbar Ayarı */
+#locationResultsList::-webkit-scrollbar { width: 5px; }
+#locationResultsList::-webkit-scrollbar-thumb { background: #f4f5f5; }
+
 </style>
 
 <div class="form-group">
@@ -96,45 +258,49 @@
     </div>
 </div>
 
-<div class="form-group" style="background: #e8f6f3; padding: 8px; border-radius: 4px; border: 1px solid #d4efdf;">
-    <label style="color: #16a085; font-weight: bold; font-size: 11px;">🌍 Konum ve Saat Dilimi Bulucu</label>
+<div class="form-group">
+    <label style="color: rgb(24, 24, 24); font-weight: bold; font-size: 11px;">🌍 Konum ve Saat Dilimi Bul</label>
     
     <div style="display: flex; align-items: center; gap: 6px;">
         <input type="text" id="city_search_input" placeholder="Şehir adı (Örn: Berlin)..." 
-               style="flex-grow: 1; margin-bottom: 0; height: 38px;">
+               style="flex-grow: 1; margin-bottom: 0; height: 28px; background: rgba(255, 255, 255, 0.295); color: rgb(24, 24, 24); border: 1px solid rgba(48, 48, 48, 0.2); border-radius: 0px; padding: 0 10px;">
         
         <button type="button" onclick="searchLocationAndTZ()" 
-                style="width: auto; height: 15px; white-space: nowrap; background: #16a085; color: white; border: none; border-radius: 4px; padding: 0 10px; cursor: pointer; font-weight: bold; font-size: 10px; line-height: 15px;">
+                style="width: auto; height: 28px; white-space: nowrap; background: rgba(3, 112, 27, 0.8); color: white; border: none; border-radius: 0px; padding: 0 8px; cursor: pointer; font-weight: bold; font-size: 10px; transition: 0.3s;">
             BUL <i class="fas fa-search"></i>
         </button>
     </div>
     
-    <small class="form-text text-muted" style="font-size: 9px;">Şehri bulunca Enlem, Boylam ve UTC otomatik dolar.</small>
+    <small class="form-text text-muted" style="font-size: 9px; color: rgb(60, 60, 60);">Şehri bulunca Enlem, Boylam ve UTC otomatik dolar.</small>
     
-    <div id="selected_location_display" style="font-size: 9px; color: #27ae60; margin-top: 5px; font-weight: bold; min-height: 15px;">
+    <div id="selected_location_display" style="font-size: 11px; margin-top: 5px; color: #27ae60; font-weight: bold;">
         {% if current_chart_data and current_chart_data.location_name %}
             <i class="fas fa-check-circle"></i> {{ current_chart_data.location_name }}
         {% endif %}
     </div>
 </div>
 
-<div class="form-row three-col" style="background-color: #f8f9fa; padding: 8px; border: 1px solid #eee; border-radius: 4px; margin-bottom: 10px;">
+<div class="form-row three-col" style="margin-top: 10px;">
     <div class="form-group">
-        <label for="lat" style="font-size: 10px;">Enlem</label>
-        <input type="number" step="any" id="lat" name="lat" placeholder="Lat" value="{{ current_chart_data.lat if current_chart_data else '' }}" required style="background: #fff; font-size: 11px;">
+        <label for="lat" style="font-size: 10px; color: rgb(24, 24, 24);">Enlem</label>
+        <input type="number" step="any" id="lat" name="lat" placeholder="Lat" 
+               value="{{ current_chart_data.lat if current_chart_data else '' }}" required 
+               style="background: rgba(255, 255, 255, 0.295); color: rgb(24, 24, 24); border: 1px solid rgba(48, 48, 48, 0.2); font-size: 11px; border-radius: 0px; width: 100%; padding: 8px;">
     </div>
     <div class="form-group">
-        <label for="lon" style="font-size: 10px;">Boylam</label>
-        <input type="number" step="any" id="lon" name="lon" placeholder="Lon" value="{{ current_chart_data.lon if current_chart_data else '' }}" required style="background: #fff; font-size: 11px;">
+        <label for="lon" style="font-size: 10px; color: rgb(24, 24, 24);">Boylam</label>
+        <input type="number" step="any" id="lon" name="lon" placeholder="Lon" 
+               value="{{ current_chart_data.lon if current_chart_data else '' }}" required 
+               style="background: rgba(255, 255, 255, 0.295); color: rgb(24, 24, 24); border: 1px solid rgba(48, 48, 48, 0.2); font-size: 11px; border-radius: 0px; width: 100%; padding: 8px;">
     </div>
     
     <div class="form-group">
-        <label for="tz_offset" style="font-size: 10px; color: #d35400; font-weight: bold;">UTC </label>
-        <input type="number" step="0.01" id="tz_offset" name="tz_offset" placeholder="Örn: 3.0" 
+        <label for="tz_offset" style="font-size: 10px; color: rgb(24, 24, 24); font-weight: bold;">UTC </label>
+        <input type="number" step="0.01" id="tz_offset" name="tz_offset" placeholder="3.0" 
                value="{{ current_chart_data.tz_offset if current_chart_data else '' }}" required 
                oninput="validateUtcInput(this)"
-               style="background: #fff; border: 1px solid #bdc3c7;">
-        <span id="utc_error" class="utc-error-text">Hatalı Değer!</span>
+               style="background: rgba(255, 255, 255, 0.295); color: rgb(24, 24, 24); border: 1px solid rgba(48, 48, 48, 0.2); font-size: 11px; border-radius: 0px; width: 100%; padding: 8px;">
+        <span id="utc_error" class="utc-error-text" style="display: none; font-size: 9px; color: #c0392b; font-weight: bold;">Hatalı Değer!</span>
     </div>
 </div>
 
@@ -169,7 +335,7 @@
     <div class="modal-content">
         <h4 style="margin-top:0;">Sonuçlar</h4>
         <div id="locationResultsList"></div>
-        <button type="button" onclick="closeLocationModal()" style="margin-top:15px; width:100%; padding:10px; background:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer;">Kapat</button>
+        <button class="modal-close" onclick="closeLocationModal()">&times;</button>
     </div>
 </div>
 
@@ -188,8 +354,14 @@
         }
     }
 
-    // Modal Fonksiyonları
-    function closeLocationModal() { document.getElementById('locationModal').style.display = 'none'; }
+    // Güncellenmiş Modal Fonksiyonu
+function closeLocationModal(event) { 
+    if (event) {
+        event.preventDefault();    // Formun gönderilmesini (yönlendirmeyi) durdurur
+        event.stopPropagation();   // Tıklamanın arkadaki elementlere geçmesini engelle
+    }
+    document.getElementById('locationModal').style.display = 'none'; 
+}
 
     // Backend'e gidip Şehri ve UTC'yi soran fonksiyon
     function searchLocationAndTZ() {
