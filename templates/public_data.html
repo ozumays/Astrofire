@@ -2,77 +2,121 @@
 
 {% block content %}
 
-<div style="position: absolute; top: 15px; left: 230px; z-index: 10;">
-    <button onclick="openSearchModal()" style="background: #fff; border: 1px solid #ddd; padding: 8px 15px; border-radius: 20px; font-size: 13px; color: #555; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 8px;">
-        <i class="fas fa-search" style="color: #3498db;"></i> Gelişmiş Arama / Filtreleme
-    </button>
-</div>
-
 <div class="library-container" id="libraryContainer">
     
     <div class="library-sidebar" id="librarySidebar">
         <div class="sidebar-header">
             <i class="fas fa-folder-tree"></i> Veri Bankası
         </div>
+    
+    <div style="padding: 10px; border-bottom: 1px solid #eee;">
+        <button onclick="openSearchModal()" style="width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; font-size: 12px; color: #475569; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+            <i class="fas fa-search" style="color: #3498db;"></i> Gelişmiş Arama / Filtrele
+        </button>
+    </div>
+    
+    <div class="sidebar-tree">
+        <details class="main-category">
+    <summary class="main-summary">
+        <i class="fas fa-users"></i> Tüm Haritalar
+    </summary>
+    <div class="main-content">
+        {% set flat_list = [] %}
         
-        <div class="sidebar-tree">
-            {% if chart_tree %}
-                {% for asc_name in zodiac_order %}
-                    {% set asc_key = "Yükselen " + asc_name %}
-                    {% if chart_tree[asc_key] %}
-                    <details class="folder-level-1">
-                        <summary>
-                            <span style="display: flex; align-items: center; gap: 6px;">
-                                <i class="fas fa-folder" style="color: #f39c12;"></i> {{ asc_key }}
-                            </span>
-                        </summary>
-                        <div class="folder-content-1">
-                            {% for sun_name in zodiac_order %}
-                                {% set sun_key = "Güneş " + sun_name %}
-                                {% if chart_tree[asc_key][sun_key] %}
-                                <details class="folder-level-2">
-                                    <summary>
-                                        <span style="display: flex; align-items: center; gap: 6px;">
-                                            <i class="fas fa-folder-open" style="color: #3498db;"></i> {{ sun_key }}
-                                        </span>
-                                    </summary>
-                                    <div class="folder-content-2">
-                                        {% for chart in chart_tree[asc_key][sun_key] %}
-                                            <a href="{{ url_for('page_data', id=chart.id) }}" 
-                                               class="chart-link {% if selected_chart and selected_chart.id == chart.id %}active{% endif %}">
-                                                <i class="fas fa-user-tag" style="font-size: 10px;"></i> {{ chart.name }}
-                                            </a>
-                                        {% endfor %}
-                                    </div>
-                                </details>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                    </details>
-                    {% endif %}
+        {# Önce ağaçtaki tüm haritaları tek bir listede toplayalım #}
+        {% if chart_tree %}
+            {% for asc_key, sun_dict in chart_tree.items() %}
+                {% for sun_key, charts in sun_dict.items() %}
+                    {% for chart in charts %}
+                        {% if chart not in flat_list %}
+                            {% do flat_list.append(chart) %}
+                        {% endif %}
+                    {% endfor %}
                 {% endfor %}
-            {% else %}
-                <div style="padding: 20px; text-align: center; color: #999; font-size: 12px;">Henüz veri yok.</div>
-            {% endif %}
-        </div>
-    </div>
+            {% endfor %}
+        {% endif %}
 
-    <div id="lib-toggle" onclick="toggleLibrarySidebar()" title="Menüyü Aç/Kapat">
-        <i class="fas fa-chevron-left" id="toggleIcon"></i>
+        {# Şimdi bu listeyi alfabetik isim sırasına göre yazdıralım #}
+        {% if flat_list %}
+            {% for chart in flat_list|sort(attribute='name') %}
+                <a href="{{ url_for('page_data', id=chart.id) }}"
+                   class="chart-link {% if selected_chart and selected_chart.id == chart.id %}active{% endif %}">
+                    <i class="fas fa-user-circle" style="font-size: 10px; opacity: 0.7;"></i> {{ chart.name }}
+                </a>
+            {% endfor %}
+        {% else %}
+            <p style="padding:10px; font-size:11px; color:#999;">Görüntülenecek veri yok.</p>
+        {% endif %}
     </div>
+</details>
 
-    <div class="library-content-wrapper">
+        <details class="main-category" open> <summary class="main-summary">
+                <i class="fas fa-star"></i> Yükselene Göre
+            </summary>
+            <div class="main-content">
+                {% if chart_tree %}
+                    {% for asc_name in zodiac_order %}
+                        {% set asc_key = "Yükselen " + asc_name %}
+                        {% if chart_tree[asc_key] %}
+                        <details class="folder-level-1">
+                            <summary>
+                                <span style="display: flex; align-items: center; gap: 6px;">
+                                    <i class="fas fa-folder" style="color: #f39c12;"></i> {{ asc_key }}
+                                </span>
+                            </summary>
+                            <div class="folder-content-1">
+                                {% for sun_name in zodiac_order %}
+                                    {% set sun_key = "Güneş " + sun_name %}
+                                    {% if chart_tree[asc_key][sun_key] %}
+                                    <details class="folder-level-2">
+                                        <summary>
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <i class="fas fa-folder-open" style="color: #3498db;"></i> {{ sun_key }}
+                                            </span>
+                                        </summary>
+                                        <div class="folder-content-2">
+                                            {% for chart in chart_tree[asc_key][sun_key] %}
+                                                <a href="{{ url_for('page_data', id=chart.id) }}"
+                                                   class="chart-link {% if selected_chart and selected_chart.id == chart.id %}active{% endif %}">
+                                                    <i class="fas fa-user-tag" style="font-size: 10px;"></i> {{ chart.name }}
+                                                </a>
+                                            {% endfor %}
+                                        </div>
+                                    </details>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </details>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </details>
+
+        <details class="main-category">
+            <summary class="main-summary">
+                <i class="fas fa-crystal-ball"></i> Öngörüler
+            </summary>
+            <div class="main-content">
+                <p style="padding:10px; font-size:11px; color:#999;">Henüz öngörü verisi yok.</p>
+            </div>
+        </details>
+    </div>
+</div>
+
+<div id="lib-toggle" onclick="toggleLibrarySidebar()">
+    <i class="fas fa-chevron-left" id="toggleIcon"></i>
+</div>
+<div class="library-content-wrapper">
         {% if selected_chart %}
             
             <div class="profile-card-sticky">
-                
-                <div class="header-row">
-                    <h1 class="chart-title">{{ selected_chart.name }}</h1>
-                    <a href="{{ url_for('load_public_chart', id=selected_chart.id) }}" class="btn-open-active">
-                        AKTİF BÖLÜMDE AÇ <i class="fas fa-external-link-alt"></i>
-                    </a>
-                </div>
-
+    <div class="header-row">
+        <h1 class="chart-title">{{ selected_chart.name }}</h1>
+        <a href="{{ url_for('load_public_chart', id=selected_chart.id) }}" class="btn-open-active">
+            AKTİF BÖLÜMDE AÇ <i class="fas fa-external-link-alt"></i>
+        </a>
+    </div>
                 <div class="birth-details-row">
                     <span><i class="far fa-calendar-alt"></i> {{ selected_chart.day }}.{{ selected_chart.month }}.{{ selected_chart.year }}</span>
                     <span class="separator">|</span>
@@ -83,15 +127,7 @@
                 </div>
 
                 <div class="chart-wheel-box">
-                     <svg id="astroChart" viewBox="0 0 700 700" style="width: 100%; height: 100%;"></svg>
-                </div>
-
-                <div class="meta-tags">
-                    <span class="meta-badge asc">Asc {{ selected_chart.asc_sign }}</span>
-                    <span class="meta-badge sun">Güneş {{ selected_chart.sun_sign }}</span>
-                    {% if selected_chart.category and selected_chart.category != 'Genel' %}
-                        <span class="meta-badge cat">{{ selected_chart.category }}</span>
-                    {% endif %}
+                     <svg id="astroChart" viewBox="0 0 400 400" style="width: 100%; height: 100%;"></svg>
                 </div>
 
             </div>
@@ -99,7 +135,7 @@
             <div class="biography-panel">
                 <div class="bio-header-row">
                     <h1 class="bio-title">
-                        <i class="fas fa-book-open" style="color: #3498db; font-size: 18px; margin-right: 8px;"></i> 
+                        <i class="fas fa-book-open" style="color: #3498db; font-size: 18px; margin-right: 8px;"></i>
                         Hayat Hikayesi
                     </h1>
                 </div>
@@ -240,7 +276,7 @@
                     let imgPath = c.image ? `/static/uploads/charts/${c.image}` : null;
                     let avatarHtml = imgPath ? `<img src="${imgPath}" class="w-full h-full object-cover">` : `<span class="text-lg font-bold text-slate-400">${c.name.charAt(0)}</span>`;
                     html += `
-                    <div onclick="window.location.href='/page_data?id=${c.id}'" 
+                    <div onclick="window.location.href='/page_data?id=${c.id}'"
                          style="background:white; border:1px solid #eee; padding:10px; border-radius:6px; cursor:pointer; display:flex; align-items:center; gap:10px; transition:0.2s;"
                          onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='white'">
                         <div style="width:30px; height:30px; background:#eee; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; font-weight:bold; color:#999;">${avatarHtml}</div>
@@ -259,7 +295,7 @@
     }
 
     // =============================================================
-    // 🖌️ HARİTA ÇİZİM MOTORU (ORİJİNAL LAYOUT KODUNDAN ALINDI)
+    // HARİTA ÇİZİM MOTORU
     // =============================================================
     {% if last_chart %}
         const chartDataRaw = '{{ last_chart | tojson | safe }}';
@@ -267,7 +303,7 @@
         
         const PLANET_IMAGE_MAP = { "Güneş": "{{ url_for('static', filename='images/semboller/gunes.svg') }}", "Ay": "{{ url_for('static', filename='images/semboller/ay.svg') }}", "Merkür": "{{ url_for('static', filename='images/semboller/merkur.svg') }}", "Venüs": "{{ url_for('static', filename='images/semboller/venus.svg') }}", "Mars": "{{ url_for('static', filename='images/semboller/mars.svg') }}", "Jüpiter": "{{ url_for('static', filename='images/semboller/jupiter.svg') }}", "Satürn": "{{ url_for('static', filename='images/semboller/saturn.svg') }}", "Uranüs": "{{ url_for('static', filename='images/semboller/uranus.svg') }}", "Neptün": "{{ url_for('static', filename='images/semboller/neptun.svg') }}", "Plüton": "{{ url_for('static', filename='images/semboller/pluton.svg') }}", "Kuzey Düğümü": "{{ url_for('static', filename='images/semboller/kuzey_dugumu.svg') }}", "Güney Düğümü": "{{ url_for('static', filename='images/semboller/guney_dugumu.svg') }}", "Şans Noktası": "{{ url_for('static', filename='images/semboller/sans_noktasi.svg') }}", "Chiron": "{{ url_for('static', filename='images/semboller/chiron.svg') }}", "Ceres": "{{ url_for('static', filename='images/semboller/ceres.svg') }}", "Pallas": "{{ url_for('static', filename='images/semboller/pallas.svg') }}", "Juno": "{{ url_for('static', filename='images/semboller/juno.svg') }}", "Vesta": "{{ url_for('static', filename='images/semboller/vesta.svg') }}", "Eris": "{{ url_for('static', filename='images/semboller/eris.svg') }}", "Makemake": "{{ url_for('static', filename='images/semboller/makemake.svg') }}", "Haumea": "{{ url_for('static', filename='images/semboller/haumea.svg') }}" };
         const ZODIAC_IMAGE_MAP = { "Koç": "{{ url_for('static', filename='images/semboller/koc.svg') }}", "Boğa": "{{ url_for('static', filename='images/semboller/boga.svg') }}", "İkizler": "{{ url_for('static', filename='images/semboller/ikizler.svg') }}", "Yengeç": "{{ url_for('static', filename='images/semboller/yengec.svg') }}", "Aslan": "{{ url_for('static', filename='images/semboller/aslan.svg') }}", "Başak": "{{ url_for('static', filename='images/semboller/basak.svg') }}", "Terazi": "{{ url_for('static', filename='images/semboller/terazi.svg') }}", "Akrep": "{{ url_for('static', filename='images/semboller/akrep.svg') }}", "Yay": "{{ url_for('static', filename='images/semboller/yay.svg') }}", "Oğlak": "{{ url_for('static', filename='images/semboller/oglak.svg') }}", "Kova": "{{ url_for('static', filename='images/semboller/kova.svg') }}", "Balık": "{{ url_for('static', filename='images/semboller/balik.svg') }}" };
-        const SYMBOL_SIZE = 23; const PLANET_SIGN_SYMBOL_SIZE = 20; const CUSP_SIGN_SYMBOL_SIZE = 20; const CUSP_TEXT_OFFSET = 26; const svg = document.getElementById('astroChart'); const cx = 350; const cy = 350; const R_ZODIAC_OUTER = 350; const R_ZODIAC_INNER = 310; const R_HOUSE_LABELS = 40; const R_CUSP_SYMBOL_CENTER = 330; const R_PLANETS_AVG = 285; const R_PLANET_DEGREES = 255; const R_PLANET_SIGN = 230; const R_PLANET_MINUTE = 205; const R_PLANET_RETRO = 180; const R_INNER_RING = 30; const R_EXPANDED_BG = 220; const R_EXPANDED_PLANETS = 210; const R_PLANETS_INNER = 260; const R_PLANETS_OUTER = 345; const SVG_NS = "http://www.w3.org/2000/svg"; 
+        const SYMBOL_SIZE = 13; const PLANET_SIGN_SYMBOL_SIZE = 13; const CUSP_SIGN_SYMBOL_SIZE = 13; const CUSP_TEXT_OFFSET = 13; const svg = document.getElementById('astroChart'); const cx = 200; const cy = 200; const R_ZODIAC_OUTER = 195; const R_ZODIAC_INNER = 175; const R_HOUSE_LABELS = 25; const R_CUSP_SYMBOL_CENTER = 185; const R_PLANETS_AVG = 160; const R_PLANET_DEGREES = 140; const R_PLANET_SIGN = 122; const R_PLANET_MINUTE = 105; const R_PLANET_RETRO = 87; const R_INNER_RING = 32; const R_EXPANDED_BG = 80; const R_EXPANDED_PLANETS = 210; const R_PLANETS_INNER = 260; const R_PLANETS_OUTER = 345; const SVG_NS = "http://www.w3.org/2000/svg";
         
         let ascDegree = 0;
         if (chartData) {
@@ -280,10 +316,10 @@
         function getAngleDiff(a, b) { let d = Math.abs(a - b); return Math.min(d, 360 - d); }
         function drawZodiac() { svg.appendChild(createSvgElement('circle', { cx: cx, cy: cy, r: R_ZODIAC_OUTER, fill: 'white', stroke: 'none' })); svg.appendChild(createSvgElement('circle', { cx: cx, cy: cy, r: R_ZODIAC_OUTER, fill: 'none', class: 'chart-line' })); svg.appendChild(createSvgElement('circle', { cx: cx, cy: cy, r: R_ZODIAC_INNER, fill: 'none', class: 'chart-line' })); }
         
-        function calculateDetails(absDeg, startDeg, signName) { let relDeg = absDeg - startDeg; if (relDeg < 0) relDeg += 360; const degrees = Math.floor(relDeg); const minutesDecimal = (relDeg - degrees) * 60; const minutes = Math.round(minutesDecimal); if (minutes === 60) { return { signName: signName, deg: degrees + 1, min: 0 }; } return { signName: signName, deg: degrees, min: minutes }; } 
-        function getRelativeDegreeJS(absDeg) { absDeg %= 360; let boundaries = []; if (typeof chartData !== 'undefined' && chartData.boundaries) { boundaries = chartData.boundaries; } else { boundaries = [ {name:"Koç", start:0, end:30}, {name:"Boğa", start:30, end:60}, {name:"İkizler", start:60, end:90}, {name:"Yengeç", start:90, end:120}, {name:"Aslan", start:120, end:150}, {name:"Başak", start:150, end:180}, {name:"Terazi", start:180, end:210}, {name:"Akrep", start:210, end:240}, {name:"Yay", start:240, end:270}, {name:"Oğlak", start:270, end:300}, {name:"Kova", start:300, end:330}, {name:"Balık", start:330, end:360} ]; } for (let i = 0; i < boundaries.length; i++) { const b = boundaries[i]; if (b.start < b.end) { if (absDeg >= b.start && absDeg < b.end) return calculateDetails(absDeg, b.start, b.name); } else { if (absDeg >= b.start || absDeg < b.end) return calculateDetails(absDeg, b.start, b.name); } } return { signName: "Bilinmeyen", deg: 0, min: 0 }; } 
+        function calculateDetails(absDeg, startDeg, signName) { let relDeg = absDeg - startDeg; if (relDeg < 0) relDeg += 360; const degrees = Math.floor(relDeg); const minutesDecimal = (relDeg - degrees) * 60; const minutes = Math.round(minutesDecimal); if (minutes === 60) { return { signName: signName, deg: degrees + 1, min: 0 }; } return { signName: signName, deg: degrees, min: minutes }; }
+        function getRelativeDegreeJS(absDeg) { absDeg %= 360; let boundaries = []; if (typeof chartData !== 'undefined' && chartData.boundaries) { boundaries = chartData.boundaries; } else { boundaries = [ {name:"Koç", start:0, end:30}, {name:"Boğa", start:30, end:60}, {name:"İkizler", start:60, end:90}, {name:"Yengeç", start:90, end:120}, {name:"Aslan", start:120, end:150}, {name:"Başak", start:150, end:180}, {name:"Terazi", start:180, end:210}, {name:"Akrep", start:210, end:240}, {name:"Yay", start:240, end:270}, {name:"Oğlak", start:270, end:300}, {name:"Kova", start:300, end:330}, {name:"Balık", start:330, end:360} ]; } for (let i = 0; i < boundaries.length; i++) { const b = boundaries[i]; if (b.start < b.end) { if (absDeg >= b.start && absDeg < b.end) return calculateDetails(absDeg, b.start, b.name); } else { if (absDeg >= b.start || absDeg < b.end) return calculateDetails(absDeg, b.start, b.name); } } return { signName: "Bilinmeyen", deg: 0, min: 0 }; }
         
-        let houseOverflowMap = {}; 
+        let houseOverflowMap = {};
         function calculateHouseOverflows(planetsByHouse, hBounds) { const DEG_PER_PLANET = 6.0; houseOverflowMap = {}; for(let i=1; i<=12; i++) { let housePlanets = planetsByHouse[i] || []; let count = housePlanets.length; if (count === 0) continue; let bounds = hBounds[i-1]; let houseWidth = (bounds.end - bounds.start + 360) % 360; let requiredWidth = count * DEG_PER_PLANET; if (requiredWidth > houseWidth) { let extraSpace = requiredWidth - houseWidth + 2.0; houseOverflowMap[i] = extraSpace; } else { houseOverflowMap[i] = 0; } } }
 
         function drawHouses(hBounds) { const houses = chartData.houses; if (!houses) return []; svg.appendChild(createSvgElement('circle', { cx: cx, cy: cy, r: R_INNER_RING, fill: 'none', class: 'chart-line' })); if (!hBounds) { hBounds = []; for (let i = 1; i <= 12; i++) { const s = houses[`CUSP${i}`]; const e = houses[`CUSP${(i % 12) + 1}`]; if (s !== undefined) hBounds.push({ id: i, start: s, end: e }); } } for (let i = 1; i <= 12; i++) { const cuspDeg = houses[`CUSP${i}`]; if (cuspDeg === undefined) continue; const nextCusp = houses[`CUSP${(i % 12) + 1}`]; let overflow = houseOverflowMap[i] || 0; if (overflow > 0) { let pStart = getCoords(R_INNER_RING, cuspDeg); let pMidIn = getCoords(150, cuspDeg); let shiftedAngle = (cuspDeg - overflow + 360) % 360; let pMidOut = getCoords(150, shiftedAngle); let pEnd = getCoords(R_ZODIAC_INNER, shiftedAngle); let d = `M ${pStart.x} ${pStart.y} L ${pMidIn.x} ${pMidIn.y} L ${pMidOut.x} ${pMidOut.y} L ${pEnd.x} ${pEnd.y}`; svg.appendChild(createSvgElement('path', { d: d, class: 'house-cusp-stepped' })); } else { const p1 = getCoords(0, cuspDeg); const p2 = getCoords(R_ZODIAC_INNER, cuspDeg); svg.appendChild(createSvgElement('line', { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, class: 'house-cusp' })); } let diff = (nextCusp - cuspDeg + 360) % 360; let midAngle = (cuspDeg + diff / 2) % 360; if (getAngleDiff(cuspDeg, nextCusp) > 180) midAngle = (cuspDeg + diff / 2 + 180) % 360; const pLabelCoords = getCoords(R_HOUSE_LABELS, midAngle); const labelEl = createSvgElement('text', { x: pLabelCoords.x, y: pLabelCoords.y, class: 'house-label', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); labelEl.textContent = i; svg.appendChild(labelEl); const degreeInfo = getRelativeDegreeJS(cuspDeg); const signImageUrl = ZODIAC_IMAGE_MAP[degreeInfo.signName]; const mInt = degreeInfo.min; const minStr = (mInt < 10 ? '0' + mInt : '' + mInt); const pCuspSign = getCoords(R_CUSP_SYMBOL_CENTER, cuspDeg); const rotatedAngle = (cuspDeg - ascDegree + 360) % 360; const visualAngleRad = (-rotatedAngle + 180) * (Math.PI / 180); const perpAngleRad = visualAngleRad + (Math.PI / 2); const dx = CUSP_TEXT_OFFSET * Math.cos(perpAngleRad); const dy = CUSP_TEXT_OFFSET * Math.sin(perpAngleRad); let pCuspDegree, pCuspMinute; if (rotatedAngle > 180) { pCuspDegree = { x: pCuspSign.x - dx, y: pCuspSign.y - dy }; pCuspMinute = { x: pCuspSign.x + dx, y: pCuspSign.y + dy }; } else { pCuspDegree = { x: pCuspSign.x + dx, y: pCuspSign.y + dy }; pCuspMinute = { x: pCuspSign.x - dx, y: pCuspSign.y - dy }; } const cuspDegreeEl = createSvgElement('text', { x: pCuspDegree.x, y: pCuspDegree.y, class: 'cusp-degree', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); cuspDegreeEl.textContent = degreeInfo.deg + '°'; svg.appendChild(cuspDegreeEl); const cuspMinuteEl = createSvgElement('text', { x: pCuspMinute.x, y: pCuspMinute.y, class: 'cusp-minute', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); cuspMinuteEl.textContent = minStr + "'"; svg.appendChild(cuspMinuteEl); if (signImageUrl) { const cuspSignEl = createSvgElement('image', { href: signImageUrl, x: pCuspSign.x - (CUSP_SIGN_SYMBOL_SIZE/2), y: pCuspSign.y - (CUSP_SIGN_SYMBOL_SIZE/2), width: CUSP_SIGN_SYMBOL_SIZE, height: CUSP_SIGN_SYMBOL_SIZE }); svg.appendChild(cuspSignEl); } } return hBounds; }
@@ -297,61 +333,172 @@
 </script>
 
 <style>
-    /* --- STİLLER (AYNEN KORUNDU) --- */
-    .filter-row { display: flex; gap: 10px; align-items: center; background: #f8fafc; padding: 10px; border-radius: 6px; }
-    .library-container { display: flex; background: #f4f7f6; position: fixed; top: 60px; bottom: 15px; left: 15px; right: 15px; border: 1px solid #dcdcdc; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); z-index: 1; }
-    .library-sidebar { width: 220px; background: #fff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; flex-shrink: 0; transition: all 0.3s ease; overflow: hidden; }
-    .library-container.sidebar-closed .library-sidebar { width: 0; border-right: none; padding: 0; }
-    #lib-toggle { width: 18px; background: #3498db; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border-right: 1px solid #2980b9; font-size: 10px; transition: background 0.2s; }
-    #lib-toggle:hover { background: #2980b9; color: white; }
-    .sidebar-header { padding: 12px 10px; background: #3498db; font-weight: 700; color: #ffffff; border-bottom: 1px solid #2980b9; font-size: 11px; text-transform: uppercase; height: 45px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-    .sidebar-header i { color: #ffffff; }
-    .sidebar-tree { flex: 1; overflow-y: auto; padding: 8px; width: 220px; }
-    .library-content-wrapper { flex: 1; display: flex; background: #f0f2f5; overflow: hidden; transition: all 0.3s ease; }
-    .profile-card-sticky { width: 470px; background: #fff; border-right: 1px solid #e0e0e0; display: flex; flex-direction: column; align-items: center; padding: 20px; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.02); text-align: center; z-index: 2; flex-shrink: 0; }
-    .header-row { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; }
-    .chart-title { margin: 0; font-size: 20px; color: #2c3e50; font-weight: 800; line-height: 1.2; text-align: left; }
-    .btn-open-active { background-color: #27ae60; color: white; text-decoration: none; font-size: 10px; font-weight: bold; padding: 6px 12px; border-radius: 4px; white-space: nowrap; display: flex; align-items: center; gap: 5px; transition: background 0.2s; }
-    .btn-open-active:hover { background-color: #219150; }
-    .birth-details-row { width: 100%; display: flex; justify-content: flex-start; flex-wrap: wrap; gap: 8px; font-size: 11px; color: #556677; margin-bottom: 10px; text-align: left; }
-    .birth-details-row i { color: #bdc3c7; margin-right: 3px; }
-    .separator { color: #e0e0e0; }
-    .chart-wheel-box { width: 420px; height: 420px; margin: 5px 0 15px 0; background: #fff; flex-shrink: 0; }
-    .meta-tags { display: flex; gap: 5px; justify-content: center; flex-wrap: wrap; width: 100%; margin-top: 0; }
-    .meta-badge { padding: 4px 10px; border-radius: 15px; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
-    .meta-badge.asc { background: #e8f5e9; color: #27ae60; border: 1px solid #c8e6c9; }
-    .meta-badge.sun { background: #fff3e0; color: #e67e22; border: 1px solid #ffe0b2; }
-    .meta-badge.cat { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
-    .biography-panel { flex: 1; padding: 20px 40px; overflow-y: auto; background: #fff; }
-    .bio-header-row { width: 100%; margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 8px; }
-    .bio-title { margin: 0; font-size: 20px; font-weight: 800; color: #2c3e50; display: flex; align-items: center; }
-    .bio-gallery { display: flex; gap: 15px; margin-bottom: 25px; }
-    .gallery-item { width: 150px; height: 150px; overflow: hidden; border-radius: 8px; border: 1px solid #eee; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s; }
-    .gallery-item:hover { transform: scale(1.05); }
-    .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
-    .story-text { font-size: 14px; line-height: 1.8; color: #333; text-align: justify; font-family: 'Segoe UI', 'Helvetica Neue', sans-serif; max-width: 900px; }
-    details summary { list-style: none; cursor: pointer; padding: 6px 8px; font-size: 11px; font-weight: 600; color: #444; border-radius: 4px; transition: background 0.2s; outline: none; }
-    details summary:hover { background: #eef2f7; }
-    details[open] > summary { color: #1565c0; }
-    .chart-link { text-decoration: none; color: #555; font-size: 11px; padding: 4px 8px; border-radius: 3px; display: block; transition: all 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid transparent; }
-    .chart-link:hover { background: #f0f0f0; color: #333; }
-    .chart-link.active { background: #e3f2fd; color: #1565c0; font-weight: bold; border-left: 3px solid #1565c0; }
-    .folder-content-1 { padding-left: 10px; } .folder-content-2 { padding-left: 15px; }
-    .empty-state-container { flex: 1; display: flex; justify-content: center; align-items: center; background: #fff; }
-    .empty-state-box { text-align: center; }
-    .library-sidebar::-webkit-scrollbar, .biography-panel::-webkit-scrollbar, .profile-card-sticky::-webkit-scrollbar { width: 6px; }
-    .library-sidebar::-webkit-scrollbar-track, .biography-panel::-webkit-scrollbar-track { background: #f9f9f9; }
-    .library-sidebar::-webkit-scrollbar-thumb, .biography-panel::-webkit-scrollbar-thumb { background: #d1d1d1; border-radius: 3px; }
-    details > summary::-webkit-details-marker { display: none; }
+    /* GENEL KONTEYNER VE ŞEFFAFLIK */
+    .library-container {
+        display: flex;
+        background: rgba(255, 255, 255, 0.178) !important; /* Şeffaf arka plan */
+        backdrop-filter: blur(10px); /* Arkadaki içeriği hafif bulandırır, daha şık durur */
+        position: fixed;
+        top: 55px;
+        bottom: 15px;
+        left: 5px;
+        right: 5px;
+        border: 1px solid #dcdcdc;
+        border-radius: 0px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        z-index: 1;
+    }
 
-    /* SVG STİLLERİ (LAYOUT İLE AYNI) */
-    .chart-line, .house-cusp, .asc-line { stroke: #000; stroke-width: 0.8px; fill: none; }
-    .house-cusp-stepped { stroke: #d35400; stroke-width: 1.5px; fill: none; stroke-dasharray: 3,2; }
-    .cusp-degree, .planet-degree { font-size: 16px; fill: #000; font-family: Helvetica, Arial, sans-serif; } 
-    .cusp-minute, .planet-minute { font-size: 15px; fill: #555; font-family: Helvetica, Arial, sans-serif; } 
-    .house-label { font-size: 10px; fill: #000; font-weight: bold; } 
-    .planet-retrograde { font-size: 13px; fill: #D00; font-family: Helvetica, Arial, sans-serif; font-weight: bold; } 
-    .planet-group { cursor: pointer; transition: opacity 0.2s; } .planet-group:hover { opacity: 0.7; }
-    .guideline { stroke: #999; stroke-width: 0.5px; stroke-dasharray: 2,2; opacity: 0.5; }
+    /* SOL PANEL (SIDEBAR) */
+    .library-sidebar {
+        width: 210px;
+        min-width: 210px;
+        background: rgba(209, 209, 209, 0.199) !important;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        box-sizing: border-box !important;
+    }
+
+    .main-summary { 
+        list-style: none; 
+        padding: 12px 10px; 
+        background: transparent !important; /* Sidebar şeffaflığını bozmaması için */
+        cursor: pointer; 
+        font-weight: bold; 
+        font-size: 13px; 
+        color: #2c3e50; 
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+    }
+
+    /* HARİTA PANELİ (SOL İÇ TARAF) */
+    .profile-card-sticky {
+        width: 500px;
+        min-width: 500px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        padding: 25px 20px;
+        margin-left: 0 !important; /* Sidebar ile çakışmayı sıfırla */
+        background: rgba(255, 255, 255, 0.50) !important; /* Harita arkası şeffaf beyaz */
+        border-right: 1px solid rgba(0,0,0,0.05);
+        z-index: 10;
+    }
+
+    /* ÜST BÖLÜM HİZALAMA (İSİM SOLDA, BUTON SAĞDA) */
+    .header-row {
+        display: flex;
+        justify-content: space-between; /* Sağa ve sola yaslar */
+        align-items: center;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    .chart-title { 
+        margin: 0; 
+        font-size: 22px; 
+        color: #490909; 
+        font-weight: 800; 
+    }
+
+    /* DOĞUM BİLGİLERİ */
+    .birth-details-row { 
+        width: 100%; 
+        display: flex; 
+        justify-content: flex-start; 
+        gap: 12px; 
+        font-size: 11px; 
+        color: #000000f1; 
+        margin-bottom: 30px; /* Haritayı aşağı itmek için boşluk artırıldı */
+    }
+
+    /* HARİTA KUTUSU VE KONUMU */
+    .chart-wheel-box {
+        width: 100% !important;
+        max-width: 450px; 
+        aspect-ratio: 1 / 1;
+        margin-top: 20px; /* Haritayı biraz daha aşağı aldık */
+        background: transparent !important; /* Arka planı şeffaf yaptık */
+    }
+
+    #astroChart {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    /* SAĞ TARAF (BİYOGRAFİ) */
+    .biography-panel {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.90) !important; /* Yazı okunurluğu için biraz daha koyu şeffaf */
+        padding: 40px;
+        height: 100%;
+        overflow-y: auto;
+    }
+    /* Sidebar Kapalıyken İçeriği Gizle */
+.library-container.sidebar-closed .library-sidebar { 
+    width: 0 !important; 
+    min-width: 0 !important; 
+    border-right: none; 
+    padding: 0; 
+    margin: 0;
+    opacity: 0;
+}
+
+/* İçerik alanının sidebar kapandığında genişlemesi */
+.library-container.sidebar-closed .library-content-wrapper {
+    width: 100% !important;
+}
+
+/* Toggle Tuşu Görünürlüğü */
+#lib-toggle { 
+    width: 25px; 
+    background: #3498db; 
+    color: white; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    cursor: pointer; 
+    border-right: 1px solid #2980b9; 
+    font-size: 14px; 
+    z-index: 100;
+}
+
+    /* DİĞER CSS ÖZELLİKLERİ (DEĞİŞMEDİ) */
+    .main-category { border-bottom: 1px solid #8b8b8b36; margin-bottom: 2px; }
+    .main-summary::-webkit-details-marker { display: none; }
+    .main-content { padding-left: 5px; display: flex; flex-direction: column; }
+    .filter-row { display: flex; gap: 10px; align-items: center; background: #00000079; padding: 10px; border-radius: 0px; }
+    .library-container.sidebar-closed .library-sidebar { width: 0; border-right: none; padding: 0; }
+    #lib-toggle { width: 18px; background: #00000079; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border-right: 1px solid #ffffff; font-size: 10px; transition: background 0.2s; }
+    #lib-toggle:hover { background: #b3ec8dad; color: white; }
+    .sidebar-header { padding: 12px 10px; background: #000000b7; font-weight: 700; color: #ffffff; border-bottom: none; font-size: 11px; text-transform: uppercase; height: 45px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .sidebar-tree { flex: 1; width: 100% !important; overflow-x: hidden; /* Yatay taşmayı kapat */ padding: 8px; width: 220px; }
+    .btn-open-active { background-color: #27ae60; color: white; text-decoration: none; font-size: 10px; font-weight: bold; padding: 6px 12px; border-radius: 0px; white-space: nowrap; display: flex; align-items: center; gap: 5px; transition: background 0.2s; }
+    .bio-header-row { border-bottom: 2px solid #f0f2f5; margin-bottom: 20px; padding-bottom: 10px; }
+    .bio-title { font-size: 22px; color: #630b08; font-weight: 700; display: flex; align-items: center; }
+    .bio-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 25px; }
+    .gallery-item { height: 120px; border-radius: 8px; overflow: hidden; border: 1px solid #eee; cursor: pointer; transition: transform 0.2s; }
+    .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+    .story-text { font-size: 15px; line-height: 1.8; color: #444; text-align: justify; }
+    .chart-link { display: block; padding: 6px 8px; font-size: 12px; color: #666; text-decoration: none; border-radius: 4px; margin-bottom: 2px; }
+    .chart-link.active { background: #3498db; color: #fff; font-weight: bold; }
+    details summary { list-style: none; cursor: pointer; padding: 5px; border-radius: 4px; font-size: 12px; font-weight: 600; color: #444; }
+    .chart-line { stroke: #e0e0e0; stroke-width: 1 !important; }
+    .house-cusp { stroke: #d0d0d0; stroke-width: 1 !important; }
+    .house-label { font-size: 8px; fill: #706f6f;}
+    .planet-degree { font-size: 10px; fill: #333;}
+    .planet-minute { font-size: 9px; fill: #666;}
+    .cusp-degree { font-size: 9px; fill: #777; }
 </style>
+
 {% endblock %}
