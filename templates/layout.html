@@ -557,9 +557,17 @@
     background-repeat: no-repeat !important;
 }
 
-/* 3. RETURN MODALİ */
-#returnModal .modal-box {
+/* 4. RETURN MODALİ */
+#returnModal .synastry-modal-box { /* Class ismi düzeltildi */
     background-image: url('/static/images/return-bg.svg') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+/* 5. PROGRESSION (İLERLETİM) MODALİ - YENİ EKLENDİ */
+#progressionModal .synastry-modal-box {
+    background-image: url('/static/images/progression-bg.svg') !important; /* Görsel ismini kontrol et */
     background-size: cover !important;
     background-position: center !important;
     background-repeat: no-repeat !important;
@@ -570,8 +578,10 @@
    ============================================================ */
 #synastryModal .synastry-modal-box, 
 #celestialEventsModal .synastry-modal-box, 
-#selectionModal .modal-box
-#returnModal .modal-box {
+#selectionModal .modal-box,             /* <-- Virgül eklendi */
+#returnModal .synastry-modal-box,       /* <-- Class ismi düzeltildi ve virgül eklendi */
+#progressionModal .synastry-modal-box { /* <-- YENİ EKLENDİ */
+
     /* Boyutlar */
     width: 700px !important; 
     height: 60vh !important;
@@ -583,65 +593,50 @@
     position: relative; /* Sanal katman buna göre hizalanacak */
     overflow: hidden;   /* Taşmaları gizle */
 
-    /* RESİM AYARLARI (Burada renk veya blur YOK) */
+    /* RESİM AYARLARI */
     background-size: cover !important;
     background-position: center !important;
     background-repeat: no-repeat !important;
 
     /* Dış Çerçeve ve Gölge */
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    border: 1px solid rgba(100, 99, 99, 0.377) !important;
+    box-shadow: 0 10px 40px rgba(250, 246, 246, 0.3) !important;
 }
 
 /* ============================================================
-   2. SANAL CAM KATMANI (BEYAZ RENK + BLUR BURADA)
+   2. SANAL CAM KATMANI (BEYAZ RENK + BLUR)
    ============================================================ */
-/* Bu kod, resmin üzerine otomatik olarak bir "cam" yerleştirir */
 #synastryModal .synastry-modal-box::before, 
 #celestialEventsModal .synastry-modal-box::before, 
-#selectionModal .modal-box::before
-#returnModal .modal-box::before {
+#selectionModal .modal-box::before, 
+#returnModal .synastry-modal-box::before,      /* <-- Virgül var */
+#progressionModal .synastry-modal-box::before { /* <-- YENİ EKLENDİ */
+    
     content: "";
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0; /* Kutuyu tamamen kapla */
+    top: 0; left: 0; right: 0; bottom: 0; 
     
-    /* İŞTE İSTEDİĞİN AYARLAR: */
-    background-color: rgba(66, 66, 66, 0.089) !important; /* Şeffaf Beyaz Ton */
+    /* Rengi ayarladık (Koyu tonlu cam) */
+    background-color: rgba(5, 0, 0, 0.233) !important; 
     
     /* BLUR (Bulanıklık) */
-    backdrop-filter: blur(10px);        
-    -webkit-backdrop-filter: blur(10px); /* Safari/Chrome için */
+    backdrop-filter: blur(1px) !important;        
+    -webkit-backdrop-filter: blur(1px) !important; 
     
-    z-index: 0; /* Resmin üstünde ama yazıların altında dur */
+    z-index: 0; 
+    pointer-events: none; 
 }
 
 /* ============================================================
-   3. İÇERİĞİ KURTARMA (Yazılar Camın Altında Kalmasın)
+   ÖNEMLİ: İÇERİKLERİ CAMIN ÜSTÜNE ÇIKAR
    ============================================================ */
-.synastry-modal-box > *, 
-.modal-box > * {
-    position: relative;
-    z-index: 1; /* Yazıları camın üzerine çıkar */
-}
-
-/* ============================================================
-   5. VARSAYILAN ARKA PLANLARI TEMİZLEME
-   ============================================================ */
-#synastryModal .synastry-body, 
-#synastryModal .synastry-header,
-#celestialEventsModal .synastry-body, 
-#celestialEventsModal .synastry-header,
-#selectionModal .modal-box h4,
-#selectionModal .synastry-list,
-#selectionModal .selection-list {
-    background: transparent !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
-}
-
-/* İçerik akışı */
-.synastry-body, #selectionModal .modal-box > div:last-child {
-    flex: 1;
-    overflow-y: auto;
+#synastryModal .synastry-modal-box > *, 
+#celestialEventsModal .synastry-modal-box > *, 
+#selectionModal .modal-box > *,
+#returnModal .synastry-modal-box > *,      /* <-- Virgül var */
+#progressionModal .synastry-modal-box > * { /* <-- YENİ EKLENDİ */
+    position: relative !important;
+    z-index: 1 !important; 
 }
 
     /* =========================================
