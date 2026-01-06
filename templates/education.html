@@ -1,59 +1,67 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div style="max-width: 1200px; margin: 10px auto; padding: 20px;">
-    <h1 style="text-align: center; color: #1565c0; margin-bottom: 40px;">
-        <i class="fas fa-graduation-cap"></i> Eğitimler
-    </h1>
+<div style="max-width: 1200px; margin: 55px auto; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.5); padding-bottom: 10px; background: transparent;">
+        <h1 style="color: #eeeeee; margin: 0; font-size: 19px; display: flex; align-items: center; gap: 10px; font-weight: 800;">
+            <i class="fas fa-graduation-cap" style="font-size: 15px;"></i> Eğitimler
+        </h1>
+    </div>
 
     {% if courses and courses|length > 0 %}
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 25px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
             {% for course in courses %}
-            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.3s, box-shadow 0.3s;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)';">
+            <div style="background: rgba(245, 245, 245, 0.15); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0px; overflow: hidden; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); transition: 0.3s;" 
+                 onmouseover="this.style.background='rgba(245, 245, 245, 0.25)';" 
+                 onmouseout="this.style.background='rgba(245, 245, 245, 0.15)';"
+                 class="course-card">
                 
                 {% if course.image %}
                 <img src="{{ url_for('static', filename='uploads/courses/' ~ course.image) }}" 
                      alt="{{ course.title }}" 
-                     style="width: 100%; height: 200px; object-fit: cover;"
+                     style="width: 100%; height: 180px; object-fit: cover; filter: brightness(0.8);"
                      onerror="this.src='{{ url_for('static', filename='images/default-course.jpg') }}'">
                 {% else %}
-                <div style="width: 100%; height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-book-open" style="font-size: 60px; color: white; opacity: 0.8;"></i>
+                <div style="width: 100%; height: 180px; background: rgba(9, 73, 92, 0.4); display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-book-open" style="font-size: 40px; color: white; opacity: 0.5;"></i>
                 </div>
                 {% endif %}
 
-                <div style="padding: 20px;">
-                    <h3 style="margin: 0 0 10px 0; color: #1e293b; font-size: 18px;">
+                <div style="padding: 15px;">
+                    <h3 style="margin: 0 0 8px 0; color: #ffffff; font-size: 13px; font-weight: 650;">
                         {{ course.title }}
                     </h3>
                     
                     {% if course.date %}
-                    <p style="color: #64748b; font-size: 13px; margin: 0 0 15px 0;">
-                        <i class="far fa-calendar-alt"></i> {{ course.date }}
+                    <p style="color: #cccccc; font-size: 11px; margin: 0 0 12px 0;">
+                        <i class="far fa-calendar-alt" style="color: #3498db;"></i> {{ course.date }}
                     </p>
                     {% endif %}
 
-                    <p style="color: #475569; font-size: 14px; line-height: 1.6; margin: 0 0 20px 0;">
+                    <p style="color: #dddddd; font-size: 11px; line-height: 1.5; margin: 0 0 15px 0; height: 50px; overflow: hidden;">
                         {{ course.description }}
                     </p>
 
-                    {% if course.link %}
-                    <a href="{{ course.link }}" target="_blank" 
-                       style="display: inline-block; background: linear-gradient(135deg, #1565c0, #0d47a1); color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px; transition: all 0.3s;"
-                       onmouseover="this.style.background='linear-gradient(135deg, #0d47a1, #01579b)'"
-                       onmouseout="this.style.background='linear-gradient(135deg, #1565c0, #0d47a1)'">
-                        <i class="fas fa-external-link-alt"></i> Detaylar
-                    </a>
-                    {% endif %}
+                    <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 12px;">
+                        {% if course.link %}
+                        <a href="{{ course.link }}" target="_blank" 
+                           onmouseover="this.style.background='rgba(46, 204, 113, 0.4)'; this.style.textShadow='0 0 5px #fff';" 
+                           onmouseout="this.style.background='rgba(224, 242, 254, 0.2)'; this.style.textShadow='none';"
+                           style="display: block; text-align: center; background: rgba(224, 242, 254, 0.2); color: #ffffff; padding: 8px; border-radius: 0px; text-decoration: none; font-weight: bold; font-size: 11px; transition: 0.3s; backdrop-filter: blur(5px);">
+                            <i class="fas fa-external-link-alt"></i> Detaylar (Details)
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
             {% endfor %}
         </div>
     {% else %}
-        <div style="text-align: center; padding: 60px 20px; background: white; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <i class="fas fa-book-reader" style="font-size: 80px; color: #cbd5e1; margin-bottom: 20px;"></i>
-            <h3 style="color: #64748b; margin: 0;">Henüz eğitim eklenmemiş</h3>
-            <p style="color: #94a3b8; margin-top: 10px;">Yeni eğitimler yakında eklenecek.</p>
+        <div style="text-align: center; padding: 60px 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(226, 232, 240, 0.1); border-radius: 0px; backdrop-filter: blur(10px);">
+            <i class="fas fa-book-reader" style="font-size: 50px; color: #cbd5e1; margin-bottom: 20px; opacity: 0.3;"></i>
+            <h3 style="color: #eeeeee; font-size: 15px;">Henüz eğitim eklenmemiş</h3>
+            <p style="color: #94a3b8; font-size: 12px;">Yeni eğitimler yakında eklenecek.</p>
         </div>
     {% endif %}
 </div>
