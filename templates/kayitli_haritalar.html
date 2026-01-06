@@ -2,186 +2,174 @@
 
 {% block content %}
 <style>
-    /* KAYITLI HARİTALAR SAYFASI - SADECE POZİSYON DÜZELTMESİ */
-    
-    /* Ana container'ı en üste al (arka plan aynen kalsın) */
-    .main-container {
-        top: 50px !important; /* Header yüksekliği */
-        left: 0 !important;
-        right: 0 !important;
-        bottom: 0 !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        gap: 0 !important;
+    /* MODAL TASARIMLARI: Border Radius 0 ve Şeffaf Blurlu */
+    .modal-content-custom {
+        background: rgba(27, 1, 1, 0.527) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 0px !important;
+        color: white !important;
     }
-    
-    /* Yan panelleri gizle */
-    .sidebar-left,
-    .right-sidebar-wrapper {
-        display: none !important;
-    }
-    
-    /* Chart content'i tam genişlik yap */
-    .chart-content {
-        width: 100% !important;
-        max-width: 100% !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        overflow-y: auto !important;
-        flex: 1 !important;
+    .modal-input-custom {
+        background: rgba(27, 1, 1, 0.527) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: white !important;
+        border-radius: 0px !important;
+        font-size: 12px !important;
     }
 </style>
 
-<div style="padding: 0; margin: 0; font-family: 'Segoe UI', sans-serif; width: 100%; height: 100%; overflow-y: auto;">
+<div style="max-width: 1200px; margin: 55px auto; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
     
-    <div style="border-bottom: 1px solid #eee; padding: 15px 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="font-size: 16px; font-weight: 700; color: #2c3e50; margin: 0; display: flex; align-items: center;">
-            <i class="fas fa-archive" style="color: #f39c12; margin-right: 8px;"></i> Kayıtlı Haritalar
-        </h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.5); padding-bottom: 10px; background: transparent;">
+        <h1 style="color: #eeeeee; margin: 0; font-size: 19px; display: flex; align-items: center; gap: 10px; font-weight: 800;">
+            <i class="fas fa-archive" style="font-size: 15px;"></i> Kayıtlı Haritalar
+        </h1>
         
-        <div style="display: flex; gap: 8px;">
-            <button type="button" onclick="document.getElementById('createFolderModal').style.display='flex'" 
-                    class="btn-secondary" 
-                    style="background-color: #95a5a6; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; color: white; font-size: 11px; cursor: pointer; transition: background 0.2s;">
-                <i class="fas fa-folder-plus"></i> Klasör Ekle
-            </button>
-            
-            <a href="{{ url_for('home', tab='natal') }}" 
-               class="btn-primary" 
-               style="background-color: #3498db; border: none; padding: 6px 12px; border-radius: 4px; font-weight: bold; text-decoration: none; color: white; font-size: 11px; transition: background 0.2s; display: inline-flex; align-items: center;">
-                <i class="fas fa-plus" style="margin-right:5px;"></i> Yeni Harita
-            </a>
-        </div>
+        <div style="display: flex; gap: 10px;">
+    <button type="button" onclick="document.getElementById('createFolderModal').style.display='flex'" 
+            onmouseover="this.style.background='rgba(46, 204, 113, 0.4)'; this.style.textShadow='0 0 5px #fff';" 
+            onmouseout="this.style.background='rgba(100, 116, 139, 0.7)'; this.style.textShadow='none';"
+            style="background: rgba(100, 116, 139, 0.7); color: white; border: none; padding: 8px 15px; border-radius: 0px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 12px; backdrop-filter: blur(5px);">
+        <i class="fas fa-folder-plus"></i> Klasör Ekle (Add Folder)
+    </button>
+    
+    <a href="{{ url_for('home', tab='natal') }}" 
+       onmouseover="this.style.background='rgba(46, 204, 113, 0.4)'; this.style.textShadow='0 0 5px #fff';" 
+       onmouseout="this.style.background='rgba(9, 73, 92, 0.7)'; this.style.textShadow='none';"
+       style="background: rgba(9, 73, 92, 0.7); color: white; padding: 8px 15px; border-radius: 0px; text-decoration: none; font-weight: bold; font-size: 12px; transition: 0.3s; backdrop-filter: blur(5px);">
+        <i class="fas fa-plus"></i> Yeni Harita (New Chart)
+    </a>
+</div>
     </div>
 
     {% if not is_logged_in %}
-        <div style="padding: 20px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 8px; color: #856404; text-align: center; font-size: 13px;">
-            <i class="fas fa-lock" style="font-size: 20px; margin-bottom: 10px; display: block;"></i>
-            <strong>Kayıtlı haritalarınızı görmek için lütfen giriş yapın.</strong>
-            <br><br>
-            <a href="/login" style="text-decoration: underline; color: #856404; font-weight: bold;">Giriş Yapmak İçin Tıklayın</a>
+        <div style="text-align: center; padding: 40px; background: rgba(255, 243, 205, 0.2); border: 1px solid rgba(255, 238, 186, 0.3); border-radius: 0px; color: #eeeeee; backdrop-filter: blur(10px);">
+            <i class="fas fa-lock" style="font-size: 25px; margin-bottom: 15px;"></i>
+            <h3 style="font-size: 15px;">Giriş Yapmalısınız (Login Required)</h3>
+            <p style="font-size: 12px;">Kayıtlı haritalarınızı yönetmek için lütfen <a href="/login" style="color: #3498db; font-weight: bold;">giriş yapın</a>.</p>
+        </div>
+    {% elif not saved_charts %}
+        <div style="text-align: center; padding: 60px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(226, 232, 240, 0.1); border-radius: 0px; backdrop-filter: blur(10px);">
+            <i class="fas fa-folder-open" style="font-size: 45px; color: #cbd5e1; margin-bottom: 20px;"></i>
+            <h3 style="color: #eeeeee; font-size: 15px;">Arşiviniz Boş (Archive Empty)</h3>
+            <p style="color: #94a3b8; font-size: 12px;">Henüz kayıtlı bir haritanız bulunmuyor.</p>
         </div>
     {% else %}
         
-        {% if not saved_charts %}
-            <div style="text-align: center; padding: 60px 20px; color: #999; background: transparent; border-radius: 10px;">
-                <i class="fas fa-folder-open" style="font-size: 40px; margin-bottom: 15px; color: #ddd;"></i>
-                <p style="font-size: 14px; margin-bottom: 5px; font-weight: 500;">Henüz kayıtlı hiçbir haritanız bulunmuyor.</p>
-                <p style="font-size: 12px;">Harita ekranında <b>"Arşive Kaydet"</b> butonunu kullanarak buraya ekleyebilirsiniz.</p>
+        {% for category_name, charts_in_category in saved_charts.items() %}
+            <div style="margin: 30px 0 15px 0; display: flex; align-items: center; gap: 15px;">
+                <h3 style="color: #eeeeee; margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; font-weight: 750;">
+                    <i class="fas fa-folder" style="color: #f39c12; font-size: 12px; font-weight: 700;"></i> {{ category_name }}
+                </h3>
+                <div style="flex-grow: 1; height: 1px; background: rgba(255, 255, 255, 0.2);"></div>
+                <span style="background: rgba(241, 245, 249, 0.1); padding: 2px 10px; border-radius: 0px; font-size: 11px; font-weight: 650; color: #cbd5e1;">
+                    {{ charts_in_category|length }} Harita (Charts)
+                </span>
             </div>
-        {% else %}
-            
-            {% if saved_charts is mapping %}
-                {% for category_name, charts_in_category in saved_charts.items() %}
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
+                {% for chart in charts_in_category %}
+                <div style="background: rgba(245, 245, 245, 0.15); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0px; padding: 15px; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); transition: 0.3s;" 
+                     onmouseover="this.style.background='rgba(245, 245, 245, 0.25)';" 
+                     onmouseout="this.style.background='rgba(245, 245, 245, 0.15)';">
                     
-                    <div style="font-size: 12px; font-weight: 700; color: #34495e; margin: 20px 20px 10px 20px; padding-bottom: 5px; border-bottom: 1px solid #e1e8ed; text-transform: uppercase; display: flex; align-items: center;">
-                        <i class="fas fa-folder" style="color: #f39c12; margin-right: 8px; font-size: 14px;"></i>
-                        {{ category_name }} 
-                        <span style="font-weight: normal; font-size: 10px; color: #7f8c8d; margin-left: 10px; background: #f0f2f5; padding: 1px 6px; border-radius: 10px;">
-                            {{ charts_in_category|length }} Harita
-                        </span>
+                    <div style="margin-bottom: 12px;">
+                        <h4 style="margin: 0 0 5px 0; color: #ffffff; font-size: 13px; font-weight: 650;">{{ chart.name | default('İsimsiz', true) }}</h4>
+                        <div style="font-size: 11px; color: #cccccc; line-height: 1.6;">
+                            <div><i class="far fa-calendar-alt" style="width: 14px; color: #3498db;"></i> {{ chart.day }}.{{ chart.month }}.{{ chart.year }}</div>
+                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <i class="fas fa-map-marker-alt" style="width: 14px; color: #ff7675;"></i> {{ chart.location_name }}
+                            </div>
+                        </div>
                     </div>
 
-                    {% if not charts_in_category %}
-                        <p style="font-size: 12px; color: #bdc3c7; font-style: italic; padding-left: 15px;">Bu klasör boş.</p>
-                    {% else %}
-                        
-                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; padding: 0 20px;">
-                        {% for chart in charts_in_category %}
-                            
-                            <div class="chart-card" style="background-color: #ffffff; border: 1px solid #e1e8ed; border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                                
-                                <div style="display: flex; flex-direction: column; flex: 1; min-width: 0; margin-right: 10px;">
-                                    <div style="font-size: 13px; font-weight: 700; color: #2c3e50; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                        {{ chart.name | default('İsimsiz', true) }}
-                                    </div>
-                                    <div style="font-size: 11px; color: #7f8c8d; display: flex; flex-direction: column; gap: 2px;">
-                                        <span><i class="far fa-calendar-alt" style="color: #3498db; width: 12px; text-align: center;"></i> {{ chart.day }}.{{ chart.month }}.{{ chart.year }} {{ "%02d:%02d"|format(chart.hour, chart.minute) }}</span>
-                                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><i class="fas fa-map-marker-alt" style="color: #e74c3c; width: 12px; text-align: center;"></i> {{ chart.location_name | default('Konum Yok', true) }}</span>
-                                    </div>
-                                </div>
+                    <div style="display: flex; gap: 5px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 10px;">
+    <a href="{{ url_for('load_chart_to_active', category=category_name, chart_id=chart.id) }}" 
+       title="Aç" 
+       onmouseover="this.style.background='rgba(46, 204, 113, 0.4)'; this.style.textShadow='0 0 5px #fff';" 
+       onmouseout="this.style.background='rgba(224, 242, 254, 0.2)'; this.style.textShadow='none';"
+       style="flex: 1; text-align: center; background: rgba(224, 242, 254, 0.2); color: #ffffff; padding: 6px; border-radius: 0px; text-decoration: none; font-size: 11px; font-weight: bold; backdrop-filter: blur(5px); transition: 0.3s;">
+        <i class="fas fa-play"></i> Aç (Open)
+    </a>
 
-                                <div style="display: flex; gap: 5px; flex-shrink: 0;">
-                                    <a href="{{ url_for('load_chart_to_active', category=category_name, chart_id=chart.id) }}" title="Haritayı Aç" style="background-color: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; width: 26px; height: 26px; border-radius: 4px; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: 0.2s;">
-                                        <i class="fas fa-play" style="font-size: 9px;"></i>
-                                    </a>
-                                    
-                                    <button type="button" onclick="openMoveModal('{{ chart.id }}', '{{ category_name }}')" title="Klasöre Taşı" style="background-color: #e8f8f5; color: #16a085; border: 1px solid #a3e4d7; width: 26px; height: 26px; border-radius: 4px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;">
-                                        <i class="fas fa-exchange-alt" style="font-size: 9px;"></i>
-                                    </button>
+    <button onclick="openMoveModal('{{ chart.id }}', '{{ category_name }}')" 
+            title="Taşı" 
+            onmouseover="this.style.background='rgba(46, 204, 113, 0.4)'; this.style.textShadow='0 0 5px #fff';" 
+            onmouseout="this.style.background='rgba(240, 253, 244, 0.15)'; this.style.textShadow='none';"
+            style="flex: 1; background: rgba(240, 253, 244, 0.15); color: #ffffff; border: none; padding: 6px; border-radius: 0px; cursor: pointer; font-size: 11px; font-weight: bold; backdrop-filter: blur(5px); transition: 0.3s;">
+        <i class="fas fa-exchange-alt"></i> Taşı (Move)
+    </button>
 
-                                    <a href="{{ url_for('edit_chart', category=category_name, chart_id=chart.id) }}" title="Düzenle" style="background-color: #f3e5f5; color: #8e44ad; border: 1px solid #e1bee7; width: 26px; height: 26px; border-radius: 4px; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: 0.2s;">
-                                        <i class="fas fa-pen" style="font-size: 9px;"></i>
-                                    </a>
+    <a href="{{ url_for('edit_chart', category=category_name, chart_id=chart.id) }}" 
+       title="Düzenle" 
+       onmouseover="this.style.background='rgba(46, 204, 113, 0.4)'; this.style.textShadow='0 0 5px #fff';" 
+       onmouseout="this.style.background='rgba(250, 245, 255, 0.15)'; this.style.textShadow='none';"
+       style="padding: 6px 10px; background: rgba(250, 245, 255, 0.15); color: #ffffff; border-radius: 0px; text-decoration: none; font-size: 11px; transition: 0.3s;">
+        <i class="fas fa-pen"></i>
+    </a>
 
-                                    <a href="{{ url_for('delete_saved_chart', category=category_name, chart_id=chart.id) }}" 
-                                       onclick="return confirmDeletion('{{ chart.name }}');" 
-                                       title="Sil" 
-                                       style="background-color: #ffebee; color: #c0392b; border: 1px solid #ffcdd2; width: 26px; height: 26px; border-radius: 4px; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: 0.2s;">
-                                        <i class="fas fa-trash" style="font-size: 9px;"></i>
-                                    </a>
-                                </div>
-
-                            </div>
-                        {% endfor %}
-                        </div>
-                    {% endif %}
+    <a href="{{ url_for('delete_saved_chart', category=category_name, chart_id=chart.id) }}" 
+       onclick="return confirm('Silmek istediğinize emin misiniz?');" 
+       title="Sil" 
+       onmouseover="this.style.background='rgba(46, 204, 113, 0.4)'; this.style.textShadow='0 0 5px #fff';" 
+       onmouseout="this.style.background='rgba(254, 242, 242, 0.15)'; this.style.textShadow='none';"
+       style="padding: 6px 10px; background: rgba(254, 242, 242, 0.15); color: #ff7675; border-radius: 0px; text-decoration: none; font-size: 11px; transition: 0.3s;">
+        <i class="fas fa-trash"></i>
+    </a>
+</div>
+                </div>
                 {% endfor %}
-            {% endif %}
-
-        {% endif %}
+            </div>
+        {% endfor %}
     {% endif %}
 </div>
 
-<div id="createFolderModal" class="modal-overlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
-    <div class="modal-content" style="background: white; padding: 20px; border-radius: 8px; width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-        <h4 style="margin-top: 0; color: #2c3e50; font-size: 14px;">Yeni Klasör Oluştur</h4>
+<div id="createFolderModal" class="modal-overlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-content-custom" style="padding: 25px; width: 320px;">
+        <h3 style="margin-top: 0; font-size: 15px;">Yeni Klasör (New Folder)</h3>
         <form action="/create_folder" method="POST">
-            <input type="text" name="folder_name" placeholder="Klasör Adı (Örn: Aile)" required style="width:100%; padding:8px; margin:10px 0; border:1px solid #ddd; border-radius:4px; box-sizing: border-box; font-size: 12px;">
-            <div style="display:flex; justify-content:flex-end; gap:5px;">
-                <button type="button" onclick="document.getElementById('createFolderModal').style.display='none'" style="padding:6px 12px; background:#e2e8f0; color:#475569; border:none; border-radius:4px; cursor:pointer; font-size: 11px;">İptal</button>
-                <button type="submit" style="padding:6px 12px; background:#3498db; color:white; border:none; border-radius:4px; cursor:pointer; font-size: 11px;">Oluştur</button>
+            <input type="text" name="folder_name" placeholder="Klasör Adı" required 
+                   class="modal-input-custom" style="width:100%; padding:10px; margin:15px 0; outline: none; box-sizing: border-box;">
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" onclick="document.getElementById('createFolderModal').style.display='none'" 
+                        style="padding:8px 15px; background:rgba(255,255,255,0.1); border:none; border-radius:0px; cursor:pointer; color: white; font-size: 11px;">İptal</button>
+                <button type="submit" style="padding:8px 15px; background:#1565c0; color:white; border:none; border-radius:0px; cursor:pointer; font-weight:bold; font-size: 11px;">Oluştur</button>
             </div>
         </form>
     </div>
 </div>
 
-<div id="moveChartModal" class="modal-overlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
-    <div class="modal-content" style="background: white; padding: 20px; border-radius: 8px; width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-        <h4 style="margin-top: 0; color: #2c3e50; font-size: 14px;">Haritayı Taşı</h4>
+<div id="moveChartModal" class="modal-overlay" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="modal-content-custom" style="padding: 25px; width: 320px;">
+        <h3 style="margin-top: 0; font-size: 15px;">Klasöre Taşı (Move to Folder)</h3>
         <form action="/move_chart" method="POST">
             <input type="hidden" name="chart_id" id="move_chart_id">
             <input type="hidden" name="old_folder" id="move_old_folder">
-            
-            <label style="font-size:12px; font-weight: bold; display: block; margin-bottom: 5px; color:#64748b;">Hedef Klasör:</label>
-            <select name="new_folder" style="width:100%; padding:8px; margin-bottom:15px; border:1px solid #ddd; border-radius:4px; font-size: 12px;">
+            <select name="new_folder" class="modal-input-custom" style="width:100%; padding:10px; margin:15px 0;">
                 {% for folder in user_folders %}
                     <option value="{{ folder }}">{{ folder }}</option>
                 {% endfor %}
             </select>
-            
-            <div style="display:flex; justify-content:flex-end; gap:5px;">
-                <button type="button" onclick="document.getElementById('moveChartModal').style.display='none'" style="padding:6px 12px; background:#e2e8f0; color:#475569; border:none; border-radius:4px; cursor:pointer; font-size: 11px;">İptal</button>
-                <button type="submit" style="padding:6px 12px; background:#16a085; color:white; border:none; border-radius:4px; cursor:pointer; font-size: 11px;">Taşı</button>
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" onclick="document.getElementById('moveChartModal').style.display='none'" 
+                        style="padding:8px 15px; background:rgba(255,255,255,0.1); border:none; border-radius:0px; cursor:pointer; color: white; font-size: 11px;">Vazgeç</button>
+                <button type="submit" style="padding:8px 15px; background:#15803d; color:white; border:none; border-radius:0px; cursor:pointer; font-weight:bold; font-size: 11px;">Taşı</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    function confirmDeletion(chartName) {
-        return confirm('"' + chartName + '" haritasını silmek istediğinize emin misiniz?');
-    }
-
     function openMoveModal(chartId, oldFolder) {
         document.getElementById('move_chart_id').value = chartId;
         document.getElementById('move_old_folder').value = oldFolder;
         document.getElementById('moveChartModal').style.display = 'flex';
     }
-    
-    window.onclick = function(event) {
-        if (event.target.className === 'modal-overlay') {
-            event.target.style.display = "none";
+    window.onclick = function(e) {
+        if (e.target.className === 'modal-overlay') {
+            e.target.style.display = "none";
         }
     }
 </script>
