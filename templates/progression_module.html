@@ -1,3 +1,300 @@
+<style>
+    /* =========================================
+       1. MODAL ÇERÇEVESİ & ARKA PLAN
+       ========================================= */
+    #progressionModal {
+        display: none; 
+        align-items: center; 
+        justify-content: center; 
+        position: fixed; 
+        top: 0; left: 0; 
+        width: 100%; height: 100%; 
+        z-index: 9999;
+        /* Arka plan karartması */
+        background: rgba(145, 145, 145, 0.13) !important;
+        backdrop-filter: blur(2px);
+    }
+
+    /* ANA KUTU (Glassmorphism) */
+    #progressionModal .synastry-modal-box {
+        width: 900px !important;
+        height: 82vh !important;
+        max-width: 95vw;
+        
+        display: flex; 
+        flex-direction: column; 
+        position: relative; 
+        overflow: hidden; 
+        font-family: 'Segoe UI', sans-serif;
+
+        /* Çerçeve ve Gölge */
+        border: 1px solid rgba(128, 127, 127, 0.3) !important;
+        box-shadow: 0 15px 50px rgba(241, 241, 241, 0.5) !important;
+        border-radius: 0px !important;
+
+        /* Arka Plan Görseli */
+        background-image: url('/static/images/progression-bg.svg') !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        background-color: #0f172a !important; 
+    }
+
+    /* =========================================
+       2. HEADER (BAŞLIK)
+       ========================================= */
+    #progressionModal .synastry-header {
+        background: rgba(0, 0, 0, 0.6) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+        padding: 15px 20px !important;
+        color: #e2e8f0 !important;
+        text-shadow: none !important;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #progressionModal .synastry-header span:first-child {
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: 0.5px;
+    }
+
+    #progressionModal .synastry-header span:last-child {
+        cursor: pointer;
+        transition: 0.2s;
+        opacity: 0.7;
+    }
+    #progressionModal .synastry-header span:last-child:hover {
+        opacity: 1;
+        color: #f87171;
+    }
+
+    /* =========================================
+       3. GÖVDE VE YAPISI
+       ========================================= */
+    #progressionModal .synastry-body {
+        display: flex;
+        flex: 1;
+        padding: 20px !important;
+        gap: 20px !important;
+        overflow: hidden;
+        background: transparent !important;
+    }
+
+    /* --- SOL PANEL (Liste) --- */
+    #progressionModal .synastry-body > div:first-child {
+        width: 280px !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
+        padding-right: 15px !important;
+        background: transparent !important;
+    }
+
+    #progressionModal h4 {
+        color: rgba(247, 247, 247, 0.945) !important;
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 10px !important;
+        text-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+    }
+
+    /* Tablo Başlıkları */
+    #progressionModal .synastry-body > div:first-child > div:nth-child(2) {
+        border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+    }
+    #progressionModal .synastry-body > div:first-child > div:nth-child(2) span {
+        color: rgba(226, 226, 226, 0.945) !important;
+        font-weight: 700 !important;
+        font-size: 11px !important;
+    }
+
+    /* --- SAĞ PANEL (Ayarlar) --- */
+    #progressionModal .synastry-body > div:last-child {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    /* =========================================
+       4. LİSTE ÖĞELERİ (SOL TARAFTAKİ KİŞİLER)
+       ========================================= */
+    #progressionModal .synastry-list {
+        background: transparent !important;
+        border: none !important;
+    }
+
+    /* .prog-chart-item Return stilinde */
+    #progressionModal .prog-chart-item {
+        background: rgba(194, 253, 255, 0.404) !important; 
+        backdrop-filter: blur(10px) !important; 
+        -webkit-backdrop-filter: blur(10px) !important; 
+        border: 1px solid rgba(255, 255, 255, 0.226) !important; 
+        color: rgba(1, 13, 19, 0.87) !important;
+        margin-bottom: 6px !important;
+        border-radius: 0px !important;
+        transition: all 0.2s ease !important;
+    }
+
+    #progressionModal .prog-chart-item div {
+        color: rgba(1, 13, 19, 0.87) !important;
+    }
+
+    /* Hover Durumu */
+    #progressionModal .prog-chart-item:hover,
+    #progressionModal .prog-chart-item::selection {
+        background-color: rgba(4, 33, 53, 0.719) !important; /* Koyu Lacivert */
+        border: 1px solid rgba(56, 189, 248, 0.5) !important; /* Neon Mavi */
+        backdrop-filter: blur(10px) !important; 
+        -webkit-backdrop-filter: blur(10px) !important; 
+        box-shadow: inset 3px 0 0 #38bdf8 !important;
+    }
+    #progressionModal .prog-chart-item:hover div {
+        color: rgba(247, 247, 247, 0.945) !important;
+        text-shadow: 0 0 5px rgba(255,255,255,0.5);
+    }
+
+    /* Seçili Durum */
+    #progressionModal .prog-chart-item.selected {
+        background-color: rgba(4, 33, 53, 0.719) !important;
+        border: 1px solid rgba(56, 189, 248, 0.5) !important;
+        box-shadow: inset 3px 0 0 #38bdf8 !important;
+    }
+    #progressionModal .prog-chart-item.selected div {
+        color: rgba(247, 247, 247, 0.945) !important;
+        font-weight: bold !important;
+        text-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+    }
+
+    /* =========================================
+       5. SAĞ PANEL AYAR KUTULARI (Return Form Stili)
+       ========================================= */
+    #progressionModal .prog-options-box, 
+    #progDateSection {
+        background: rgba(99, 59, 14, 0.075) !important;
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        border-radius: 0px !important;
+        border: 1px solid rgba(255, 255, 255, 0.247) !important;
+        backdrop-filter: blur(5px);
+        padding: 10px !important;
+    }
+
+    /* Başlıklar */
+    #progressionModal .prog-options-label,
+    #progressionModal #dateInputLabel {
+        color: rgba(247, 247, 247, 0.945) !important;
+        font-size: 11px !important;
+        text-transform: uppercase;
+        font-weight: 700 !important;
+        border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* Radyo Buton Öğeleri (Return Inputlarına Benzetildi) */
+    #progressionModal .prog-radio-item {
+        background: rgba(184, 94, 25, 0.356) !important;
+        backdrop-filter: blur(5px) !important;        
+        -webkit-backdrop-filter: blur(5px) !important;
+        border: 1px solid rgba(59, 29, 6, 0.123) !important;
+        color: rgba(255, 255, 255, 0.836) !important;
+        border-radius: 0px !important;
+        padding: 6px !important;
+        margin-bottom: 4px !important;
+        display: flex; 
+        align-items: center;
+        cursor: pointer;
+    }
+
+    #progressionModal .prog-radio-item span {
+        color: rgba(248, 248, 248, 0.849) !important;
+        font-size: 11px !important;
+    }
+
+    /* Radyo Seçili/Hover */
+    #progressionModal .prog-radio-item:hover,
+    #progressionModal .prog-radio-item:has(input:checked) {
+        background-color: rgba(180, 83, 9, 0.3) !important;
+        border: 1px solid rgba(245, 158, 11, 0.5) !important;
+        box-shadow: inset 1px 0 0 #f59e0b !important;
+        color: white;
+    }
+    
+    #progressionModal .prog-radio-item:has(input:checked) span {
+        font-weight: bold !important;
+    }
+
+    /* =========================================
+       6. INPUT VE BUTONLAR
+       ========================================= */
+    #progressionModal input[type="datetime-local"] {
+        background: rgba(214, 165, 125, 0.685) !important;
+        backdrop-filter: blur(5px) !important;
+        border: 1px solid rgba(228, 228, 228, 0.123) !important;
+        color: rgba(247, 247, 247, 0.945) !important;
+        border-radius: 0px !important;
+        padding: 6px !important;
+        font-size: 11px !important;
+    }
+
+    /* Şimdi Butonu (Küçük Yeşil) */
+    #progressionModal #progDateSection button {
+        background: linear-gradient(135deg, #15803d 0%, #16a34a 100%) !important;
+        border: 1px solid #22c55e !important;
+        color: white !important;
+        border-radius: 0px !important;
+        text-transform: uppercase;
+        font-weight: 700 !important;
+    }
+
+    /* Ana Hesapla Butonu (Büyük Yeşil) */
+    #progressionModal button#btnProgCalc {
+        background: linear-gradient(135deg, #15803d 0%, #16a34a 100%) !important; 
+        border: 1px solid #22c55e !important; 
+        color: white !important; 
+        font-weight: 700 !important;
+        font-size: 10px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3) !important;
+        transition: all 0.2s ease !important;
+        padding: 8px !important;
+        border-radius: 0px !important;
+        width: 100% !important;
+        opacity: 1 !important; /* Disabled durumunu JS kontrol etsin, stil sabit kalsın */
+    }
+
+    #progressionModal button#btnProgCalc:hover {
+        background: linear-gradient(135deg, #16a34a 0%, #4ade80 100%) !important;
+        box-shadow: 0 6px 20px rgba(22, 163, 74, 0.5) !important;
+        transform: translateY(-1px);
+    }
+    
+    /* Disabled durumu için override */
+    #progressionModal button#btnProgCalc:disabled {
+        background: #444 !important;
+        border: 1px solid #555 !important;
+        box-shadow: none !important;
+        cursor: not-allowed !important;
+        color: #999 !important;
+    }
+
+    /* =========================================
+       7. SCROLLBAR
+       ========================================= */
+    #progressionModal ::-webkit-scrollbar { width: 5px; }
+    #progressionModal ::-webkit-scrollbar-track { background: transparent; }
+    #progressionModal ::-webkit-scrollbar-thumb { 
+        background: rgba(255,255,255,0.2); 
+        border-radius: 0px;
+    }
+    #progressionModal ::-webkit-scrollbar-thumb:hover { 
+        background: rgba(255,255,255,0.4); 
+    }
+</style>
+
 <div id="progressionModal" class="modal-overlay" style="display:none; align-items:center; justify-content:center; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999;">
     <div class="synastry-modal-box" style="width: 800px; height: 620px; max-width: 95%; display:flex; flex-direction:column; background:white; border-radius:8px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.2); font-family: 'Segoe UI', sans-serif;">
         
@@ -14,58 +311,58 @@
                     <span id="progSelectionCount" style="font-size:10px; background:#f3e8ff; color:#7c3aed; padding:3px 8px; border-radius:10px; font-weight:bold; border:1px solid #e9d5ff;">0/1</span>
                 </div>
                 
-                <div style="display:grid; grid-template-columns: 30px 2fr 1fr 0.8fr; padding:0 8px 5px 8px; border-bottom:1px solid #eee; margin-bottom:5px;">
-                    <span></span> 
-                    <span style="font-size:9px; font-weight:bold; color:#999;">İSİM</span>
-                    <span style="font-size:9px; font-weight:bold; color:#999; text-align:center;">TARİH</span>
-                    <span style="font-size:9px; font-weight:bold; color:#999; text-align:center;">ZODİAK</span>
-                </div>
+                <div style="display:grid; grid-template-columns: 2fr 1.2fr 0.8fr; padding:0 8px 5px 8px; border-bottom:1px solid #eee; margin-bottom:5px;">
+    <span style="font-size:9px; font-weight:bold; color:#999;">İSİM</span>
+    <span style="font-size:9px; font-weight:bold; color:#999; text-align:center;">TARİH</span>
+    <span style="font-size:9px; font-weight:bold; color:#999; text-align:center;">ZODİAK</span>
+</div>
 
-                <div class="synastry-list" style="flex:1; overflow-y:auto; border:1px solid #e9d5ff; background-color: #faf5ff; border-radius:4px; padding:2px;">
-                    {% if active_charts %}
-                        {% for chart in active_charts %}
-                            {% if chart.type == 'natal' %}
-                            <div class="prog-chart-item" 
-                                 onclick="toggleProgChartSelection(this, {{ loop.index0 }})" 
-                                 style="display:grid; grid-template-columns: 30px 2fr 1fr 0.8fr; align-items:center; padding:8px; margin-bottom:2px; border-bottom:1px solid rgba(0,0,0,0.03); cursor:pointer; transition:0.1s;">
-                                
-                                <div style="display:flex; justify-content:center;">
-                                    <input type="checkbox" value="{{ loop.index0 }}" style="pointer-events:none;">
-                                </div>
-                                <div style="font-weight:700; font-size:11px; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    {{ chart.name }}
-                                </div>
-                                <div style="font-size:10px; color:#666; text-align:center;">
-                                    {{ chart.day }}.{{ chart.month }}.{{ chart.year }}
-                                </div>
-                                <div style="font-size:9px; color:#7c3aed; text-align:center; font-weight:600;">
-                                    {{ chart.zodiac_type|default('Astronomik') }}
-                                </div>
-                            </div>
-                            {% endif %}
-                        {% endfor %}
-                    {% else %}
-                        <div style="padding:20px; text-align:center; color:#777; font-size:11px;">Aktif natal harita yok.</div>
-                    {% endif %}
+<div class="synastry-list" style="flex:1; overflow-y:auto; border:1px solid #e9d5ff; background-color: #faf5ff; border-radius:4px; padding:2px;">
+    {% if active_charts %}
+        {% for chart in active_charts %}
+            {% if chart.type == 'natal' %}
+            
+            <div class="prog-chart-item" 
+                 onclick="toggleProgChartSelection(this, {{ loop.index0 }})" 
+                 style="display:grid; grid-template-columns: 2fr 1.2fr 0.8fr; align-items:center; padding:8px; margin-bottom:2px; border-bottom:1px solid rgba(0,0,0,0.03); cursor:pointer; transition:0.1s;">
+                
+                <input type="checkbox" value="{{ loop.index0 }}" style="display:none;">
+
+                <div style="font-weight:700; font-size:11px; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                    {{ chart.name }}
                 </div>
+                <div style="font-size:10px; color:#666; text-align:center;">
+                    {{ chart.day }}.{{ chart.month }}.{{ chart.year }}
+                </div>
+                <div style="font-size:9px; color:#7c3aed; text-align:center; font-weight:600;">
+                    {{ chart.zodiac_type|default('Astronomik') }}
+                </div>
+            </div>
+
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <div style="padding:20px; text-align:center; color:#777; font-size:11px;">Aktif natal harita yok.</div>
+    {% endif %}
+</div>
             </div>
 
             <div style="flex:1; display:flex; flex-direction:column; gap:12px; overflow-y:auto; max-height:100%; padding-right:5px;">
                 
-                <div style="background:#f8fafc; padding:12px; border-radius:6px; border:1px solid #e2e8f0;">
-                    <label style="font-size:11px; font-weight:800; color:#475569; display:block; margin-bottom:8px; border-bottom:1px solid #e2e8f0; padding-bottom:4px;">İLERLETİM TEKNİĞİ</label>
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                        <label style="display:flex; align-items:center; gap:8px; font-size:11px; cursor:pointer; padding:4px;">
-                            <input type="radio" name="prog_technique" value="secondary" checked onchange="updateDateInputLabel()"> 
-                            <span style="color:#333;"><b>İkincil İlerletim</b> (Secondary - 1 Gün=1 Yıl)</span>
+                <div class="prog-options-box">
+                    <label class="prog-options-label">İLERLETİM TEKNİĞİ</label>
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <label class="prog-radio-item">
+                            <input type="radio" name="prog_technique" value="secondary" checked onchange="updateDateInputLabel()" style="display:none;"> 
+                            <span><b>İkincil İlerletim</b> (Secondary - 1 Gün=1 Yıl)</span>
                         </label>
-                        <label style="display:flex; align-items:center; gap:8px; font-size:11px; cursor:pointer; padding:4px;">
-                            <input type="radio" name="prog_technique" value="solar_arc" onchange="updateDateInputLabel()"> 
-                            <span style="color:#333;"><b>Güneş Yayı</b> (Solar Arc - 1°=1 Yıl)</span>
+                        <label class="prog-radio-item">
+                            <input type="radio" name="prog_technique" value="solar_arc" onchange="updateDateInputLabel()" style="display:none;"> 
+                            <span><b>Güneş Yayı</b> (Solar Arc - 1°=1 Yıl)</span>
                         </label>
-                        <label style="display:flex; align-items:center; gap:8px; font-size:11px; cursor:pointer; padding:4px;">
-                            <input type="radio" name="prog_technique" value="transit" onchange="updateDateInputLabel()"> 
-                            <span style="color:#333;"><b>Transit</b> (Anlık Gökyüzü)</span>
+                        <label class="prog-radio-item">
+                            <input type="radio" name="prog_technique" value="transit" onchange="updateDateInputLabel()" style="display:none;"> 
+                            <span><b>Transit</b> (Anlık Gökyüzü)</span>
                         </label>
                     </div>
                 </div>
@@ -84,32 +381,32 @@
                     </p>
                 </div>
 
-                <div style="background:#fef3c7; padding:12px; border-radius:6px; border:1px solid #fde68a;">
-                    <label style="font-size:11px; font-weight:800; color:#92400e; display:block; margin-bottom:8px; border-bottom:1px solid #fde68a; padding-bottom:4px;">GÖRÜNTÜLEME TİPİ</label>
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                        <label style="display:flex; align-items:center; gap:8px; font-size:11px; cursor:pointer; padding:4px;">
-                            <input type="radio" name="prog_mode" value="single" checked> 
-                            <span style="color:#333;">Tekli Harita (Sadece İlerletilmiş)</span>
+                <div class="prog-options-box">
+                    <label class="prog-options-label">GÖRÜNTÜLEME TİPİ</label>
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <label class="prog-radio-item">
+                            <input type="radio" name="prog_mode" value="single" checked style="display:none;"> 
+                            <span>Tekli Harita (Sadece İlerletilmiş)</span>
                         </label>
-                        <label style="display:flex; align-items:center; gap:8px; font-size:11px; cursor:pointer; padding:4px;">
-                            <input type="radio" name="prog_mode" value="dual"> 
-                            <span style="color:#333;">İkili (Natal + İlerletilmiş)</span>
+                        <label class="prog-radio-item">
+                            <input type="radio" name="prog_mode" value="dual" style="display:none;"> 
+                            <span>İkili (Natal + İlerletilmiş)</span>
                         </label>
                     </div>
                 </div>
 
-                <div style="background:#fef3f2; padding:12px; border-radius:6px; border:1px solid #fecaca;">
-                    <label style="font-size:11px; font-weight:800; color:#991b1b; display:block; margin-bottom:8px; border-bottom:1px solid #fecaca; padding-bottom:4px;">ZODYAK TİPİ</label>
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                        <label style="display:flex; align-items:center; gap:8px; font-size:11px; cursor:pointer; padding:4px;">
-                            <input type="radio" name="prog_zodiac" value="Tropical"> 
-                            <span style="color:#333;">Tropikal</span>
+                <div class="prog-options-box">
+                    <label class="prog-options-label">ZODYAK TİPİ</label>
+                    <div style="display:flex; flex-direction:column; gap:2px;">
+                        <label class="prog-radio-item">
+                            <input type="radio" name="prog_zodiac" value="Tropical" style="display:none;"> 
+                            <span>Tropikal</span>
                         </label>
-                        <label style="display:flex; align-items:center; gap:8px; font-size:11px; cursor:pointer; padding:4px;">
-                            <input type="radio" name="prog_zodiac" value="Astronomik" checked> 
-                            <span style="color:#333;">Astronomik</span>
+                        <label class="prog-radio-item">
+                            <input type="radio" name="prog_zodiac" value="Astronomik" checked style="display:none;"> 
+                            <span>Astronomik</span>
                         </label>
-                        </div>
+                    </div>
                 </div>
 
                 <div style="margin-top:auto;">
@@ -175,27 +472,26 @@
     }
 
     function toggleProgChartSelection(el, idx) { 
-        const chk = el.querySelector('input'); 
-        
-        document.querySelectorAll('#progressionModal .prog-chart-item').forEach(item => {
-            item.style.backgroundColor = 'transparent';
-            const checkbox = item.querySelector('input');
-            if(checkbox) checkbox.checked = false;
-        });
-        
-        if(selectedProgIndex === idx) {
-            selectedProgIndex = null;
-            chk.checked = false;
-            el.style.backgroundColor = 'transparent';
-        } else {
-            selectedProgIndex = idx;
-            chk.checked = true;
-            el.style.backgroundColor = '#7c3aed1a';
-        }
-        
-        document.getElementById('progSelectionCount').innerText = (selectedProgIndex !== null ? "1" : "0") + "/1";
-        updateProgBtn(); 
+    // 1. Önce listedeki tüm satırların seçimini kaldır (Temizle)
+    document.querySelectorAll('#progressionModal .prog-chart-item').forEach(item => {
+        item.classList.remove('selected'); // Görsel vurguyu kaldır
+        item.style.backgroundColor = ''; // Inline stilleri sıfırla
+        item.style.border = '';
+    });
+    
+    // 2. Eğer zaten seçili olan bir şeye tıklandıysa seçimi iptal et
+    if(selectedProgIndex === idx) {
+        selectedProgIndex = null;
+    } else {
+        // 3. Yeni satırı seç
+        selectedProgIndex = idx;
+        el.classList.add('selected'); // CSS class'ını ekle (Vurgu yap)
     }
+    
+    // 4. Sayaç ve Buton durumunu güncelle
+    document.getElementById('progSelectionCount').innerText = (selectedProgIndex !== null ? "1" : "0") + "/1";
+    updateProgBtn(); 
+}
     
     function updateProgBtn() { 
         const btn = document.getElementById('btnProgCalc'); 
