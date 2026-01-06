@@ -1,37 +1,55 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="consultations-page">
-    <div class="page-header">
-        <h1>🔮 Danışmanlıklar</h1>
-        <p>Astroloji danışmanlık hizmetlerimiz hakkında bilgi alın</p>
+<div style="max-width: 1200px; margin: 55px auto; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.5); padding-bottom: 10px; background: transparent;">
+        <h1 style="color: #eeeeee; margin: 0; font-size: 19px; display: flex; align-items: center; gap: 10px; font-weight: 800;">
+            <i class="fas fa-comments" style="font-size: 15px;"></i> Danışmanlıklar
+        </h1>
     </div>
 
-    <div class="consultations-grid">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px;">
         {% for consultation in consultations %}
-        <div class="consultation-card">
-            <div class="consultation-images">
+        
+        <div style="background: rgba(245, 245, 245, 0.15); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0px; overflow: hidden; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); transition: 0.3s;" 
+             onmouseover="this.style.background='rgba(245, 245, 245, 0.25)';" 
+             onmouseout="this.style.background='rgba(245, 245, 245, 0.15)';"
+             class="consultation-card">
+            
+            <div style="display: flex; gap: 2px; height: 200px; background: rgba(0,0,0,0.1);">
                 {% for img in consultation.images %}
                     {% if img %}
-                    <img src="{{ url_for('static', filename='uploads/courses/' + img) }}" alt="{{ consultation.title }}">
+                    <img src="{{ url_for('static', filename='uploads/courses/' + img) }}" 
+                         alt="{{ consultation.title }}" 
+                         style="flex: 1; width: 100%; height: 100%; object-fit: cover; filter: brightness(0.85);">
                     {% endif %}
                 {% endfor %}
             </div>
-            
-            <div class="consultation-content">
-                <h2>{{ consultation.title }}</h2>
+
+            <div style="padding: 20px;">
+                <h2 style="margin: 0 0 10px 0; color: #ffffff; font-size: 14px; font-weight: 700; text-transform: uppercase;">
+                    {{ consultation.title }}
+                </h2>
                 
-                <div class="consultation-price">
-                    <span class="price-tag">💰 {{ consultation.price }}</span>
+                <div style="margin-bottom: 15px;">
+                    <span style="display: inline-block; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #ffffff; padding: 5px 12px; border-radius: 0px; font-weight: bold; font-size: 12px;">
+                        💰 {{ consultation.price }}
+                    </span>
                 </div>
                 
-                <div class="consultation-description">
+                <div style="color: #dddddd; font-size: 12px; line-height: 1.6; margin-bottom: 20px; white-space: pre-wrap; height: 80px; overflow: hidden;">
                     {{ consultation.description }}
                 </div>
                 
-                <a href="{{ url_for('page_contact') }}" class="btn-contact">
-                    📞 İletişime Geç
-                </a>
+                <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 15px;">
+                    <a href="{{ url_for('page_contact') }}" 
+                       onmouseover="this.style.background='rgba(46, 204, 113, 0.4)'; this.style.textShadow='0 0 5px #fff';" 
+                       onmouseout="this.style.background='rgba(224, 242, 254, 0.2)'; this.style.textShadow='none';"
+                       style="display: block; text-align: center; background: rgba(224, 242, 254, 0.2); color: #ffffff; padding: 12px; border-radius: 0px; text-decoration: none; font-weight: bold; font-size: 12px; transition: 0.3s; backdrop-filter: blur(5px);">
+                        <i class="fas fa-phone-alt"></i> İletişime Geç (Contact)
+                    </a>
+                </div>
             </div>
         </div>
         {% endfor %}
@@ -39,122 +57,15 @@
 </div>
 
 <style>
-.consultations-page {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.page-header {
-    text-align: center;
-    margin-bottom: 40px;
-    padding: 30px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-}
-
-.page-header h1 {
-    font-size: 2.5em;
-    margin-bottom: 10px;
-}
-
-.page-header p {
-    font-size: 1.2em;
-    opacity: 0.9;
-}
-
-.consultations-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 30px;
-    margin-top: 30px;
-}
-
-.consultation-card {
-    background: white;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.consultation-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-}
-
-.consultation-images {
-    display: flex;
-    gap: 5px;
-    height: 200px;
-    background: #f5f5f5;
-}
-
-.consultation-images img {
-    flex: 1;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.consultation-content {
-    padding: 25px;
-}
-
-.consultation-content h2 {
-    color: #333;
-    font-size: 1.5em;
-    margin-bottom: 15px;
-}
-
-.consultation-price {
-    margin: 15px 0;
-}
-
-.price-tag {
-    display: inline-block;
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 25px;
-    font-weight: bold;
-    font-size: 1.2em;
-}
-
-.consultation-description {
-    color: #666;
-    line-height: 1.6;
-    margin: 20px 0;
-    white-space: pre-wrap;
-}
-
-.btn-contact {
-    display: inline-block;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 12px 30px;
-    border-radius: 25px;
-    text-decoration: none;
-    font-weight: bold;
-    transition: all 0.3s;
-    margin-top: 15px;
-}
-
-.btn-contact:hover {
-    transform: scale(1.05);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
-
-@media (max-width: 768px) {
-    .consultations-grid {
-        grid-template-columns: 1fr;
-    }
+    /* Global scroll barı da şeffaf temaya uydurmak istersen */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
     
-    .page-header h1 {
-        font-size: 2em;
+    /* Responsive Düzenleme */
+    @media (max-width: 768px) {
+        .consultation-card { margin-bottom: 15px; }
     }
-}
 </style>
 {% endblock %}
