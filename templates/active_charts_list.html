@@ -1,34 +1,55 @@
 {% if active_charts %}
     <div class="chart-list-container" style="padding-right: 5px;">
         
+        <div id="bulkDeleteControls" style="display:none; padding:10px; background:rgba(255, 193, 7, 0.2); border:1px solid #ffc107; border-radius:4px; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:12px; font-weight:bold; color:#fff;">
+                    <i class="fas fa-check-square"></i> Toplu Silme
+                </span>
+                <div>
+                    <button onclick="deleteSelectedCharts()" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; font-size:11px; margin-right:5px; cursor:pointer;">
+                        <i class="fas fa-trash"></i> Sil
+                    </button>
+                    <button onclick="toggleBulkDeleteMode()" style="background:#6c757d; color:white; border:none; padding:5px 10px; border-radius:4px; font-size:11px; cursor:pointer;">
+                        İptal
+                    </button>
+                </div>
+            </div>
+        </div>
+        
         {% for chart in active_charts %}
             <a href="{{ url_for('set_active_chart', index=loop.index0) }}" 
                class="chart-list-item {% if current_chart_data and chart.id == current_chart_data.id %}selected{% endif %}"
-               onclick="saveLastSelectedChart({{ loop.index0 }})"
-               oncontextmenu="showContextMenu(event, {{ loop.index0 }}); return false;">
+               onclick="if(!bulkDeleteMode) { saveLastSelectedChart({{ loop.index0 }}); } else { event.preventDefault(); toggleChartSelection({{ loop.index0 }}); }"
+               oncontextmenu="showContextMenu(event, {{ loop.index0 }}); return false;"
+               data-chart-index="{{ loop.index0 }}">
                 
-                <span class="chart-list-name">
-                    {% if chart.type == 'synastry' %}
-                        <i class="fas fa-user-friends" style="color:#e67e22;"></i>
-                    {% elif chart.name.startswith('Transit') %}
-                        <i class="fas fa-clock" style="color:#27ae60;"></i>
-                    {% else %}
-                        <i class="far fa-user-circle" style="color:#4a90e2;"></i>
-                    {% endif %}
-                    {{ chart.name }}
-                </span>
+                <input type="checkbox" class="bulk-delete-checkbox" data-index="{{ loop.index0 }}" style="display:none; margin-right:8px;" onclick="event.stopPropagation();">
                 
-                <span class="chart-list-date">
-                    {# Tüm haritalar için chart.year kullan (sinastri/progression'da zaten progressed tarih) #}
-                    {{ chart.day }}.{{ chart.month }}.{{ chart.year }} 
-                    {{ "%02d"|format(chart.hour) }}:{{ "%02d"|format(chart.minute) }}
+                <div class="chart-item-content">
+                    <span class="chart-list-name">
+                        {% if chart.type == 'synastry' %}
+                            <i class="fas fa-user-friends" style="color:#e67e22; width:18px;"></i>
+                        {% elif chart.name.startswith('Transit') %}
+                            <i class="fas fa-clock" style="color:#27ae60; width:18px;"></i>
+                        {% else %}
+                            <i class="far fa-user-circle" style="color:#4a90e2; width:18px;"></i>
+                        {% endif %}
+                        {{ chart.name }}
+                    </span>
+                    
+                    <span class="chart-list-date">
+                        <span style="font-size:10px; margin-right:4px; opacity:0.6;"></i>
+                        📅 {{ chart.day }}.{{ chart.month }}.{{ chart.year }} 
+                        {{ "%02d"|format(chart.hour) }}:{{ "%02d"|format(chart.minute) }}
+                    </span>
+
                     {% if chart.zodiac_type %}
                         <span style="display:block; font-size:9px; color:#666; margin-top:2px;">
                             📍 {{ chart.zodiac_type }}
                         </span>
                     {% endif %}
-                </span>
-                
+                </div>
             </a>
         {% endfor %}
         
@@ -37,6 +58,5 @@
     <div style="text-align: center; padding: 20px; color: #999; font-size: 12px;">
         <i class="fas fa-inbox" style="font-size: 24px; margin-bottom: 10px; display: block; opacity: 0.5;"></i>
         Henüz aktif harita yok.
-        <br>Harita hesapladığınızda buraya düşecektir.
     </div>
 {% endif %}
