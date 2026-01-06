@@ -10,52 +10,9 @@
         top: 0; left: 0; 
         width: 100%; height: 100%; 
         z-index: 9999;
-    }
-
-    /* =========================================
-       2. ANA MODAL KUTUSU (TASARIM & BLUR)
-       ========================================= */
-    .synastry-modal-box {
-        /* Boyutlar */
-        width: 700px !important; 
-        height: 60vh !important;
-        max-width: 95vw; 
-        
-        /* Yerleşim */
-        display: flex; 
-        flex-direction: column; 
-        position: relative; 
-        overflow: hidden; 
-        font-family: 'Segoe UI', sans-serif;
-
-        /* Dış Çerçeve ve Gölge */
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-
-        /* Arka Plan Görseli */
-        background-image: url('/static/images/synastry-bg.svg') !important;
-        background-size: cover !important;
-        background-position: center !important;
-        background-repeat: no-repeat !important;
-    }
-
-    /* SANAL CAM KATMANI (Blur ve Beyazlık) */
-    .synastry-modal-box::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        
-        background-color: rgba(255, 255, 255, 0.089) !important;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        
-        z-index: 0; 
-    }
-
-    /* İçeriklerin camın üstüne çıkması için */
-    .synastry-modal-box > * { 
-        position: relative; 
-        z-index: 1; 
+        /* Arka plan karartması */
+        background: rgba(145, 145, 145, 0.13) !important;
+        backdrop-filter: blur(2px);
     }
 
     /* =========================================
@@ -173,9 +130,9 @@
         font-size: 11px;
         
         /* Normal Görünüm */
-        background: rgba(192, 228, 243, 0.281);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        background: rgba(194, 253, 255, 0.404) !important; 
+        backdrop-filter: blur(10px) !important; 
+        -webkit-backdrop-filter: blur(10px) !important; 
         border: 1px solid rgba(255, 255, 255, 0.226) !important; 
         color: rgba(1, 13, 19, 0.87) !important;
         
@@ -233,9 +190,9 @@
         display: flex; align-items: center;
         padding: 10px; margin-bottom: 8px;
         
-        background: rgba(68, 33, 6, 0.356) !important;
-        backdrop-filter: blur(20px) !important;        
-        -webkit-backdrop-filter: blur(20px) !important;
+        background: rgba(184, 94, 25, 0.356) !important;
+        backdrop-filter: blur(5px) !important;        
+        -webkit-backdrop-filter: blur(5px) !important;
         border: 1px solid rgba(59, 29, 6, 0.123) !important;
         
         cursor: pointer; transition: 0.2s;
@@ -325,24 +282,27 @@
     </div>
 
     <div class="synastry-list">
-        {% if active_charts %}
-            {% for chart in active_charts %}
-                {% if chart.type == 'natal' or chart.type == 'transit' %}
-                
-                <div class="chart-select-item" onclick="toggleChartSelection(this, {{ loop.index0 }})">
-                    <input type="checkbox" value="{{ loop.index0 }}" style="display:none;" class="chart-checkbox">
-                    <div class="item-name">{{ chart.name }}</div>
-                    <div class="item-date">{{ chart.day }}.{{ chart.month }}.{{ chart.year }}</div>
-                    <div style="text-align:center;">
-                        <span class="zodiac-badge">{{ chart.zodiac_type|truncate(4, True, '') }}</span>
-                    </div>
+    {% if active_charts %}
+        {% for chart in active_charts %}
+            
+            {# --- FİLTRE GÜNCELLENDİ: İkili/Grup haritalarını gizle --- #}
+            {% if chart.type not in ['synastry', 'synastri', 'event'] %}
+            
+            <div class="chart-select-item" onclick="toggleChartSelection(this, {{ loop.index0 }})">
+                <input type="checkbox" value="{{ loop.index0 }}" style="display:none;" class="chart-checkbox">
+                <div class="item-name">{{ chart.name }}</div>
+                <div class="item-date">{{ chart.day }}.{{ chart.month }}.{{ chart.year }}</div>
+                <div style="text-align:center;">
+                    <span class="zodiac-badge">{{ chart.zodiac_type|truncate(4, True, '') }}</span>
                 </div>
-                
-                {% endif %}
+            </div>
+            
+            {% endif %} {# --- FİLTRE SONU --- #}
+
             {% endfor %}
         {% else %}
-            <div style="padding:20px; text-align:center; color:#666; font-size:11px;">Aktif harita yok.</div>
-        {% endif %}
+        <div style="padding:20px; text-align:center; color:#666; font-size:11px;">Aktif harita yok.</div>
+    {% endif %}
     </div>
 </div>
 
