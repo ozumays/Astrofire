@@ -1,89 +1,74 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <title>İletişim - AstroFire</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style_modern.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        body { background-color: #f4f7fa; font-family: 'Segoe UI', sans-serif; margin:0; }
-        .contact-container {
-            max-width: 800px; margin: 40px auto; padding: 20px;
-            background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(15px);
-            border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .profile-img {
-            width: 150px; height: 150px; border-radius: 50%; object-fit: cover;
-            border: 4px solid #1565c0; margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .bio-text { font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 30px; padding: 0 40px; }
-        
-        .social-links { display: flex; justify-content: center; gap: 20px; margin-bottom: 40px; }
-        .social-btn {
-            display: flex; align-items: center; gap: 10px;
-            padding: 12px 25px; border-radius: 30px;
-            text-decoration: none; font-weight: bold; color: white;
-            transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-        .social-btn:hover { transform: translateY(-3px); }
-        
-        .contact-footer {
-            border-top: 1px solid #eee; padding-top: 20px;
-            display: flex; justify-content: center; gap: 30px; color: #333;
-        }
-        .contact-item i { color: #1565c0; margin-right: 5px; }
-    </style>
-</head>
-<body>
-    {% include 'layout.html' %} 
-    <div class="contact-container" style="margin-top: 100px; position: relative; z-index: 10;">
+{% extends "layout.html" %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 55px auto; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid rgba(255, 255, 255, 0.5); padding-bottom: 10px; background: transparent;">
+        <h1 style="color: #eeeeee; margin: 0; font-size: 19px; display: flex; align-items: center; gap: 10px; font-weight: 800;">
+            <i class="fas fa-address-book" style="font-size: 15px;"></i> İletişim & Hakkımda
+        </h1>
+    </div>
+
+    <div style="background: rgba(245, 245, 245, 0.15); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0px; padding: 40px 20px; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); text-align: center;">
         
         {% if contact.get('photo') %}
-            <img src="{{ url_for('static', filename='uploads/contact/' + contact.photo) }}" class="profile-img">
+            <img src="{{ url_for('static', filename='uploads/contact/' + contact.photo) }}" 
+                 style="width: 150px; height: 150px; border-radius: 0px; object-fit: cover; border: 2px solid rgba(255, 255, 255, 0.3); margin-bottom: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
         {% else %}
-            <div class="profile-img" style="background:#ddd; display:flex; align-items:center; justify-content:center; margin:0 auto 20px auto;">
-                <i class="fas fa-user" style="font-size:50px; color:#fff;"></i>
+            <div style="width: 150px; height: 150px; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 25px auto; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 0px;">
+                <i class="fas fa-user" style="font-size: 50px; color: rgba(255,255,255,0.5);"></i>
             </div>
         {% endif %}
 
-        <h1 style="color:#2c3e50;">Merhaba!</h1>
+        <h2 style="color: #ffffff; font-size: 20px; font-weight: 700; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">Merhaba!</h2>
         
-        <div class="bio-text">
+        <div style="font-size: 12px; color: #dddddd; line-height: 1.8; margin-bottom: 35px; padding: 0 30px; text-align: center;">
             {{ contact.get('bio', 'Henüz biyografi eklenmemiş.') | replace('\n', '<br>') | safe }}
         </div>
 
-        <div class="social-links">
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-bottom: 40px;">
             {% if contact.get('instagram') %}
-                <a href="{{ contact.instagram }}" target="_blank" class="social-btn" style="background: #E1306C;">
+                <a href="{{ contact.instagram }}" target="_blank" 
+                   onmouseover="this.style.background='rgba(46, 204, 113, 0.4)'; this.style.textShadow='0 0 5px #fff';" 
+                   onmouseout="this.style.background='#E1306C';"
+                   style="display: flex; align-items: center; gap: 10px; padding: 10px 20px; background: #E1306C; color: white; text-decoration: none; font-weight: bold; font-size: 12px; border-radius: 0px; transition: 0.3s; backdrop-filter: blur(5px);">
                     <i class="fab fa-instagram"></i> Instagram
                 </a>
             {% endif %}
             
             {% if contact.get('youtube') %}
-                <a href="{{ contact.youtube }}" target="_blank" class="social-btn" style="background: #FF0000;">
+                <a href="{{ contact.youtube }}" target="_blank" 
+                   onmouseover="this.style.background='rgba(46, 204, 113, 0.4)'; this.style.textShadow='0 0 5px #fff';" 
+                   onmouseout="this.style.background='#FF0000';"
+                   style="display: flex; align-items: center; gap: 10px; padding: 10px 20px; background: #FF0000; color: white; text-decoration: none; font-weight: bold; font-size: 12px; border-radius: 0px; transition: 0.3s; backdrop-filter: blur(5px);">
                     <i class="fab fa-youtube"></i> YouTube
                 </a>
             {% endif %}
             
             {% if contact.get('website') %}
-                <a href="{{ contact.website }}" target="_blank" class="social-btn" style="background: #2c3e50;">
+                <a href="{{ contact.website }}" target="_blank" 
+                   onmouseover="this.style.background='rgba(46, 204, 113, 0.4)'; this.style.textShadow='0 0 5px #fff';" 
+                   onmouseout="this.style.background='rgba(44, 62, 80, 0.8)';"
+                   style="display: flex; align-items: center; gap: 10px; padding: 10px 20px; background: rgba(44, 62, 80, 0.8); color: white; text-decoration: none; font-weight: bold; font-size: 12px; border-radius: 0px; transition: 0.3s; backdrop-filter: blur(5px);">
                     <i class="fas fa-globe"></i> Web Sitesi
                 </a>
             {% endif %}
         </div>
 
-        <div class="contact-footer">
+        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px; display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; color: #eeeeee; font-size: 12px;">
             {% if contact.get('phone') %}
-                <div class="contact-item"><i class="fas fa-phone"></i> {{ contact.phone }}</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-phone" style="color: #3498db;"></i> {{ contact.phone }}
+                </div>
             {% endif %}
             
             {% if contact.get('email') %}
-                <div class="contact-item"><i class="fas fa-envelope"></i> {{ contact.email }}</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-envelope" style="color: #ff7675;"></i> {{ contact.email }}
+                </div>
             {% endif %}
         </div>
 
     </div>
-</body>
-</html>
+</div>
+{% endblock %}
