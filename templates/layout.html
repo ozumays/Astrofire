@@ -1870,7 +1870,7 @@
         <form action="/update_profile" method="POST" enctype="multipart/form-data">
             <div class="profile-form-group"><label>Profil Resmi</label>
                 {% if user_profile_image %} <img src="{{ url_for('static', filename='uploads/profiles/' ~ user_profile_image) }}" class="profile-image-preview" alt="Profil">
-                {% else %} <img src="{{ url_for('static', filename='images/default-avatar.png') }}" class="profile-image-preview" alt="Profil" onerror="this.src='https://via.placeholder.com/100'"> {% endif %}
+                {% else %} <img src="{{ url_for('static', filename='images/default-avatar.png') }}" class="profile-image-preview" alt="Profil" onerror="this.src='https://placehold.co/100'"> {% endif %}
                 <input type="file" name="profile_image" accept="image/png, image/jpeg, image/jpg" style="margin-top:10px;">
             </div>
             <div class="profile-form-group"><label>İsim Soyisim</label><input type="text" name="name" value="{{ display_name }}" required></div>
@@ -3126,3 +3126,4 @@ function drawSynastryRingDetailed(planets, isOuter) {
 
 </body>
 </html>
+
