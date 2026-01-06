@@ -1,64 +1,152 @@
 <style>
-    /* --- MEVCUT STİLLERİN (Değişmedi) --- */
-    .report-grid { display: flex; flex-direction: row; gap: 20px; width: 100%; align-items: flex-start; padding: 10px 5px; box-sizing: border-box; }
-    .report-column-left, .report-column-right { flex: 1; background-color: #f0f7ff; border: 1px solid #cce0f5; border-radius: 8px; padding: 15px; min-width: 300px; box-shadow: 0 2px 5px rgba(21, 101, 192, 0.1); }
-    .report-title { font-size: 11px; font-weight: 800; color: #1565c0; text-transform: uppercase; margin: 0 0 10px 0; padding-bottom: 5px; border-bottom: 1px dotted #a6c8e6; display: block; letter-spacing: 0.5px; }
-    .report-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 11px; background-color: #ffffff; border-radius: 4px; overflow: hidden; border: 1px solid #cce0f5; }
-    .report-table th { text-align: left; background-color: #dbe9f6; color: #1565c0; font-weight: 700; padding: 6px 8px; border-bottom: 1px solid #cce0f5; border-right: 1px solid #cce0f5; }
-    .report-table td { padding: 6px 8px; color: #444; border-bottom: 1px solid #e1e8ed; border-right: 1px solid #e1e8ed; vertical-align: middle; }
-    .report-table td:first-child { font-weight: 600; color: #1565c0; background-color: #fafcff; }
-    .report-table tbody tr:hover td { background-color: #eef6fc; }
+    /* --- ANA DÜZEN (GRID) --- */
+    .report-grid { 
+        display: flex; 
+        flex-direction: row; 
+        gap: 20px; 
+        width: 100%; 
+        align-items: flex-start; 
+        padding: 10px 5px; 
+        box-sizing: border-box; 
+    }
+
+    /* --- ORTAK KUTU STİLİ --- */
+    .report-box {
+        background: transparent !important;
+        border: 2px transparent !important;
+        border-radius: 0px;
+        padding: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        color: #000000 !important;
+    }
+
+    /* --- SOL VE SAĞ AYRIMI --- */
+    .report-column-left { flex: 1; min-width: 350px; }
+    .report-column-right { flex: 1; min-width: 300px; }
+
+    /* --- BAŞLIKLAR --- */
+    .report-title { 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 13px; 
+        font-weight: 800; 
+        text-transform: uppercase; 
+        margin: 0 0 10px 0; 
+        padding-bottom: 5px; 
+        display: block; 
+        letter-spacing: 0.5px; 
+    }
     
-    /* İKON VE HÜCRE STİLLERİ */
+    .report-column-left .report-title { color: #ffffff !important; border-bottom: 1px dotted #ffffffaa; }
+    .report-column-right .report-title { color: #000000 !important; border-bottom: 1px dotted #000000aa; }
+
+    /* --- TABLO YAPISI --- */
+    .report-table { 
+        width: 100%; 
+        border-collapse: separate; 
+        border-spacing: 2px;
+        border: none;
+        background: transparent !important;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .report-table tr,
+    .report-table tr:nth-child(even),
+    .report-table tr:nth-child(odd) {
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+
+    .report-table th, 
+    .report-table td {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 11px !important;
+        padding: 7px 9px;
+        vertical-align: middle;
+        border: none;
+    }
+
+    .report-table th { font-weight: 700; text-transform: uppercase; text-align: left; }
+    .report-table td { font-weight: 400; }
+
+    /* --- SÜTUN ÖZELLEŞTİRMELERİ --- */
+    .report-table td:nth-child(2) { font-family: 'Segoe UI', sans-serif; font-size: 10.5px !important; color: #000000 !important; letter-spacing: 0.5px; }
+    .report-table td:nth-child(3) { font-family: 'Courier New', monospace; font-size: 10.5px !important; color: #000 !important; }
+    .report-table td:nth-child(4) { font-size: 10px !important; color: rgb(145, 22, 22) !important; }
+    .report-table td:nth-child(5) { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 10px !important; color: #222222 !important; }
+    .report-table td:nth-child(6) { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 10.5px !important; font-weight: bold; color: #2e2e2e !important; text-align: center; }
+
+    /* --- RENKLENDİRME --- */
+    .report-column-left .report-table th { background-color: rgba(231, 201, 158, 0.336) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; color: #000000 !important; border-radius: 0px; border-bottom: 3px solid rgba(0, 0, 0, 0.1) !important; }
+    .report-column-left .report-table td { background-color: rgba(255, 255, 255, 0.918) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; color: #000000 !important; border-radius: 0px; border-bottom: 3px solid rgba(0, 0, 0, 0.1) !important; }
+    .report-column-left .report-table tr:last-child td { border-bottom: none !important; }
+    .report-column-left .report-table tbody tr:hover td { background-color: rgba(152, 218, 122, 0.959) !important; }
+    .report-column-left .planet-name { color: #492405 !important; font-weight: 650; margin-right: 4px; }
+    .report-column-left .deg-text, .report-column-left .constellation-tag { color: #222 !important; opacity: 0.9; } 
+    .report-column-left .constellation-tag { background: rgba(0,0,0,0.05) !important; }
+
+    .report-column-right .report-table th { background-color: rgba(94, 160, 190, 0.295) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; color: #000000 !important; border-radius: 0px; border-bottom: 3px solid rgba(0, 0, 0, 0.1) !important; }
+    .report-column-right .report-table td { background-color: rgba(255, 255, 255, 0.815) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; color: #000000 !important; border-radius: 0px; border-bottom: 3px solid rgba(0, 0, 0, 0.1) !important; }
+    .report-column-right .report-table tbody tr:hover td { background-color: rgba(152, 218, 122, 0.959) !important; }
+    .report-column-right .planet-name { color: #084366; font-weight: 650; margin-right: 4px; }
+
+    /* --- İKON AYARLARI (GÜNCELLENDİ: ARTIK KESİN BOYUTLU) --- */
     .cell-flex { display: flex; align-items: center; gap: 6px; } 
-    .p-icon { width: 18px; height: 18px; object-fit: contain; display: block; filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.1)); }
-    .compact-info { display: flex; align-items: center; font-size: 11px; }
-    .deg-text { font-weight: bold; color: #222; margin-right: 2px; }
-    .constellation-tag { font-family: monospace; color: #666; font-size: 10px; background: #eee; padding: 1px 4px; border-radius: 3px; margin-left: 4px; }
-    .distance-val { font-weight: bold; color: #333; font-size: 11px; }
+    
+    /* Ortak özellikler */
+    .p-icon { 
+        width: 18px; /* Varsayılan güvenlik */
+        height: 18px;
+        object-fit: contain; 
+        display: block; 
+        filter: drop-shadow(0px 1px 1px rgba(0,0,0,0.1)) !important; 
+    }
 
-    /* DURUM ETİKETLERİ */
-    .status-exact { color: #fff; background-color: #f1c40f; font-weight: bold; padding: 2px 5px; border-radius: 3px; font-size: 10px; } 
-    .status-app { color: #27ae60; font-weight: bold; background-color: #eafaf1; padding: 2px 5px; border-radius: 3px; font-size: 10px; } 
-    .status-sep { color: #c0392b; font-style: italic; background-color: #fdedec; padding: 2px 5px; border-radius: 3px; font-size: 10px; } 
+    /* GEZEGEN İKON BOYUTU: 19px */
+    .icon-planet { width: 19px !important; height: 19px !important; }
 
-    /* YENİ: TRANSİT TAHMİN STİLİ */
+    /* BURÇ İKON BOYUTU: 15px */
+    .icon-zodiac { width: 15px !important; height: 15px !important; }
+
+    .compact-info { display: flex; align-items: center; }
+    .constellation-tag { font-family: monospace; font-size: 10.5px; padding: 2px 5px; border-radius: 3px; margin-left: 4px; }
+    .distance-val { font-weight: bold; }
+    .status-exact { color: #fff; background-color: #f39c12; font-weight: bold; padding: 2px 5px; border-radius: 3px; font-size: 10px; } 
+    .status-app { color: #fff; font-weight: bold; background-color: #27ae60; padding: 2px 5px; border-radius: 3px; font-size: 10px; } 
+    .status-sep { color: #fff; font-style: italic; background-color: #c0392b; padding: 2px 5px; border-radius: 3px; font-size: 10px; } 
     .forecast-days { color: #d35400; font-weight: 800; font-size: 11px; }
     .forecast-retro { color: #c0392b; font-weight: bold; font-size: 10px; background: #fadbd8; padding: 2px 6px; border-radius: 4px; }
 </style>
 
 {% set planet_icons = { 
-    'Güneş': 'gunes.svg', 
-    'Ay': 'ay.svg', 
-    'Merkür': 'merkur.svg', 
-    'Venüs': 'venus.svg', 
-    'Mars': 'mars.svg', 
-    'Jüpiter': 'jupiter.svg', 
-    'Satürn': 'saturn.svg', 
-    'Uranüs': 'uranus.svg', 
-    'Neptün': 'neptun.svg', 
-    'Plüton': 'pluton.svg', 
-    'Kuzey Düğümü': 'kuzey_dugumu.svg', 
-    'Güney Düğümü': 'guney_dugumu.svg', 
-    'Chiron': 'chiron.svg', 
-    'Ceres': 'ceres.svg',
-    'Pallas': 'pallas.svg',
-    'Juno': 'juno.svg',
-    'Vesta': 'vesta.svg',
-    'Eris': 'eris.svg',
-    'Makemake': 'makemake.svg',
-    'Haumea': 'haumea.svg',
-    'Lilith': 'lilith.svg', 
-    'Şans Noktası': 'sans_noktasi.svg' 
+    'Güneş': 'gunes.svg', 'Ay': 'ay.svg', 'Merkür': 'merkur.svg', 'Venüs': 'venus.svg', 'Mars': 'mars.svg', 
+    'Jüpiter': 'jupiter.svg', 'Satürn': 'saturn.svg', 'Uranüs': 'uranus.svg', 'Neptün': 'neptun.svg', 
+    'Plüton': 'pluton.svg', 'Kuzey Düğümü': 'kuzey_dugumu.svg', 'Güney Düğümü': 'guney_dugumu.svg', 
+    'Chiron': 'chiron.svg', 'Ceres': 'ceres.svg', 'Pallas': 'pallas.svg', 'Juno': 'juno.svg', 
+    'Vesta': 'vesta.svg', 'Eris': 'eris.svg', 'Makemake': 'makemake.svg', 'Haumea': 'haumea.svg', 
+    'Lilith': 'lilith.svg', 'Şans Noktası': 'sans_noktasi.svg' 
+} %}
+
+{# --- YENİ: BURÇ İKONLARI --- #}
+{% set zodiac_icons = {
+    'Koç': 'koc.svg', 'Boğa': 'boga.svg', 'İkizler': 'ikizler.svg', 'Yengeç': 'yengec.svg',
+    'Aslan': 'aslan.svg', 'Başak': 'basak.svg', 'Terazi': 'terazi.svg', 'Akrep': 'akrep.svg',
+    'Yay': 'yay.svg', 'Oğlak': 'oglak.svg', 'Kova': 'kova.svg', 'Balık': 'balik.svg'
+} %}
+
+{# --- GENİŞLİK VERİLERİ --- #}
+{% set const_widths = {
+    'Koç': '24.73°', 'Boğa': '36.72°', 'İkizler': '27.85°', 'Yengeç': '20.05°', 
+    'Aslan': '35.81°', 'Başak': '43.96°', 'Terazi': '23.24°', 'Akrep': '25.19°', 
+    'Yay': '33.42°', 'Oğlak': '27.83°', 'Kova': '24.16°', 'Balık': '37.04°'
 } %}
 
 {% if last_chart %}
-    
-    {# SİNASTRİ KONTROLÜ #}
+
     {% if last_chart.chart1 and last_chart.chart2 %}
         {# ============ SİNASTRİ RAPORU ============ #}
         <div class="report-grid">
-            <div class="report-column-left">
+            <div class="report-box report-column-left">
                 <span class="report-title">{{ last_chart.chart1.name or "Harita 1" }} - Gezegen Konumları</span>
                 <table class="report-table">
                     <thead>
@@ -67,7 +155,8 @@
                             <th>Burç</th>
                             <th>Konum</th>
                             <th>R</th>
-                            <th style="border-top-right-radius: 4px;">Ev</th>
+                            <th>Ev</th>
+                            <th style="border-top-right-radius: 4px;">Genişlik</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -78,15 +167,25 @@
                                     <td>
                                         <div class="cell-flex">
                                             {% if p_name in planet_icons %}
-                                                <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p_name]) }}" class="p-icon" alt="{{ p_name }}">
+                                                <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p_name]) }}" class="p-icon icon-planet" alt="{{ p_name }}">
                                             {% endif %}
-                                            <span>{{ p_name }}</span>
+                                            <span class="planet-name">{{ p_name }}</span>
                                         </div>
                                     </td>
-                                    <td>{{ p_data[3] }}</td>
+                                    
+                                    <td>
+                                        <div class="cell-flex">
+                                            {% if p_data[3] in zodiac_icons %}
+                                                <img src="{{ url_for('static', filename='images/semboller/' + zodiac_icons[p_data[3]]) }}" class="p-icon icon-zodiac" alt="{{ p_data[3] }}">
+                                            {% endif %}
+                                            <span>{{ p_data[3] }}</span>
+                                        </div>
+                                    </td>
+                                    
                                     <td style="font-family: monospace;">{{ p_data[4] }}</td>
                                     <td style="color:red; font-weight: bold; text-align:center;">{{ p_data[5] }}</td>
                                     <td style="text-align:center;">{{ p_data[6] }}</td>
+                                    <td style="font-family: monospace; text-align:center; color:#555;">{{ const_widths.get(p_data[3], '-') }}</td>
                                 </tr>
                             {% endif %}
                         {% endfor %}
@@ -94,7 +193,7 @@
                 </table>
             </div>
 
-            <div class="report-column-right">
+            <div class="report-box report-column-right">
                 <span class="report-title">{{ last_chart.chart2.name or "Harita 2" }} - Gezegen Konumları</span>
                 <table class="report-table">
                     <thead>
@@ -103,7 +202,8 @@
                             <th>Burç</th>
                             <th>Konum</th>
                             <th>R</th>
-                            <th style="border-top-right-radius: 4px;">Ev</th>
+                            <th>Ev</th>
+                            <th style="border-top-right-radius: 4px;">Genişlik</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -114,15 +214,25 @@
                                     <td>
                                         <div class="cell-flex">
                                             {% if p_name in planet_icons %}
-                                                <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p_name]) }}" class="p-icon" alt="{{ p_name }}">
+                                                <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p_name]) }}" class="p-icon icon-planet" alt="{{ p_name }}">
                                             {% endif %}
-                                            <span>{{ p_name }}</span>
+                                            <span class="planet-name">{{ p_name }}</span>
                                         </div>
                                     </td>
-                                    <td>{{ p_data[3] }}</td>
+                                    
+                                    <td>
+                                        <div class="cell-flex">
+                                            {% if p_data[3] in zodiac_icons %}
+                                                <img src="{{ url_for('static', filename='images/semboller/' + zodiac_icons[p_data[3]]) }}" class="p-icon icon-zodiac" alt="{{ p_data[3] }}">
+                                            {% endif %}
+                                            <span>{{ p_data[3] }}</span>
+                                        </div>
+                                    </td>
+                                    
                                     <td style="font-family: monospace;">{{ p_data[4] }}</td>
                                     <td style="color:red; font-weight: bold; text-align:center;">{{ p_data[5] }}</td>
                                     <td style="text-align:center;">{{ p_data[6] }}</td>
+                                    <td style="font-family: monospace; text-align:center; color:#555;">{{ const_widths.get(p_data[3], '-') }}</td>
                                 </tr>
                             {% endif %}
                         {% endfor %}
@@ -131,46 +241,43 @@
             </div>
         </div>
 
-        <div style="margin-top: 20px;">
-            <span class="report-title">İKİ HARİTA ARASINDAKİ AÇILAR (ASPECT HESAPLARI)</span>
+        <div class="report-box report-column-right">
+            <span class="report-title">MEVCUT AÇILAR</span>
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th style="width:40%">{{ last_chart.chart1.name or "Harita 1" }}</th>
-                        <th style="width:40%">{{ last_chart.chart2.name or "Harita 2" }}</th>
-                        <th style="width:12%">Mesafe</th>
-                        <th style="width:8%">Durum</th>
+                        <th style="width:35%">1. Gezegen</th>
+                        <th style="width:35%">2. Gezegen</th>
+                        <th style="width:15%">Mesafe</th>
+                        <th style="width:15%">Durum</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for p1_name, p1_data in last_chart.chart1.planets.items() %}
-                        {% for p2_name, p2_data in last_chart.chart2.planets.items() %}
-                            {% set diff = (p1_data[0]|float - p2_data[0]|float)|abs %}
+                    {% set speed_order = ['Şans Noktası', 'Ay', 'Merkür', 'Venüs', 'Güneş', 'Mars', 'Jüpiter', 'Satürn'] %}
+                    {% set p_list = [] %}
+                    {% for pid in speed_order %}{% if last_chart.planets.get(pid) %}{% set _ = p_list.append(pid) %}{% endif %}{% endfor %}
+                    {% for pid in motor.PLANET_IDS.keys() %}{% if last_chart.planets.get(pid) and pid not in p_list %}{% set _ = p_list.append(pid) %}{% endif %}{% endfor %}
+
+                    {% for i in range(p_list|length) %}
+                        {% for j in range(i + 1, p_list|length) %}
+                            {% set p1 = p_list[i] %}
+                            {% set p2 = p_list[j] %}
+                            {% set d1 = last_chart.planets.get(p1) %}
+                            {% set d2 = last_chart.planets.get(p2) %}
+                            {% set diff = (d1[0]|float - d2[0]|float)|abs %}
                             {% if diff > 180 %}{% set diff = 360 - diff %}{% endif %}
-                            
+
                             <tr>
                                 <td>
                                     <div class="cell-flex">
-                                        {% if p1_name in planet_icons %}
-                                            <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p1_name]) }}" class="p-icon">
-                                        {% endif %}
-                                        <div class="compact-info">
-                                            <span style="font-weight:bold; color:#1565c0; margin-right:4px;">{{ p1_name }}</span>
-                                            {{ p1_data[4] }}
-                                            <span class="constellation-tag">{{ p1_data[3]|upper }}</span>
-                                        </div>
+                                        {% if p1 in planet_icons %}<img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p1]) }}" class="p-icon icon-planet">{% endif %}
+                                        <div class="compact-info"><span class="planet-name">{{ p1 }}</span> {{ d1[4] }} <span class="constellation-tag">{{ d1[3]|upper }}</span></div>
                                     </div>
                                 </td>
                                 <td>
                                     <div class="cell-flex">
-                                        {% if p2_name in planet_icons %}
-                                            <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p2_name]) }}" class="p-icon">
-                                        {% endif %}
-                                        <div class="compact-info">
-                                            <span style="font-weight:bold; color:#1565c0; margin-right:4px;">{{ p2_name }}</span>
-                                            {{ p2_data[4] }}
-                                            <span class="constellation-tag">{{ p2_data[3]|upper }}</span>
-                                        </div>
+                                        {% if p2 in planet_icons %}<img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p2]) }}" class="p-icon icon-planet">{% endif %}
+                                        <div class="compact-info"><span class="planet-name">{{ p2 }}</span> {{ d2[4] }} <span class="constellation-tag">{{ d2[3]|upper }}</span></div>
                                     </div>
                                 </td>
                                 <td><span class="distance-val">{{ "%.1f"|format(diff) }}°</span></td>
@@ -187,168 +294,190 @@
         </div>
     
     {% elif last_chart.planets %}
-        {# ============ TEKLİ HARİTA RAPORU (ESKİ MANTIK) ============ #}
+        {# ============ TEKLİ HARİTA RAPORU ============ #}
         <div class="report-grid">
-        <div class="report-column-left">
-            <span class="report-title">Gezegen Konumları</span>
+            <div class="report-box report-column-left">
+                <span class="report-title">Gezegen Konumları</span>
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th style="border-top-left-radius: 4px;">Gök Cismi</th>
+                            <th>Burç</th>
+                            <th>Konum</th>
+                            <th>R</th>
+                            <th>Ev</th>
+                            <th style="border-top-right-radius: 4px;">Genişlik</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p_name in motor.PLANET_IDS.keys() %}
+                            {% set p_data = last_chart.planets.get(p_name) %}
+                            {% if p_data and p_data|length > 5 %}
+                                <tr>
+                                    <td>
+                                        <div class="cell-flex">
+                                            {% if p_name in planet_icons %}
+                                                <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p_name]) }}" class="p-icon icon-planet" alt="{{ p_name }}">
+                                            {% endif %}
+                                            <span class="planet-name">{{ p_name }}</span>
+                                        </div>
+                                    </td> 
+                                    
+                                    <td>
+                                        <div class="cell-flex">
+                                            {% if p_data[3] in zodiac_icons %}
+                                                <img src="{{ url_for('static', filename='images/semboller/' + zodiac_icons[p_data[3]]) }}" class="p-icon icon-zodiac" alt="{{ p_data[3] }}">
+                                            {% endif %}
+                                            <span>{{ p_data[3] }}</span>
+                                        </div>
+                                    </td> 
+                                    
+                                    <td style="font-family: monospace;">{{ p_data[4] }}</td> 
+                                    <td style="color:red; font-weight: bold; text-align:center;">{{ p_data[5] }}</td>
+                                    <td style="text-align:center;">{{ p_data[6] }}</td> 
+                                    <td style="font-family: monospace; text-align:center; color:#555;">{{ const_widths.get(p_data[3], '-') }}</td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="report-box report-column-right">
+                <span class="report-title">Ev Girişleri</span>
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th style="border-top-left-radius: 4px;">Ev</th>
+                            <th>Burç</th>
+                            <th>Konum</th>
+                            <th style="border-top-right-radius: 4px;">Genişlik</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in range(1, 13) %}
+                            {% set cusp_name = 'CUSP' ~ i %}
+                            {% set cusp_deg = last_chart.houses.get(cusp_name) %}
+                            {% if cusp_deg is not none %}
+                                {% set cusp_info = get_relative_degree(cusp_deg, last_chart.get('zodiac_type', 'Astronomik')) %}
+                                <tr>
+                                    <td>{{ i }}. Ev</td>
+                                    <td>
+                                        <div class="cell-flex">
+                                            {% if cusp_info[0] in zodiac_icons %}
+                                                <img src="{{ url_for('static', filename='images/semboller/' + zodiac_icons[cusp_info[0]]) }}" class="p-icon icon-zodiac">
+                                            {% endif %}
+                                            <span>{{ cusp_info[0] }}</span>
+                                        </div>
+                                    </td> 
+                                    <td style="font-family: monospace;">{{ cusp_info[2] }}</td> 
+                                    <td style="font-family: monospace; text-align:center; color:#555;">{{ const_widths.get(cusp_info[0], '-') }}</td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="report-box report-column-right">
+            <span class="report-title">MEVCUT AÇILAR</span>
             <table class="report-table">
                 <thead>
                     <tr>
-                        <th style="border-top-left-radius: 4px;">Gök Cismi</th>
-                        <th>Burç</th>
-                        <th>Konum</th>
-                        <th>R</th>
-                        <th style="border-top-right-radius: 4px;">Ev</th>
+                        <th style="width:35%">1. Gezegen</th>
+                        <th style="width:35%">2. Gezegen</th>
+                        <th style="width:15%">Mesafe</th>
+                        <th style="width:15%">Durum</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for p_name in motor.PLANET_IDS.keys() %}
-                        {% set p_data = last_chart.planets.get(p_name) %}
-                        {% if p_data and p_data|length > 5 %}
+                    {% set speed_order = ['Şans Noktası', 'Ay', 'Merkür', 'Venüs', 'Güneş', 'Mars', 'Jüpiter', 'Satürn'] %}
+                    {% set p_list = [] %}
+                    {% for pid in speed_order %}{% if last_chart.planets.get(pid) %}{% set _ = p_list.append(pid) %}{% endif %}{% endfor %}
+                    {% for pid in motor.PLANET_IDS.keys() %}{% if last_chart.planets.get(pid) and pid not in p_list %}{% set _ = p_list.append(pid) %}{% endif %}{% endfor %}
+
+                    {% for i in range(p_list|length) %}
+                        {% for j in range(i + 1, p_list|length) %}
+                            {% set p1 = p_list[i] %}
+                            {% set p2 = p_list[j] %}
+                            {% set d1 = last_chart.planets.get(p1) %}
+                            {% set d2 = last_chart.planets.get(p2) %}
+                            {% set diff = (d1[0]|float - d2[0]|float)|abs %}
+                            {% if diff > 180 %}{% set diff = 360 - diff %}{% endif %}
+
                             <tr>
                                 <td>
                                     <div class="cell-flex">
-                                        {% if p_name in planet_icons %}
-                                            <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p_name]) }}" class="p-icon" alt="{{ p_name }}">
-                                        {% endif %}
-                                        <span>{{ p_name }}</span>
+                                        {% if p1 in planet_icons %}<img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p1]) }}" class="p-icon icon-planet">{% endif %}
+                                        <div class="compact-info"><span class="planet-name">{{ p1 }}</span> {{ d1[4] }} <span class="constellation-tag">{{ d1[3]|upper }}</span></div>
                                     </div>
-                                </td> 
-                                <td>{{ p_data[3] }}</td> 
-                                <td style="font-family: monospace;">{{ p_data[4] }}</td> 
-                                <td style="color:red; font-weight: bold; text-align:center;">{{ p_data[5] }}</td>
-                                <td style="text-align:center;">{{ p_data[6] }}</td> 
+                                </td>
+                                <td>
+                                    <div class="cell-flex">
+                                        {% if p2 in planet_icons %}<img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p2]) }}" class="p-icon icon-planet">{% endif %}
+                                        <div class="compact-info"><span class="planet-name">{{ p2 }}</span> {{ d2[4] }} <span class="constellation-tag">{{ d2[3]|upper }}</span></div>
+                                    </div>
+                                </td>
+                                <td><span class="distance-val">{{ "%.1f"|format(diff) }}°</span></td>
+                                <td>
+                                    {% if diff < 1 %}<span class="status-exact">TAM</span>
+                                    {% elif diff < 10 %}<span class="status-app">YAKIN</span>
+                                    {% else %}<span class="status-sep">UZAK</span>{% endif %}
+                                </td>
                             </tr>
-                        {% endif %}
+                        {% endfor %}
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
-        <div class="report-column-right">
-            <span class="report-title">Ev Girişleri</span>
+        {% if transit_forecasts %}
+        <div class="report-box report-column-right">
+            <span class="report-title">KESİN VARIŞ ZAMANLARI</span>
             <table class="report-table">
                 <thead>
-                    <tr><th style="border-top-left-radius: 4px;">Ev</th><th>Burç</th><th>Konum</th></tr>
+                    <tr>
+                        <th style="width:25%">Hareketli (Hızlı)</th>
+                        <th style="width:25%">Hedef Konum</th>
+                        <th style="width:50%">Tahmini Varış Süresi</th>
+                    </tr>
                 </thead>
                 <tbody>
-                    {% for i in range(1, 13) %}
-                        {% set cusp_name = 'CUSP' ~ i %}
-                        {% set cusp_deg = last_chart.houses.get(cusp_name) %}
-                        {% if cusp_deg is not none %}
-                            {% set cusp_info = get_relative_degree(cusp_deg, last_chart.get('zodiac_type', 'Astronomik')) %}
-                            <tr>
-                                <td>{{ i }}. Ev</td>
-                                <td>{{ cusp_info[0] }}</td> 
-                                <td style="font-family: monospace;">{{ cusp_info[2] }}</td> 
-                            </tr>
-                        {% endif %}
+                    {% for item in transit_forecasts %}
+                    <tr>
+                        <td>
+                            <div class="cell-flex">
+                                {% if item.mover in planet_icons %}
+                                    <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[item.mover]) }}" class="p-icon icon-planet">
+                                {% endif %}
+                                <span class="planet-name">{{ item.mover }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="cell-flex">
+                                {% if item.target in planet_icons %}
+                                    <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[item.target]) }}" class="p-icon icon-planet">
+                                {% endif %}
+                                <div class="compact-info">
+                                    <span class="deg-text">{{ "%.1f"|format(item.target_deg) }}°</span>
+                                    <span class="constellation-tag">{{ item.target_sign|upper }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            {% if item.is_retro %}
+                                <span class="forecast-retro">RETRO HAREKETLİ</span>
+                            {% else %}
+                                <span class="forecast-days">➔ {{ item.days_later }} GÜN SONRA</span>
+                            {% endif %}
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </div>
-
-    <div style="margin-top: 20px;">
-        <span class="report-title">MEVCUT AÇILAR VE YAKINLAŞMA DURUMU</span>
-        <table class="report-table">
-            <thead>
-                <tr>
-                    <th style="width:35%">1. Gezegen</th>
-                    <th style="width:35%">2. Gezegen</th>
-                    <th style="width:15%">Mesafe</th>
-                    <th style="width:15%">Durum</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% set speed_order = ['Şans Noktası', 'Ay', 'Merkür', 'Venüs', 'Güneş', 'Mars', 'Jüpiter', 'Satürn'] %}
-                {% set p_list = [] %}
-                {% for pid in speed_order %}{% if last_chart.planets.get(pid) %}{% set _ = p_list.append(pid) %}{% endif %}{% endfor %}
-                {% for pid in motor.PLANET_IDS.keys() %}{% if last_chart.planets.get(pid) and pid not in p_list %}{% set _ = p_list.append(pid) %}{% endif %}{% endfor %}
-
-                {% for i in range(p_list|length) %}
-                    {% for j in range(i + 1, p_list|length) %}
-                        {% set p1 = p_list[i] %}
-                        {% set p2 = p_list[j] %}
-                        {% set d1 = last_chart.planets.get(p1) %}
-                        {% set d2 = last_chart.planets.get(p2) %}
-                        {% set diff = (d1[0]|float - d2[0]|float)|abs %}
-                        {% if diff > 180 %}{% set diff = 360 - diff %}{% endif %}
-
-                        <tr>
-                            <td>
-                                <div class="cell-flex">
-                                    {% if p1 in planet_icons %}<img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p1]) }}" class="p-icon">{% endif %}
-                                    <div class="compact-info"><span style="font-weight:bold; color:#1565c0; margin-right:4px;">{{ p1 }}</span> {{ d1[4] }} <span class="constellation-tag">{{ d1[3]|upper }}</span></div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="cell-flex">
-                                    {% if p2 in planet_icons %}<img src="{{ url_for('static', filename='images/semboller/' + planet_icons[p2]) }}" class="p-icon">{% endif %}
-                                    <div class="compact-info"><span style="font-weight:bold; color:#1565c0; margin-right:4px;">{{ p2 }}</span> {{ d2[4] }} <span class="constellation-tag">{{ d2[3]|upper }}</span></div>
-                                </div>
-                            </td>
-                            <td><span class="distance-val">{{ "%.1f"|format(diff) }}°</span></td>
-                            <td>
-                                {% if diff < 1 %}<span class="status-exact">TAM</span>
-                                {% elif diff < 10 %}<span class="status-app">YAKIN</span>
-                                {% else %}<span class="status-sep">UZAK</span>{% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    {% if transit_forecasts %}
-    <div style="margin-top: 20px;">
-        <span class="report-title">KESİN VARIŞ ZAMANLARI (TRANSİT MOTORU HESAPLAMASI)</span>
-        <table class="report-table">
-            <thead>
-                <tr>
-                    <th style="width:25%">Hareketli (Hızlı)</th>
-                    <th style="width:25%">Hedef Konum</th>
-                    <th style="width:50%">Tahmini Varış Süresi</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in transit_forecasts %}
-                <tr>
-                    <td>
-                        <div class="cell-flex">
-                            {% if item.mover in planet_icons %}
-                                <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[item.mover]) }}" class="p-icon">
-                            {% endif %}
-                            <span style="font-weight:bold; color:#1565c0;">{{ item.mover }}</span>
-                        </div>
-                    </td>
-
-                    <td>
-                        <div class="cell-flex">
-                            {% if item.target in planet_icons %}
-                                <img src="{{ url_for('static', filename='images/semboller/' + planet_icons[item.target]) }}" class="p-icon">
-                            {% endif %}
-                            <div class="compact-info">
-                                <span class="deg-text">{{ "%.1f"|format(item.target_deg) }}°</span>
-                                <span class="constellation-tag">{{ item.target_sign|upper }}</span>
-                            </div>
-                        </div>
-                    </td>
-
-                    <td>
-                        {% if item.is_retro %}
-                            <span class="forecast-retro">RETRO HAREKETLİ</span>
-                        {% else %}
-                            <span class="forecast-days">➔ {{ item.days_later }} GÜN SONRA</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% endif %}
+        {% endif %}
     {% endif %}
 
 {% else %}
