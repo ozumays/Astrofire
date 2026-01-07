@@ -1521,6 +1521,7 @@
         
         <nav class="main-nav">
             <a href="{{ url_for('page_data') }}" class="nav-link {% if active_page == 'data' %}active{% endif %}">DATA</a>
+            <a href="javascript:void(0)" onclick="openSelectionModal('planets', 'Öngörüler')" class="nav-link">Öngörüler</a>
             <a href="{{ url_for('home') }}" class="nav-link {% if not active_page %}active{% endif %}">Harita Aç</a>
             <a href="{{ url_for('kayitli_haritalar') }}" class="nav-link {% if request.endpoint == 'kayitli_haritalar' %}active{% endif %}">Kayıtlı Haritalar</a>
             <a href="{{ url_for('page_education') }}" class="nav-link {% if active_page == 'egitimler' %}active{% endif %}">Eğitimler</a>
@@ -3126,4 +3127,3 @@ function drawSynastryRingDetailed(planets, isOuter) {
 
 </body>
 </html>
-
