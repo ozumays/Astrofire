@@ -261,6 +261,14 @@
         border-radius: 5px !important;
     }
     .synastry-list::-webkit-scrollbar-track { background: transparent; }
+
+    /* Seçili olduğunda arka plan değişimi */
+    .chart-select-item.selected {
+        background-color: rgba(7, 44, 68, 0.705) !important;
+        border: 1px solid rgba(56, 189, 248, 0.5) !important;
+        box-shadow: inset 3px 0 0 #38bdf8 !important;
+        color: white !important;
+    }
 </style>
 
 <div id="synastryModal" class="modal-overlay">
@@ -279,6 +287,8 @@
         <span class="syn-col-header">İSİM</span>
         <span class="syn-col-header">TARİH</span>
         <span class="syn-col-header">TİP</span>
+        
+        <span id="selectionCount" class="syn-selection-count" style="font-size:10px; color:#ddd; margin-left:auto;">0/2</span>
     </div>
 
     <div class="synastry-list">
