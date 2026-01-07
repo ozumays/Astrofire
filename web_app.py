@@ -1933,6 +1933,37 @@ def api_swap_synastry():
         print(f"❌ Swap Hatası: {e}")
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)})
+    
+    # --- YARDIMCI FONKSİYON (api_calculate_progression DIŞINDA OLMALI) ---
+def calculate_donum_noktasi_logic(natal_data, years_passed, direction="forward"):
+    shift = years_passed if direction == "forward" else -years_passed
+    advanced_data = natal_data.copy()
+    
+    # 1. Gezegenleri Kaydır
+    new_planets = {}
+    for p_id, p_info in natal_data['planets'].items():
+        # p_info[0] ham boylamdır
+        new_long = (p_info[0] + shift) % 360
+        # Diğer verileri koru, sadece boylamı ve formatlanmış dereceyi güncelle
+        p_list = list(p_info)
+        p_list[0] = new_long
+        # Buradaki get_relative_degree senin motorunda mevcut olan fonksiyondur
+        from astro_core import get_relative_degree # Gerekirse import et
+        _, _, fmt = get_relative_degree(new_long, "Astronomik")
+        p_list[4] = fmt
+        new_planets[p_id] = tuple(p_list)
+    
+    advanced_data['planets'] = new_planets
+
+    # 2. Evleri Kaydır
+    if 'houses' in natal_data:
+        new_houses = {}
+        for h_id, h_long in natal_data['houses'].items():
+            new_houses[h_id] = (h_long + shift) % 360
+        advanced_data['houses'] = new_houses
+        advanced_data['cusps'] = new_houses
+
+    return advanced_data
 
 @app.route('/api/calculate_progression', methods=['POST'])
 def api_calculate_progression():
@@ -2019,6 +2050,25 @@ def api_calculate_progression():
                 natal_tz, natal_lat, natal_lon, None, house_code, target_zodiac
             )
             title = f"Transit ({now.day}.{now.month}.{now.year})"
+
+        # B) DÖNÜM NOKTASI (KADER & KARMA - Sabit 1 Derece) 🌟
+        elif technique in ['donum_noktasi_kader', 'donum_noktasi_karma']:
+            # 1. Yaş Hesabı
+            natal_dt = datetime(natal_year, natal_month, natal_day, natal_hour, natal_minute)
+            total_seconds_lived = (now - natal_dt).total_seconds()
+            age_in_years = total_seconds_lived / (365.242199 * 24 * 3600)
+            
+            # 2. Yön Belirle (Kader + / Karma -)
+            direction = "forward" if technique == "donum_noktasi_kader" else "backward"
+            shift = age_in_years if direction == "forward" else -age_in_years
+            
+            # 3. Hesaplama (Dışarıda tanımladığımız yardımcı fonksiyonu kullanır)
+            # Not: calculation_base_natal yukarıda 2. adımda zaten hesaplanmıştı.
+            prog_data = calculate_donum_noktasi_logic(calculation_base_natal, age_in_years, direction)
+            
+            title = "Dönüm Noktası (Kader)" if direction == "forward" else "Dönüm Noktası (Karma)"
+            if prog_data:
+                prog_data['display_date_str'] = now.strftime("%d.%m.%Y")
 
         # B) SECONDARY PROGRESSION (İKİNCİL İLERLETİM) - DÜZELTİLDİ 🛠️
         elif technique == 'secondary':
@@ -2163,11 +2213,13 @@ def api_calculate_progression():
         session['current_chart_data'] = new_chart
         
         return jsonify({'success': True, 'message': 'Hesaplama başarılı!'})
+    
         
     except Exception as e:
         print(f"❌ İlerletim Hatası: {e}")
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)})
+
 
 @app.route('/api/search_database', methods=['POST'])
 def api_search_database():
@@ -2524,6 +2576,8 @@ def process_time_jump(dt, chart, idx, active_charts):
     # Teknik bayrakları
     is_secondary = 'secondary' in chart_type or 'secondary' in chart_name or 'ikincil' in chart_name
     is_solar_arc = 'solar_arc' in chart_type or 'solar_arc' in chart_name or 'güneş yayı' in chart_name
+    is_kader = 'kader' in chart_type or 'kader' in chart_name
+    is_karma = 'karma' in chart_type or 'karma' in chart_name
     
     # --- KRİTİK ADIM: NATAL TARİHİ KORUMA ---
     # Eğer haritada 'natal_year' yoksa (ilk kez açılıyorsa), mevcut 'year' bilgisini natal olarak etiketle.
@@ -2534,6 +2588,16 @@ def process_time_jump(dt, chart, idx, active_charts):
         chart['natal_day'] = chart['day']
         chart['natal_hour'] = chart['hour']
         chart['natal_minute'] = chart['minute']
+
+        # --- 2. NATAL_DT TANIMLAMA (BURAYA EKLE) ---
+    # Bu değişken hesaplamaların kök tarihidir.
+    natal_dt = datetime(
+        int(chart['natal_year']), 
+        int(chart['natal_month']), 
+        int(chart['natal_day']), 
+        int(chart.get('natal_hour', 12)), 
+        int(chart.get('natal_minute', 0))
+    )
 
     res = ""
     final_data = None
@@ -2620,6 +2684,38 @@ def process_time_jump(dt, chart, idx, active_charts):
         chart['natal_meta_2']['hour'] = dt.hour
         chart['natal_meta_2']['minute'] = dt.minute
 
+        # --- YENİ: DÖNÜM NOKTASI ZAMAN ATLAMASI ---
+    elif is_kader or is_karma:
+        # 1. Yaşanılan Süreyi (Yıl) Hesapla
+        natal_dt = datetime(chart.get('natal_year', chart['year']), 
+                            chart.get('natal_month', chart['month']), 
+                            chart.get('natal_day', chart['day']), 
+                            chart.get('natal_hour', chart['hour']), 
+                            chart.get('natal_minute', chart['minute']))
+        
+        age_in_years = (dt - natal_dt).days / 365.2425
+        direction = "forward" if is_kader else "backward"
+        
+        # 2. İlgili baz veriyi al (Dual ise meta1, Single ise chart verisi)
+        # Not: calculation_base_natal yukarıda 'secondary' kısmında yaptığın gibi 
+        # natal koordinatlarda ve hedef zodyakta önceden hesaplanmış olmalı.
+        _, base_natal = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
+            natal_dt.year, natal_dt.month, natal_dt.day, natal_dt.hour, natal_dt.minute,
+            float(chart['tz_offset']), float(chart['lat']), float(chart['lon']), None, 
+            ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(chart.get('house_system'), 'P'), 
+            chart.get('zodiac_type', 'Astronomik')
+        )
+
+        # 3. Matematiksel Kaydırmayı Uygula (1 Yıl = 1 Derece)
+        data2 = calculate_donum_noktasi_logic(base_natal, age_in_years, direction)
+        
+        title_suffix = "Kader" if is_kader else "Karma"
+        data2['name'] = f"Dönüm Noktası ({title_suffix} - {dt.year})"
+        data2['display_date_str'] = dt.strftime("%d.%m.%Y")
+        
+        # Dual mod paketlemesi için final_data ata
+        final_data = data2
+
     # --- SENARYO B: SINGLE MOD (TEKLİ HARİTA) ---
     else:
         # Natal bilgileri ARTIK GÜVENLİ: 'natal_year' anahtarından alıyoruz.
@@ -2668,6 +2764,7 @@ def process_time_jump(dt, chart, idx, active_charts):
                 chart.get('zodiac_type', 'Astronomik')
             )
             final_data['display_date_str'] = dt.strftime("%d.%m.%Y")
+
 
     # --- KAYDETME ---
     # Ekranda "Şu an hangi zamandayız?" bilgisini tutmak için 'year/month' güncellenir.
