@@ -1,4 +1,3 @@
-# user_manager.py (MONGODB ATLAS ENTEGRE EDİLMİŞ VERSİYON)
 import os
 import re
 import datetime
