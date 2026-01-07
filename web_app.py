@@ -718,6 +718,7 @@ def login():
         password = request.form.get('password', '').strip()
         
         # user_manager'daki try_login fonksiyonunu kullan
+        # Yeni sistemde 'result' değişkeni, kullanıcının veritabanındaki tüm bilgisidir.
         success, result = user_manager.try_login(email, password)
         
         if success:
@@ -726,16 +727,16 @@ def login():
             session['logged_in_email'] = email
             session['display_name'] = result.get('name', 'Kullanıcı')
             
-            # --- KRİTİK: Kullanıcının kayıtlı aktif haritalarını geri yükle ---
-            user_data = user_manager.USER_DATA_STORE.get(email, {})
-            saved_active_charts = user_data.get('active_charts', [])
+            # --- DÜZELTİLEN KISIM ---
+            # Artık USER_DATA_STORE yok. Veri zaten 'result' değişkeninin içinde geldi.
+            saved_active_charts = result.get('active_charts', [])
             session['active_charts'] = saved_active_charts if saved_active_charts else []
+            # ------------------------
             
             # İlk haritayı aktif yap (varsa)
             if session['active_charts']:
                 session['current_chart_index'] = 0
                 session['current_chart_data'] = session['active_charts'][0]
-            # ----------------------------------------------------------------
             
             return redirect(url_for('home'))
         else:
