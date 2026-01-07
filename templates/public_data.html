@@ -5,13 +5,10 @@
 <div class="library-container" id="libraryContainer">
     
     <div class="library-sidebar" id="librarySidebar">
-        <div class="sidebar-header">
-            <i class="fas fa-folder-tree"></i> Veri Bankası
-        </div>
     
     <div style="padding: 10px; border-bottom: 1px solid #eee;">
-        <button onclick="openSearchModal()" style="width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; font-size: 12px; color: #475569; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
-            <i class="fas fa-search" style="color: #3498db;"></i> Gelişmiş Arama / Filtrele
+        <button onclick="openSearchModal()" class="btn-advanced-search">
+        <i class="fas fa-search"></i> Gelişmiş Arama / Filtrele
         </button>
     </div>
     
@@ -41,7 +38,11 @@
             {% for chart in flat_list|sort(attribute='name') %}
                 <a href="{{ url_for('page_data', id=chart.id) }}"
                    class="chart-link {% if selected_chart and selected_chart.id == chart.id %}active{% endif %}">
-                    <i class="fas fa-user-circle" style="font-size: 10px; opacity: 0.7;"></i> {{ chart.name }}
+                    <i class="fas fa-user-circle"></i> 
+                    <div style="display: flex; flex-direction: column;">
+                        <span class="chart-name">{{ chart.name }}</span>
+                        <span style="font-size: 10px; opacity: 0.6;">{{ chart.year }}</span>
+                    </div>
                 </a>
             {% endfor %}
         {% else %}
@@ -75,12 +76,16 @@
                                             </span>
                                         </summary>
                                         <div class="folder-content-2">
-                                            {% for chart in chart_tree[asc_key][sun_key] %}
-                                                <a href="{{ url_for('page_data', id=chart.id) }}"
-                                                   class="chart-link {% if selected_chart and selected_chart.id == chart.id %}active{% endif %}">
-                                                    <i class="fas fa-user-tag" style="font-size: 10px;"></i> {{ chart.name }}
-                                                </a>
-                                            {% endfor %}
+                                    {% for chart in chart_tree[asc_key][sun_key] %}
+                                        <a href="{{ url_for('page_data', id=chart.id) }}"
+                                    class="chart-link {% if selected_chart and selected_chart.id == chart.id %}active{% endif %}">
+                                        <i class="fas fa-user-tag"></i> 
+                                        <div style="display: flex; flex-direction: column;">
+                                            <span class="chart-name">{{ chart.name }}</span>
+                                            <span style="font-size: 10px; opacity: 0.6;">{{ chart.year }}</span>
+                                            </div>
+                                            </a>
+                                        {% endfor %}
                                         </div>
                                     </details>
                                     {% endif %}
@@ -90,15 +95,6 @@
                         {% endif %}
                     {% endfor %}
                 {% endif %}
-            </div>
-        </details>
-
-        <details class="main-category">
-            <summary class="main-summary">
-                <i class="fas fa-crystal-ball"></i> Öngörüler
-            </summary>
-            <div class="main-content">
-                <p style="padding:10px; font-size:11px; color:#999;">Henüz öngörü verisi yok.</p>
             </div>
         </details>
     </div>
@@ -123,7 +119,7 @@
                     <span><i class="far fa-clock"></i> {{ "%02d:%02d"|format(selected_chart.hour, selected_chart.minute) }}</span>
                     <span class="separator">|</span>
                     <span><i class="fas fa-map-marker-alt"></i> {{ selected_chart.location_name }}</span>
-                    <span style="font-size: 9px; color: #aaa; margin-left: 2px;">(UTC {{ selected_chart.tz }})</span>
+                    <span style="font-size: 13px; color: #e6d8d8; margin-bottom: 10px; margin-left: 2px;">(UTC {{ selected_chart.tz }})</span>
                 </div>
 
                 <div class="chart-wheel-box">
@@ -303,7 +299,7 @@
         
         const PLANET_IMAGE_MAP = { "Güneş": "{{ url_for('static', filename='images/semboller/gunes.svg') }}", "Ay": "{{ url_for('static', filename='images/semboller/ay.svg') }}", "Merkür": "{{ url_for('static', filename='images/semboller/merkur.svg') }}", "Venüs": "{{ url_for('static', filename='images/semboller/venus.svg') }}", "Mars": "{{ url_for('static', filename='images/semboller/mars.svg') }}", "Jüpiter": "{{ url_for('static', filename='images/semboller/jupiter.svg') }}", "Satürn": "{{ url_for('static', filename='images/semboller/saturn.svg') }}", "Uranüs": "{{ url_for('static', filename='images/semboller/uranus.svg') }}", "Neptün": "{{ url_for('static', filename='images/semboller/neptun.svg') }}", "Plüton": "{{ url_for('static', filename='images/semboller/pluton.svg') }}", "Kuzey Düğümü": "{{ url_for('static', filename='images/semboller/kuzey_dugumu.svg') }}", "Güney Düğümü": "{{ url_for('static', filename='images/semboller/guney_dugumu.svg') }}", "Şans Noktası": "{{ url_for('static', filename='images/semboller/sans_noktasi.svg') }}", "Chiron": "{{ url_for('static', filename='images/semboller/chiron.svg') }}", "Ceres": "{{ url_for('static', filename='images/semboller/ceres.svg') }}", "Pallas": "{{ url_for('static', filename='images/semboller/pallas.svg') }}", "Juno": "{{ url_for('static', filename='images/semboller/juno.svg') }}", "Vesta": "{{ url_for('static', filename='images/semboller/vesta.svg') }}", "Eris": "{{ url_for('static', filename='images/semboller/eris.svg') }}", "Makemake": "{{ url_for('static', filename='images/semboller/makemake.svg') }}", "Haumea": "{{ url_for('static', filename='images/semboller/haumea.svg') }}" };
         const ZODIAC_IMAGE_MAP = { "Koç": "{{ url_for('static', filename='images/semboller/koc.svg') }}", "Boğa": "{{ url_for('static', filename='images/semboller/boga.svg') }}", "İkizler": "{{ url_for('static', filename='images/semboller/ikizler.svg') }}", "Yengeç": "{{ url_for('static', filename='images/semboller/yengec.svg') }}", "Aslan": "{{ url_for('static', filename='images/semboller/aslan.svg') }}", "Başak": "{{ url_for('static', filename='images/semboller/basak.svg') }}", "Terazi": "{{ url_for('static', filename='images/semboller/terazi.svg') }}", "Akrep": "{{ url_for('static', filename='images/semboller/akrep.svg') }}", "Yay": "{{ url_for('static', filename='images/semboller/yay.svg') }}", "Oğlak": "{{ url_for('static', filename='images/semboller/oglak.svg') }}", "Kova": "{{ url_for('static', filename='images/semboller/kova.svg') }}", "Balık": "{{ url_for('static', filename='images/semboller/balik.svg') }}" };
-        const SYMBOL_SIZE = 13; const PLANET_SIGN_SYMBOL_SIZE = 13; const CUSP_SIGN_SYMBOL_SIZE = 13; const CUSP_TEXT_OFFSET = 13; const svg = document.getElementById('astroChart'); const cx = 200; const cy = 200; const R_ZODIAC_OUTER = 195; const R_ZODIAC_INNER = 175; const R_HOUSE_LABELS = 25; const R_CUSP_SYMBOL_CENTER = 185; const R_PLANETS_AVG = 160; const R_PLANET_DEGREES = 140; const R_PLANET_SIGN = 122; const R_PLANET_MINUTE = 105; const R_PLANET_RETRO = 87; const R_INNER_RING = 32; const R_EXPANDED_BG = 80; const R_EXPANDED_PLANETS = 210; const R_PLANETS_INNER = 260; const R_PLANETS_OUTER = 345; const SVG_NS = "http://www.w3.org/2000/svg";
+        const SYMBOL_SIZE = 13; const PLANET_SIGN_SYMBOL_SIZE = 13; const CUSP_SIGN_SYMBOL_SIZE = 11; const CUSP_TEXT_OFFSET = 15; const svg = document.getElementById('astroChart'); const cx = 200; const cy = 200; const R_ZODIAC_OUTER = 195; const R_ZODIAC_INNER = 175; const R_HOUSE_LABELS = 25; const R_CUSP_SYMBOL_CENTER = 185; const R_PLANETS_AVG = 160; const R_PLANET_DEGREES = 140; const R_PLANET_SIGN = 122; const R_PLANET_MINUTE = 105; const R_PLANET_RETRO = 87; const R_INNER_RING = 32; const R_EXPANDED_BG = 80; const R_EXPANDED_PLANETS = 210; const R_PLANETS_INNER = 260; const R_PLANETS_OUTER = 345; const SVG_NS = "http://www.w3.org/2000/svg";
         
         let ascDegree = 0;
         if (chartData) {
@@ -320,15 +316,123 @@
         function getRelativeDegreeJS(absDeg) { absDeg %= 360; let boundaries = []; if (typeof chartData !== 'undefined' && chartData.boundaries) { boundaries = chartData.boundaries; } else { boundaries = [ {name:"Koç", start:0, end:30}, {name:"Boğa", start:30, end:60}, {name:"İkizler", start:60, end:90}, {name:"Yengeç", start:90, end:120}, {name:"Aslan", start:120, end:150}, {name:"Başak", start:150, end:180}, {name:"Terazi", start:180, end:210}, {name:"Akrep", start:210, end:240}, {name:"Yay", start:240, end:270}, {name:"Oğlak", start:270, end:300}, {name:"Kova", start:300, end:330}, {name:"Balık", start:330, end:360} ]; } for (let i = 0; i < boundaries.length; i++) { const b = boundaries[i]; if (b.start < b.end) { if (absDeg >= b.start && absDeg < b.end) return calculateDetails(absDeg, b.start, b.name); } else { if (absDeg >= b.start || absDeg < b.end) return calculateDetails(absDeg, b.start, b.name); } } return { signName: "Bilinmeyen", deg: 0, min: 0 }; }
         
         let houseOverflowMap = {};
-        function calculateHouseOverflows(planetsByHouse, hBounds) { const DEG_PER_PLANET = 6.0; houseOverflowMap = {}; for(let i=1; i<=12; i++) { let housePlanets = planetsByHouse[i] || []; let count = housePlanets.length; if (count === 0) continue; let bounds = hBounds[i-1]; let houseWidth = (bounds.end - bounds.start + 360) % 360; let requiredWidth = count * DEG_PER_PLANET; if (requiredWidth > houseWidth) { let extraSpace = requiredWidth - houseWidth + 2.0; houseOverflowMap[i] = extraSpace; } else { houseOverflowMap[i] = 0; } } }
+        function calculateHouseOverflows(planetsByHouse, hBounds) { const DEG_PER_PLANET = 8.0; houseOverflowMap = {}; for(let i=1; i<=12; i++) { let housePlanets = planetsByHouse[i] || []; let count = housePlanets.length; if (count === 0) continue; let bounds = hBounds[i-1]; let houseWidth = (bounds.end - bounds.start + 360) % 360; let requiredWidth = count * DEG_PER_PLANET; if (requiredWidth > houseWidth) { let extraSpace = requiredWidth - houseWidth + 2.0; houseOverflowMap[i] = extraSpace; } else { houseOverflowMap[i] = 0; } } }
 
-        function drawHouses(hBounds) { const houses = chartData.houses; if (!houses) return []; svg.appendChild(createSvgElement('circle', { cx: cx, cy: cy, r: R_INNER_RING, fill: 'none', class: 'chart-line' })); if (!hBounds) { hBounds = []; for (let i = 1; i <= 12; i++) { const s = houses[`CUSP${i}`]; const e = houses[`CUSP${(i % 12) + 1}`]; if (s !== undefined) hBounds.push({ id: i, start: s, end: e }); } } for (let i = 1; i <= 12; i++) { const cuspDeg = houses[`CUSP${i}`]; if (cuspDeg === undefined) continue; const nextCusp = houses[`CUSP${(i % 12) + 1}`]; let overflow = houseOverflowMap[i] || 0; if (overflow > 0) { let pStart = getCoords(R_INNER_RING, cuspDeg); let pMidIn = getCoords(150, cuspDeg); let shiftedAngle = (cuspDeg - overflow + 360) % 360; let pMidOut = getCoords(150, shiftedAngle); let pEnd = getCoords(R_ZODIAC_INNER, shiftedAngle); let d = `M ${pStart.x} ${pStart.y} L ${pMidIn.x} ${pMidIn.y} L ${pMidOut.x} ${pMidOut.y} L ${pEnd.x} ${pEnd.y}`; svg.appendChild(createSvgElement('path', { d: d, class: 'house-cusp-stepped' })); } else { const p1 = getCoords(0, cuspDeg); const p2 = getCoords(R_ZODIAC_INNER, cuspDeg); svg.appendChild(createSvgElement('line', { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, class: 'house-cusp' })); } let diff = (nextCusp - cuspDeg + 360) % 360; let midAngle = (cuspDeg + diff / 2) % 360; if (getAngleDiff(cuspDeg, nextCusp) > 180) midAngle = (cuspDeg + diff / 2 + 180) % 360; const pLabelCoords = getCoords(R_HOUSE_LABELS, midAngle); const labelEl = createSvgElement('text', { x: pLabelCoords.x, y: pLabelCoords.y, class: 'house-label', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); labelEl.textContent = i; svg.appendChild(labelEl); const degreeInfo = getRelativeDegreeJS(cuspDeg); const signImageUrl = ZODIAC_IMAGE_MAP[degreeInfo.signName]; const mInt = degreeInfo.min; const minStr = (mInt < 10 ? '0' + mInt : '' + mInt); const pCuspSign = getCoords(R_CUSP_SYMBOL_CENTER, cuspDeg); const rotatedAngle = (cuspDeg - ascDegree + 360) % 360; const visualAngleRad = (-rotatedAngle + 180) * (Math.PI / 180); const perpAngleRad = visualAngleRad + (Math.PI / 2); const dx = CUSP_TEXT_OFFSET * Math.cos(perpAngleRad); const dy = CUSP_TEXT_OFFSET * Math.sin(perpAngleRad); let pCuspDegree, pCuspMinute; if (rotatedAngle > 180) { pCuspDegree = { x: pCuspSign.x - dx, y: pCuspSign.y - dy }; pCuspMinute = { x: pCuspSign.x + dx, y: pCuspSign.y + dy }; } else { pCuspDegree = { x: pCuspSign.x + dx, y: pCuspSign.y + dy }; pCuspMinute = { x: pCuspSign.x - dx, y: pCuspSign.y - dy }; } const cuspDegreeEl = createSvgElement('text', { x: pCuspDegree.x, y: pCuspDegree.y, class: 'cusp-degree', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); cuspDegreeEl.textContent = degreeInfo.deg + '°'; svg.appendChild(cuspDegreeEl); const cuspMinuteEl = createSvgElement('text', { x: pCuspMinute.x, y: pCuspMinute.y, class: 'cusp-minute', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); cuspMinuteEl.textContent = minStr + "'"; svg.appendChild(cuspMinuteEl); if (signImageUrl) { const cuspSignEl = createSvgElement('image', { href: signImageUrl, x: pCuspSign.x - (CUSP_SIGN_SYMBOL_SIZE/2), y: pCuspSign.y - (CUSP_SIGN_SYMBOL_SIZE/2), width: CUSP_SIGN_SYMBOL_SIZE, height: CUSP_SIGN_SYMBOL_SIZE }); svg.appendChild(cuspSignEl); } } return hBounds; }
+        function drawHouses(hBounds) { const houses = chartData.houses; if (!houses) return []; svg.appendChild(createSvgElement('circle', { cx: cx, cy: cy, r: R_INNER_RING, fill: 'none', stroke: '#ff0000', 'stroke-width': '1', class: 'chart-line' })); if (!hBounds) { hBounds = []; for (let i = 1; i <= 12; i++) { const s = houses[`CUSP${i}`]; const e = houses[`CUSP${(i % 12) + 1}`]; if (s !== undefined) hBounds.push({ id: i, start: s, end: e }); } } for (let i = 1; i <= 12; i++) { const cuspDeg = houses[`CUSP${i}`]; if (cuspDeg === undefined) continue; const nextCusp = houses[`CUSP${(i % 12) + 1}`]; let overflow = houseOverflowMap[i] || 0; if (overflow > 0) { let pStart = getCoords(R_INNER_RING, cuspDeg); let pMidIn = getCoords(150, cuspDeg); let shiftedAngle = (cuspDeg - overflow + 360) % 360; let pMidOut = getCoords(150, shiftedAngle); let pEnd = getCoords(R_ZODIAC_INNER, shiftedAngle); let d = `M ${pStart.x} ${pStart.y} L ${pMidIn.x} ${pMidIn.y} L ${pMidOut.x} ${pMidOut.y} L ${pEnd.x} ${pEnd.y}`; svg.appendChild(createSvgElement('path', { d: d, class: 'house-cusp-stepped' })); } else { const p1 = getCoords(0, cuspDeg); const p2 = getCoords(R_ZODIAC_INNER, cuspDeg); svg.appendChild(createSvgElement('line', { x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y, class: 'house-cusp' })); } let diff = (nextCusp - cuspDeg + 360) % 360; let midAngle = (cuspDeg + diff / 2) % 360; if (getAngleDiff(cuspDeg, nextCusp) > 180) midAngle = (cuspDeg + diff / 2 + 180) % 360; const pLabelCoords = getCoords(R_HOUSE_LABELS, midAngle); const labelEl = createSvgElement('text', { x: pLabelCoords.x, y: pLabelCoords.y, class: 'house-label', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); labelEl.textContent = i; svg.appendChild(labelEl); const degreeInfo = getRelativeDegreeJS(cuspDeg); const signImageUrl = ZODIAC_IMAGE_MAP[degreeInfo.signName]; const mInt = degreeInfo.min; const minStr = (mInt < 10 ? '0' + mInt : '' + mInt); const pCuspSign = getCoords(R_CUSP_SYMBOL_CENTER, cuspDeg); const rotatedAngle = (cuspDeg - ascDegree + 360) % 360; const visualAngleRad = (-rotatedAngle + 180) * (Math.PI / 180); const perpAngleRad = visualAngleRad + (Math.PI / 2); const dx = CUSP_TEXT_OFFSET * Math.cos(perpAngleRad); const dy = CUSP_TEXT_OFFSET * Math.sin(perpAngleRad); let pCuspDegree, pCuspMinute; if (rotatedAngle > 180) { pCuspDegree = { x: pCuspSign.x - dx, y: pCuspSign.y - dy }; pCuspMinute = { x: pCuspSign.x + dx, y: pCuspSign.y + dy }; } else { pCuspDegree = { x: pCuspSign.x + dx, y: pCuspSign.y + dy }; pCuspMinute = { x: pCuspSign.x - dx, y: pCuspSign.y - dy }; } const cuspDegreeEl = createSvgElement('text', { x: pCuspDegree.x, y: pCuspDegree.y, class: 'cusp-degree', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); cuspDegreeEl.textContent = degreeInfo.deg + '°'; svg.appendChild(cuspDegreeEl); const cuspMinuteEl = createSvgElement('text', { x: pCuspMinute.x, y: pCuspMinute.y, class: 'cusp-minute', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); cuspMinuteEl.textContent = minStr + "'"; svg.appendChild(cuspMinuteEl); if (signImageUrl) { const cuspSignEl = createSvgElement('image', { href: signImageUrl, x: pCuspSign.x - (CUSP_SIGN_SYMBOL_SIZE/2), y: pCuspSign.y - (CUSP_SIGN_SYMBOL_SIZE/2), width: CUSP_SIGN_SYMBOL_SIZE, height: CUSP_SIGN_SYMBOL_SIZE }); svg.appendChild(cuspSignEl); } } return hBounds; }
         
         function drawSingleChartPlanets() { const planets = chartData.planets; const stars = chartData.fixed_stars || {}; let hBounds = []; for(let i=1; i<=12; i++) { let s = chartData.houses['CUSP'+i]; let e = chartData.houses['CUSP'+(i%12+1)]; if(s!==undefined) hBounds.push({id:i, start:s, end:e}); } let planetsByHouse = {}; for(let i=1; i<=12; i++) planetsByHouse[i] = []; for (const name of Object.keys(planets)) { const p_data = planets[name]; if (!PLANET_IMAGE_MAP[name]) continue; const houseNumber = parseInt(p_data[6], 10); planetsByHouse[houseNumber].push({ name, p_data, visualDeg: p_data[0], realDeg: p_data[0], type: 'planet', houseNum: houseNumber }); } calculateHouseOverflows(planetsByHouse, hBounds); drawHouses(hBounds); const planetsGroup = createSvgElement('g', { id: 'planets-group' }); svg.appendChild(planetsGroup); for (let i = 1; i <= 12; i++) { let housePlanets = planetsByHouse[i]; if (housePlanets.length === 0) continue; let bounds = hBounds[i-1]; let overflow = houseOverflowMap[i] || 0; let visualStart = (bounds.start - overflow + 360) % 360; let totalVisualWidth = ((bounds.end - bounds.start + 360) % 360) + overflow; housePlanets.sort((a, b) => a.realDeg - b.realDeg); let padding = 5.0; let step = (totalVisualWidth - (2 * padding)) / (housePlanets.length > 1 ? housePlanets.length - 1 : 1); if (housePlanets.length === 1) { housePlanets[0].visualDeg = (visualStart + totalVisualWidth / 2) % 360; } else { housePlanets.forEach((p, idx) => { p.visualDeg = (visualStart + padding + (idx * step)) % 360; }); } housePlanets.forEach(p => drawSinglePlanetDetailed(p, planetsGroup, R_PLANETS_AVG, false)); } }
         
-        function drawSinglePlanetDetailed(item, container, radius, forceGuideline) { const { name, p_data, visualDeg, realDeg, type } = item; const rx = p_data[5]; const signName = p_data[3]; const signImageUrl = ZODIAC_IMAGE_MAP[signName]; const planetGroup = createSvgElement('g', { class: 'planet-group', style: 'cursor: pointer;' }); container.appendChild(planetGroup); const pImage = getCoords(radius, visualDeg); if (Math.abs(getAngleDiff(visualDeg, realDeg)) > 3.0) { const pReal = getCoords(R_INNER_RING, realDeg); const pVis = getCoords(radius, visualDeg); const line = createSvgElement('line', { x1: pReal.x, y1: pReal.y, x2: pVis.x, y2: pVis.y, class: 'guideline' }); container.insertBefore(line, container.firstChild); } if (type === 'planet' && PLANET_IMAGE_MAP[name]) { const imageUrl = PLANET_IMAGE_MAP[name]; const imageEl = createSvgElement('image', { href: imageUrl, x: pImage.x - (SYMBOL_SIZE/2), y: pImage.y - (SYMBOL_SIZE/2), width: SYMBOL_SIZE, height: SYMBOL_SIZE }); planetGroup.appendChild(imageEl); } const degText = p_data[4]; let degStr = '0°'; let minStr = "00'"; if (degText && degText.includes('°')) { const parts = degText.split('°'); degStr = parts[0].trim() + '°'; if (parts.length > 1 && parts[1].trim()) { minStr = parts[1].trim(); if (!minStr.includes("'")) minStr += "'"; } } const pDegree = getCoords(R_PLANET_DEGREES, visualDeg); const degreeEl = createSvgElement('text', { x: pDegree.x, y: pDegree.y, class: 'planet-degree', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); degreeEl.textContent = degStr; planetGroup.appendChild(degreeEl); if (signImageUrl) { const pSign = getCoords(R_PLANET_SIGN, visualDeg); const signImageEl = createSvgElement('image', { href: signImageUrl, x: pSign.x - (PLANET_SIGN_SYMBOL_SIZE/2), y: pSign.y - (PLANET_SIGN_SYMBOL_SIZE/2), width: PLANET_SIGN_SYMBOL_SIZE, height: PLANET_SIGN_SYMBOL_SIZE }); svg.appendChild(signImageEl); } const pMinute = getCoords(R_PLANET_MINUTE, visualDeg); const minuteEl = createSvgElement('text', { x: pMinute.x, y: pMinute.y, class: 'planet-minute', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); minuteEl.textContent = minStr; planetGroup.appendChild(minuteEl); if (rx) { const pRetro = getCoords(R_PLANET_RETRO, visualDeg); const retroEl = createSvgElement('text', { x: pRetro.x, y: pRetro.y, class: 'planet-retrograde', 'text-anchor': 'middle', 'dominant-baseline': 'middle' }); retroEl.textContent = rx; planetGroup.appendChild(retroEl); } }
+        function drawSinglePlanetDetailed(item, container, radius, forceGuideline) { 
+    const { name, p_data, visualDeg, realDeg, type } = item; 
+    const rx = p_data[5]; 
+    const signName = p_data[3]; 
+    const signImageUrl = ZODIAC_IMAGE_MAP[signName]; 
+    const planetGroup = createSvgElement('g', { class: 'planet-group', style: 'cursor: pointer;' }); 
+    container.appendChild(planetGroup); 
+    
+    const pImage = getCoords(radius, visualDeg); 
 
+    // Çizgi çeken (guideline) if bloğu buradan kaldırıldı.
+
+    if (type === 'planet' && PLANET_IMAGE_MAP[name]) { 
+        const imageUrl = PLANET_IMAGE_MAP[name]; 
+        const imageEl = createSvgElement('image', { 
+            href: imageUrl, 
+            x: pImage.x - (SYMBOL_SIZE/2), 
+            y: pImage.y - (SYMBOL_SIZE/2), 
+            width: SYMBOL_SIZE, 
+            height: SYMBOL_SIZE 
+        }); 
+        planetGroup.appendChild(imageEl); 
+    } 
+    
+    const degText = p_data[4]; 
+    let degStr = '0°'; 
+    let minStr = "00'"; 
+    if (degText && degText.includes('°')) { 
+        const parts = degText.split('°'); 
+        degStr = parts[0].trim() + '°'; 
+        if (parts.length > 1 && parts[1].trim()) { 
+            minStr = parts[1].trim(); 
+            if (!minStr.includes("'")) minStr += "'"; 
+        } 
+    } 
+    
+    const pDegree = getCoords(R_PLANET_DEGREES, visualDeg); 
+    const degreeEl = createSvgElement('text', { 
+        x: pDegree.x, 
+        y: pDegree.y, 
+        class: 'planet-degree', 
+        'text-anchor': 'middle', 
+        'dominant-baseline': 'middle' 
+    }); 
+    degreeEl.textContent = degStr; 
+    planetGroup.appendChild(degreeEl); 
+
+    if (signImageUrl) { 
+        const pSign = getCoords(R_PLANET_SIGN, visualDeg); 
+        const signImageEl = createSvgElement('image', { 
+            href: signImageUrl, 
+            x: pSign.x - (PLANET_SIGN_SYMBOL_SIZE/2), 
+            y: pSign.y - (PLANET_SIGN_SYMBOL_SIZE/2), 
+            width: PLANET_SIGN_SYMBOL_SIZE, 
+            height: PLANET_SIGN_SYMBOL_SIZE 
+        }); 
+        svg.appendChild(signImageEl); 
+    } 
+    
+    const pMinute = getCoords(R_PLANET_MINUTE, visualDeg); 
+    const minuteEl = createSvgElement('text', { 
+        x: pMinute.x, 
+        y: pMinute.y, 
+        class: 'planet-minute', 
+        'text-anchor': 'middle', 
+        'dominant-baseline': 'middle' 
+    }); 
+    minuteEl.textContent = minStr; 
+    planetGroup.appendChild(minuteEl); 
+
+    if (rx) { 
+        const pRetro = getCoords(R_PLANET_RETRO, visualDeg); 
+        const retroEl = createSvgElement('text', { 
+            x: pRetro.x, 
+            y: pRetro.y, 
+            class: 'planet-retrograde', 
+            'text-anchor': 'middle', 
+            'dominant-baseline': 'middle' 
+        }); 
+        retroEl.textContent = rx; 
+        planetGroup.appendChild(retroEl); 
+    } 
+}
         if (chartData) { drawZodiac(); drawSingleChartPlanets(); }
+
+        // Sayfa yüklendiğinde klasör durumlarını geri yükle
+document.addEventListener("DOMContentLoaded", function() {
+    // Kayıtlı durumları al
+    const openFolders = JSON.parse(localStorage.getItem('openFolders') || '[]');
+    
+    // Her bir klasörü kontrol et, listede varsa aç
+    document.querySelectorAll('details').forEach((details, index) => {
+        if (openFolders.includes(index)) {
+            details.open = true;
+        }
+    });
+
+    // Klasör açılıp kapandığında durumu kaydet
+    document.querySelectorAll('details').forEach((details, index) => {
+        details.addEventListener('toggle', function() {
+            let currentOpen = JSON.parse(localStorage.getItem('openFolders') || '[]');
+            if (details.open) {
+                if (!currentOpen.includes(index)) currentOpen.push(index);
+            } else {
+                currentOpen = currentOpen.filter(i => i !== index);
+            }
+            localStorage.setItem('openFolders', JSON.stringify(currentOpen));
+        });
+    });
+});
+
     {% endif %}
 </script>
 
@@ -336,15 +440,15 @@
     /* GENEL KONTEYNER VE ŞEFFAFLIK */
     .library-container {
         display: flex;
-        background: rgba(255, 255, 255, 0.178) !important; /* Şeffaf arka plan */
-        backdrop-filter: blur(10px); /* Arkadaki içeriği hafif bulandırır, daha şık durur */
+        background: rgba(0, 0, 0, 0);
+        border: 1px solid rgba(0, 0, 0, 0.904) !important;
+        border-radius: 0px;
+        backdrop-filter: blur(10px);  
         position: fixed;
-        top: 55px;
-        bottom: 15px;
+        top: 62px;
+        bottom: 10px;
         left: 5px;
         right: 5px;
-        border: 1px solid #dcdcdc;
-        border-radius: 0px;
         overflow: hidden;
         box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         z-index: 1;
@@ -352,12 +456,9 @@
 
     /* SOL PANEL (SIDEBAR) */
     .library-sidebar {
-        width: 210px;
-        min-width: 210px;
-        background: rgba(209, 209, 209, 0.199) !important;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        width: 290px;
+        min-width: 290px;
+        background: transparent !important; /* Sidebar renginden bir ton koyu, daha belirgin */
         display: flex;
         flex-direction: column;
         flex-shrink: 0;
@@ -373,27 +474,29 @@
         cursor: pointer; 
         font-weight: bold; 
         font-size: 13px; 
-        color: #2c3e50; 
+        color: #000000de; 
         display: flex; 
         align-items: center; 
         gap: 10px; 
     }
 
-    /* HARİTA PANELİ (SOL İÇ TARAF) */
     .profile-card-sticky {
-        width: 500px;
-        min-width: 500px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        position: sticky;
-        top: 0;
-        padding: 25px 20px;
-        margin-left: 0 !important; /* Sidebar ile çakışmayı sıfırla */
-        background: rgba(255, 255, 255, 0.50) !important; /* Harita arkası şeffaf beyaz */
-        border-right: 1px solid rgba(0,0,0,0.05);
-        z-index: 10;
-    }
+    width: 510px;
+    min-width: 510px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;      /* Yatayda (ortada) tutar */
+    justify-content: flex-end; /* İçindeki her şeyi en alta iter */
+    position: sticky;
+    top: 0;
+    padding-top: 20px;
+    padding-right: 10px;
+    padding-bottom: 0px;
+    padding-left: 10px;
+    background: rgba(0, 0, 0, 0.158) !important;
+    border: 2px solid rgb(255, 255, 255) !important;
+    z-index: 10;
+}
 
     /* ÜST BÖLÜM HİZALAMA (İSİM SOLDA, BUTON SAĞDA) */
     .header-row {
@@ -407,8 +510,9 @@
     .chart-title { 
         margin: 0; 
         font-size: 22px; 
-        color: #490909; 
-        font-weight: 800; 
+        color: #f8f8f8; 
+        font-weight: 800;
+        margin-left: 5px !important;
     }
 
     /* DOĞUM BİLGİLERİ */
@@ -417,19 +521,31 @@
         display: flex; 
         justify-content: flex-start; 
         gap: 12px; 
-        font-size: 11px; 
-        color: #000000f1; 
-        margin-bottom: 30px; /* Haritayı aşağı itmek için boşluk artırıldı */
+        font-size: 13px; 
+        color: #dbd4d4f1; 
+        margin-bottom: 20px; /* Haritayı aşağı itmek için boşluk artırıldı */
+        margin-left: 5px !important;
     }
 
     /* HARİTA KUTUSU VE KONUMU */
-    .chart-wheel-box {
-        width: 100% !important;
-        max-width: 450px; 
-        aspect-ratio: 1 / 1;
-        margin-top: 20px; /* Haritayı biraz daha aşağı aldık */
-        background: transparent !important; /* Arka planı şeffaf yaptık */
-    }
+.chart-wheel-box {
+    width: 100% !important;
+    max-width: 500px; /* Panelin genişliğine (600px) uyum sağlaması için artırdık */
+    aspect-ratio: 1 / 1;
+    
+    /* DİKEYDE EN ALTA İTMEK İÇİN: */
+    margin-top: auto;   /* Üstteki tüm boşluğu doldurur ve kutuyu aşağı iter */
+    margin-bottom: 1px !important; /* En alta tamamen sıfır yapışmasın diye küçük pay */
+    
+    /* YATAYDA ORTALAMAK İÇİN: */
+    margin-left: auto;
+    margin-right: auto;
+    
+    background: transparent !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
     #astroChart {
         width: 100% !important;
@@ -475,30 +591,282 @@
 
     /* DİĞER CSS ÖZELLİKLERİ (DEĞİŞMEDİ) */
     .main-category { border-bottom: 1px solid #8b8b8b36; margin-bottom: 2px; }
-    .main-summary::-webkit-details-marker { display: none; }
-    .main-content { padding-left: 5px; display: flex; flex-direction: column; }
+    /* Klasör başlıklarını (Summary) kutu haline getiriyoruz */
+.main-summary {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px !important;
+    margin-bottom: 5px !important;
+    background: rgb(140, 70, 30) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 0px !important;
+    cursor: pointer;
+    font-size: 12px !important;
+    transition: all 0.2s ease;
+    list-style: none !important; /* Varsayılan oku gizle */
+}
+
+.folder-level-1 summary {
+    display: flex !important;
+    align-items: center;
+    justify-content: center; 
+    gap: 10px;
+    width: 180px !important;
+    min-width: 180px;
+    
+    /* SAĞA YASLAMA KURALI: */
+    margin-left: auto !important;   /* Sol boşluğu otomatik yaparak sağa iter */
+    margin-right: 5px !important;  /* Sağ kenara tamamen yapışmaması için küçük bir boşluk */
+    
+    padding: 10px 12px !important;
+    margin-bottom: 5px !important;
+    background: rgba(241, 178, 142, 0.829) !important;
+    backdrop-filter: blur(5px) !important;
+    color: #000000 !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 20px !important;
+    font-weight: 500 !important;
+    cursor: pointer;
+    font-size: 12px !important;
+    transition: all 0.2s ease;
+    list-style: none !important;
+}
+
+.folder-level-2 summary {
+    display: flex !important;
+    align-items: center;
+    justify-content: center; 
+    gap: 10px;
+    width: 150px !important;
+    min-width: 150px;
+
+    /* SAĞA YASLAMA KURALI: */
+    margin-left: auto !important;   /* Sol boşluğu otomatik yaparak sağa iter */
+    margin-right: 5px !important;  /* Sağ kenara tamamen yapışmaması için küçük bir boşluk */
+    
+    padding: 10px 12px !important;
+    margin-bottom: 5px !important;
+    background: rgba(255, 211, 185, 0.863) !important;
+    backdrop-filter: blur(5px) !important;
+    color: #000000 !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 20px !important;
+    font-weight: 500 !important;
+    cursor: pointer;
+    font-size: 12px !important;
+    transition: all 0.2s ease;
+    list-style: none !important;
+}
+
+/* --- 1. ANA SUMMARY (Tüm Haritalar / Yükselene Göre) --- */
+.main-summary {
+    transition: all 0.3s ease;
+}
+.main-summary:hover {
+    background: rgba(255, 255, 255, 0) !important;
+    color: rgba(255, 255, 255, 1) !important;
+    text-shadow: 0px 0px 8px #fff !important;
+}
+
+/* Hover Hali */
+.folder-level-1 > summary:hover {
+    background: rgba(202, 131, 90, 0.829) !important;
+    color: #000 !important;
+    transform: translateX(8px);
+    display: inline-flex; /* transformun çalışması için gerekli */
+}
+/* AÇIK (Seçili) Hali */
+details.folder-level-1[open] > summary {
+    background: rgba(202, 131, 90, 0.829) !important;
+    color: #000 !important;
+    transform: translateX(8px);
+    display: inline-flex; /* transformun çalışması için gerekli */
+    font-weight: bold;
+}
+
+/* Hover Hali */
+.folder-level-2 > summary:hover {
+    background: rgba(248, 194, 162, 0.788) !important;
+    transform: translateX(15px);
+    color: #000 !important;
+}
+/* AÇIK (Seçili) Hali */
+details.folder-level-2[open] > summary {
+    background: rgba(248, 194, 162, 0.788) !important;
+    color: #000 !important;
+    border: 1px solid rgba(0,0,0,0.1) !important;
+    transform: translateX(15px);
+    display: inline-flex; /* transformun çalışması için gerekli */
+}
+
+/* Genel summary oku gizleme */
+summary::-webkit-details-marker,
+summary::marker {
+    display: none;
+}
+
+/* Klasör açıkken rengini değiştirelim */
+details[open] > summary {
+    background: rgb(140, 70, 30) !important;
+    color: #f8f8f8 !important;
+}
+    .main-content { padding-left: 5px; padding: 5px !important; display: flex; flex-direction: column; }
     .filter-row { display: flex; gap: 10px; align-items: center; background: #00000079; padding: 10px; border-radius: 0px; }
     .library-container.sidebar-closed .library-sidebar { width: 0; border-right: none; padding: 0; }
-    #lib-toggle { width: 18px; background: #00000079; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border-right: 1px solid #ffffff; font-size: 10px; transition: background 0.2s; }
-    #lib-toggle:hover { background: #b3ec8dad; color: white; }
-    .sidebar-header { padding: 12px 10px; background: #000000b7; font-weight: 700; color: #ffffff; border-bottom: none; font-size: 11px; text-transform: uppercase; height: 45px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-    .sidebar-tree { flex: 1; width: 100% !important; overflow-x: hidden; /* Yatay taşmayı kapat */ padding: 8px; width: 220px; }
+    /* Sidebar Açma-Kapama Butonu */
+#lib-toggle { 
+    width: 20px; /* Biraz genişlettik */
+    background: rgb(140, 70, 30) !important;
+    color: rgb(255, 255, 255); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    cursor: pointer; 
+    border-right: 1px solid rgb(140, 70, 30) !important;
+    border-left: 1px solid rgb(140, 70, 30) !important;
+    font-size: 11px; 
+    transition: all 0.3s ease; 
+    z-index: 100;
+}
+
+/* Hover durumunda buton rengi */
+#lib-toggle:hover { 
+    background: transparent !important;
+    border-right: 1px solid rgba(0, 0, 0, 0);
+    border-left: 1px solid rgba(0, 0, 0, 0); 
+    color: #fff; 
+}
+
+/* Sidebar İçerik Alanı */
+.sidebar-tree { 
+    flex: 1; 
+    width: 290px !important; /* Genişlettiğimiz yeni ölçü */
+    background: transparent !important; /* Sidebar renginden bir ton koyu, daha belirgin */
+    overflow-x: hidden; 
+    overflow-y: auto; /* Dikey kaydırma aktif */
+    padding: 8px; 
+    box-sizing: border-box;
+}
     .btn-open-active { background-color: #27ae60; color: white; text-decoration: none; font-size: 10px; font-weight: bold; padding: 6px 12px; border-radius: 0px; white-space: nowrap; display: flex; align-items: center; gap: 5px; transition: background 0.2s; }
+    .btn-open-active:hover {
+    background: #27ae5f00 !important;
+    text-shadow: #0000009d 0px 0px 4px !important;
+    color: rgba(0, 0, 0, 0.87) !important;
+    }
     .bio-header-row { border-bottom: 2px solid #f0f2f5; margin-bottom: 20px; padding-bottom: 10px; }
-    .bio-title { font-size: 22px; color: #630b08; font-weight: 700; display: flex; align-items: center; }
+    .bio-title { font-size: 22px; color: #fafafa !important; font-weight: 700; display: flex; align-items: center; }
     .bio-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 25px; }
     .gallery-item { height: 120px; border-radius: 8px; overflow: hidden; border: 1px solid #eee; cursor: pointer; transition: transform 0.2s; }
     .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
-    .story-text { font-size: 15px; line-height: 1.8; color: #444; text-align: justify; }
-    .chart-link { display: block; padding: 6px 8px; font-size: 12px; color: #666; text-decoration: none; border-radius: 4px; margin-bottom: 2px; }
-    .chart-link.active { background: #3498db; color: #fff; font-weight: bold; }
-    details summary { list-style: none; cursor: pointer; padding: 5px; border-radius: 4px; font-size: 12px; font-weight: 600; color: #444; }
-    .chart-line { stroke: #e0e0e0; stroke-width: 1 !important; }
-    .house-cusp { stroke: #d0d0d0; stroke-width: 1 !important; }
-    .house-label { font-size: 8px; fill: #706f6f;}
-    .planet-degree { font-size: 10px; fill: #333;}
+    .story-text { font-size: 15px; line-height: 1.8; color: #fafafa !important; text-align: justify; }
+    
+    /* SVG içindeki TÜM çizgileri (daire ve ev çizgileri) kapsar */
+#astroChart circle, 
+#astroChart line, 
+#astroChart path,
+#astroChart > circle {
+    stroke: #030303b2 !important;   /* Hepsi aynı renk */
+    stroke-width: 1px !important; /* Hepsi aynı incelik */
+}
+    .house-label { font-size: 8px; fill: #3b3b3ba6 !important}
+    .planet-degree { font-size: 10px; fill: #272727;}
     .planet-minute { font-size: 9px; fill: #666;}
-    .cusp-degree { font-size: 9px; fill: #777; }
+    .cusp-degree { font-size: 9.2px; fill: #202020 !important }
+    .cusp-minute { font-size: 9px; fill: #777 !important }
+
+    /* Kişi Listesi Kutu Tasarımı */
+.chart-link {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px !important; /* Kutunun iç genişliği */
+    margin-bottom: 8px !important; /* Kutular arası boşluk */
+    background: rgba(248, 194, 162, 0) !important;
+    color: #fcfcfc !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 0px !important;
+    text-decoration: none !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+/* Üzerine gelince kutunun rengi değişsin */
+.chart-link:hover {
+    background: rgba(0, 0, 0, 0.363) !important;
+    color: #eeeeee !important;
+    text-shadow: #e0e0e0 0px 0px 4px !important;
+    border-color: #00000000 !important;
+    transform: translateX(8px);
+    display: inline-flex; /* transformun çalışması için gerekli */
+}
+
+/* Aktif (Seçili) Kişi Kutusu */
+.chart-link.active {
+    background: rgba(0, 0, 0, 0.363) !important;
+    color: #eeeeee !important;
+    text-shadow: #e0e0e0 0px 0px 4px !important;
+    border-color: #00000000 !important;
+    font-weight: bold !important;
+    transform: translateX(8px);
+    display: inline-flex; /* transformun çalışması için gerekli */
+}
+
+/* Kutu içindeki ikonların rengi */
+.chart-link i {
+    font-size: 14px;
+    color: inherit;
+}
+
+.btn-advanced-search {
+    width: 100%;
+    background: #27ae5f00 !important;
+    border: 1px solid #27ae5f00 !important;
+    padding: 8px !important;
+    border-radius: 0px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #fcfcfc !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    margin-top: 7px !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.329) !important;
+    margin-bottom: 5px;
+}
+
+.btn-advanced-search:hover {
+    background: #27ae5f00 !important;
+    border:none !important;
+    text-shadow: #e0e0e0 0px 0px 4px !important;
+    color: #ffffff !important;
+}
+
+.btn-advanced-search i {
+    color: rgb(255, 255, 255) !important;
+    font-size: 14px;
+}
+
+/* Genişleyen ev çizgilerinin içindeki siyah dolguyu kaldırır */
+.house-cusp-stepped {
+    fill: none !important;      /* İşte o siyahlığı silen komut bu! */
+    stroke: #030303b2 !important; /* Çizginin kendisi kalsın */
+    stroke-width: 1px !important;
+}
+
+.planet-retrograde {
+    font-size: 9px !important;        /* R harfinin büyüklüğü */
+    font-weight: bold !important;      /* Daha kalın görünmesi için */
+    fill: #770a0a !important;           /* Genelde retro dikkat çeksin diye kırmızı yapılır */
+    font-family: Arial, sans-serif !important;   /* Yazı tipi */
+}
+
 </style>
 
 {% endblock %}
