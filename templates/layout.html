@@ -16,8 +16,32 @@
         box-sizing: border-box; 
     }
 
-    .video-overlay { 
-        display: none; 
+    /* --- EKRAN KARARMASINI ÇÖZEN KODLAR --- */
+
+    /* 1. Varsa eski video açılış ekranını tamamen yok et */
+    .video-overlay, #intro-video, .overlay {
+        display: none !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        z-index: -9999 !important;
+    }
+
+    /* 2. Login sayfasından kalan siyah katman varsa sil */
+    body::before {
+        content: none !important;
+        display: none !important;
+    }
+
+    /* 3. Modal perdeleri (sadece modal açıkken görünsün diye sıfırla) */
+    .modal-overlay {
+        /* display: none;  <-- Bunu yaparsak modallar hiç açılmaz */
+        /* Sadece başlangıçta görünmemesini garantiye alıyoruz: */
+        z-index: 2000; /* Sadece gerektiğinde üste çıksın */
+    }
+
+    /* 4. Arka planın siyah kalmasını engelle, açık renk yap */
+    html, body {
+        background-color: #f1f5f9 !important; 
     }
 
     html, body { 
@@ -3127,3 +3151,4 @@ function drawSynastryRingDetailed(planets, isOuter) {
 
 </body>
 </html>
+
