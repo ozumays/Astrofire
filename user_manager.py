@@ -1,201 +1,208 @@
-# user_manager.py (DÜZELTİLMİŞ VERSİYON)
-import json
+# user_manager.py (MONGODB ATLAS ENTEGRE EDİLMİŞ VERSİYON)
 import os
-import traceback 
-import datetime 
-import re # Email kontrolü için
+import re
+import datetime
 import random
+import traceback
+from pymongo import MongoClient
+import certifi
 
-# --- Numpy Kontrolü ---
+# ============================================================================
+# 🔌 MONGODB ATLAS BAĞLANTISI
+# ============================================================================
+# web_app.py içindeki URI ile aynısını kullanıyoruz
+MONGO_URI = "mongodb+srv://ozumays:26674424140@cluster0.8ptsdi0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+
 try:
-    import numpy as np
-except ImportError:
-    np = None 
+    # SSL Sertifika hatasını önlemek için certifi kullanıyoruz
+    client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
+    db = client['AstrofireDB']
+    users_col = db['users']  # Tüm kullanıcı verileri burada tutulacak
+    print("✅ user_manager: MongoDB Atlas bağlantısı başarılı.")
+except Exception as e:
+    print(f"❌ user_manager: MongoDB Bağlantı Hatası: {e}")
 
-# --- Sabitler ---
-USER_REGISTRY_FILE = "users.json"
-USER_ARCHIVE_FILE = "user_archive.json"
-SESSION_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'flask_session', 'session_data.json')
+# ============================================================================
+# 🛠️ YARDIMCI FONKSİYONLAR
+# ============================================================================
 
-# Global Veri Depoları
-REGISTERED_USERS = {}
-USER_DATA_STORE = {}
-
-# --- YARDIMCI FONKSİYONLAR (Bağımsız çalışması için buraya alındı) ---
 def is_valid_email(email):
     return re.match(r"[^@]+@[^@]+\.[^@]+", email)
 
-# --- Numpy Encoder ---
-class NumpyJSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if np and isinstance(obj, (np.integer, np.int_)):
-            return int(obj)
-        if np and isinstance(obj, (np.floating, np.float_)):
-            return float(obj)
-        if np and isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return super(NumpyJSONEncoder, self).default(obj)
-
-# --- Disk İşlemleri ---
-
+# --- ESKİ DİSK FONKSİYONLARI (Uyumluluk için boş bıraktık) ---
 def save_archive_to_disk():
-    try:
-        with open(USER_REGISTRY_FILE, 'w', encoding='utf-8') as f:
-            json.dump(REGISTERED_USERS, f, ensure_ascii=False, indent=4)
-            
-        with open(USER_ARCHIVE_FILE, 'w', encoding='utf-8') as f:
-            json.dump(USER_DATA_STORE, f, ensure_ascii=False, indent=4, cls=NumpyJSONEncoder)
-    except Exception as e:
-        print(f"KRİTİK HATA: Arşiv kaydedilirken hata: {e}")
+    pass  # Artık MongoDB otomatik kaydediyor, gerek yok.
 
 def load_archive_from_disk():
-    global REGISTERED_USERS, USER_DATA_STORE
-    try:
-        if os.path.exists(USER_REGISTRY_FILE):
-            with open(USER_REGISTRY_FILE, 'r', encoding='utf-8') as f:
-                REGISTERED_USERS = json.load(f)
-        
-        if os.path.exists(USER_ARCHIVE_FILE):
-            with open(USER_ARCHIVE_FILE, 'r', encoding='utf-8') as f:
-                USER_DATA_STORE = json.load(f)
-        
-        print(f"DEBUG: Arşiv yüklendi ({len(REGISTERED_USERS)} kullanıcı).")
-    except Exception as e:
-        print(f"KRİTİK HATA: Arşiv okunurken hata: {e}")
-        REGISTERED_USERS = {}
-        USER_DATA_STORE = {}
+    print("ℹ️ Veriler MongoDB Bulut üzerinden canlı okunuyor.")
 
-# --- KLASÖR YÖNETİMİ ---
+# ============================================================================
+# 📂 KLASÖR VE HARİTA YÖNETİMİ (MONGODB)
+# ============================================================================
 
 def create_new_folder(email, folder_name):
-    if email in USER_DATA_STORE:
-        if 'saved' not in USER_DATA_STORE[email]:
-            USER_DATA_STORE[email]['saved'] = {}
+    """Kullanıcının 'saved' alanına yeni bir klasör anahtarı ekler"""
+    try:
+        # MongoDB'de iç içe objeye dinamik key eklemek için $set kullanıyoruz
+        users_col.update_one(
+            {"email": email},
+            {"$set": {f"saved.{folder_name}": []}}
+        )
+        return True
+    except Exception as e:
+        print(f"Klasör oluşturma hatası: {e}")
+        return False
+
+def save_chart_to_user_data(email, chart_data, category_name="Genel"):
+    """Haritayı ilgili klasöre array olarak ekler ($push)"""
+    try:
+        # ID kontrolü
+        if 'id' not in chart_data or chart_data['id'] is None:
+            chart_data['id'] = random.randint(100000, 999999)
         
-        if folder_name not in USER_DATA_STORE[email]['saved']:
-            USER_DATA_STORE[email]['saved'][folder_name] = []
-            save_archive_to_disk()
-            return True
-    return False
+        # Eğer klasör yoksa oluştur, varsa içine ekle
+        users_col.update_one(
+            {"email": email},
+            {"$push": {f"saved.{category_name}": chart_data}}
+        )
+        return True
+    except Exception as e:
+        print(f"Harita kayıt hatası: {e}")
+        return False
+
+def delete_user_chart(email, category_name, chart_id):
+    """Haritayı array içinden siler ($pull)"""
+    try:
+        # ID'nin integer olduğundan emin olalım
+        chart_id_int = int(chart_id)
+        
+        result = users_col.update_one(
+            {"email": email},
+            {"$pull": {f"saved.{category_name}": {"id": chart_id_int}}}
+        )
+        
+        if result.modified_count > 0:
+            return True, "Silindi"
+        return False, "Bulunamadı"
+    except Exception as e:
+        print(f"Silme hatası: {e}")
+        return False, str(e)
 
 def move_chart_to_folder(email, chart_id, current_folder, target_folder):
-    if email in USER_DATA_STORE and 'saved' in USER_DATA_STORE[email]:
-        saved = USER_DATA_STORE[email]['saved']
+    """Bir klasörden alıp diğerine taşır"""
+    try:
+        user = users_col.find_one({"email": email})
+        if not user or 'saved' not in user: return False
         
-        if current_folder in saved and target_folder in saved:
-            chart_to_move = None
-            chart_index = -1
+        saved = user.get('saved', {})
+        source_list = saved.get(current_folder, [])
+        
+        # Haritayı bul
+        chart_to_move = next((c for c in source_list if str(c.get('id')) == str(chart_id)), None)
+        
+        if chart_to_move:
+            # 1. Eski yerden sil ($pull)
+            users_col.update_one(
+                {"email": email},
+                {"$pull": {f"saved.{current_folder}": {"id": chart_to_move['id']}}}
+            )
             
-            for i, chart in enumerate(saved[current_folder]):
-                if str(chart.get('id')) == str(chart_id):
-                    chart_to_move = chart
-                    chart_index = i
-                    break
+            # 2. Yeni yere ekle ($push)
+            users_col.update_one(
+                {"email": email},
+                {"$push": {f"saved.{target_folder}": chart_to_move}}
+            )
+            return True
             
-            if chart_to_move:
-                saved[current_folder].pop(chart_index)
-                saved[target_folder].insert(0, chart_to_move)
-                save_archive_to_disk()
-                return True
+    except Exception as e:
+        print(f"Taşıma hatası: {e}")
     return False
 
 def get_user_folder_list(email):
-    if email in USER_DATA_STORE and 'saved' in USER_DATA_STORE[email]:
-        return list(USER_DATA_STORE[email]['saved'].keys())
+    user = users_col.find_one({"email": email}, {"saved": 1})
+    if user and 'saved' in user:
+        return list(user['saved'].keys())
     return ["Genel"]
 
-# --- KULLANICI & OTURUM İŞLEMLERİ ---
+def get_user_saved_charts(email):
+    user = users_col.find_one({"email": email}, {"saved": 1})
+    if user and 'saved' in user:
+        return user['saved']
+    return {}
+
+# ============================================================================
+# 👤 KULLANICI İŞLEMLERİ (MONGODB)
+# ============================================================================
 
 def get_user_data_by_email(email):
-    return REGISTERED_USERS.get(email)
+    """Kullanıcı verisini çeker (active_charts ve saved dahil)"""
+    return users_col.find_one({"email": email})
 
-def get_all_users():
-    user_list = []
-    for email, info in REGISTERED_USERS.items():
-        user_list.append({
-            'email': email,
-            'name': info.get('name', 'İsimsiz'),
-            'phone': info.get('phone', '-'),
-            'register_date': info.get('register_date', datetime.datetime.now().strftime("%d.%m.%Y"))
-        })
-    return user_list
-
-# DÜZELTME 1: try_login artık 'remember_me' zorunlu değil (Varsayılan False)
-def try_login(email, password, remember_me=False):
-    user_data = get_user_data_by_email(email)
-    if not (email and password): return False, "Lütfen tüm alanları doldurun."
-    
-    if user_data and user_data.get('password') == password:
-        return True, user_data
-    return False, "Hatalı e-posta veya şifre."
-
-# DÜZELTME 2: Fonksiyon adı 'register_user' yapıldı ve 'phone' opsiyonel oldu
 def register_user(name, email, password, phone=""):
     if not (name and email and password): return False, "Eksik bilgi."
-    if email in REGISTERED_USERS: return False, "Bu e-posta zaten kayıtlı."
     if not is_valid_email(email): return False, "Geçersiz e-posta."
+    
+    # E-posta kontrolü (MongoDB)
+    if users_col.find_one({"email": email}):
+        return False, "Bu e-posta zaten kayıtlı."
     
     register_date = datetime.datetime.now().strftime("%d.%m.%Y %H:%M")
     
-    # Kullanıcıyı kaydet
-    REGISTERED_USERS[email] = {
-        'name': name, 
-        'password': password, 
-        'phone': phone, 
-        'email': email, 
-        'register_date': register_date
+    new_user = {
+        'name': name,
+        'email': email,
+        'password': password,
+        'phone': phone,
+        'register_date': register_date,
+        'active_charts': [],     # Session'daki aktif haritalar için
+        'saved': {'Genel': []}   # Klasör sistemi
     }
     
-    # Veri deposunu başlat
-    USER_DATA_STORE[email] = {'active': [], 'saved': {'Genel': []}}
+    try:
+        users_col.insert_one(new_user)
+        return True, f"'{name}' başarıyla kaydedildi."
+    except Exception as e:
+        return False, f"Veritabanı hatası: {e}"
+
+def try_login(email, password, remember_me=False):
+    if not (email and password): return False, "Lütfen tüm alanları doldurun."
     
-    save_archive_to_disk()
-    return True, f"'{name}' başarıyla kaydedildi."
-
-def save_chart_to_user_data(email, chart_data, category_name="Genel"):
-    if email not in USER_DATA_STORE:
-        USER_DATA_STORE[email] = {'active': [], 'saved': {'Genel': []}}
-
-    user_archive = USER_DATA_STORE[email]['saved']
-
-    if category_name not in user_archive:
-        user_archive[category_name] = []
+    user = users_col.find_one({"email": email})
     
-    if 'id' not in chart_data or chart_data['id'] is None:
-        chart_data['id'] = random.randint(100000, 999999)
-    
-    user_archive[category_name].append(chart_data)
-    save_archive_to_disk()
-    return True
+    if user and user.get('password') == password:
+        return True, user
+    return False, "Hatalı e-posta veya şifre."
 
-def get_user_saved_charts(email):
-    if email in USER_DATA_STORE:
-        return USER_DATA_STORE[email].get('saved', {})
-    return {}
+def save_user_data(email, user_data):
+    """
+    Kullanıcının profil, şifre veya aktif harita verilerini günceller.
+    user_data içindeki alanları $set ile güncelleriz.
+    """
+    try:
+        # _id alanını güncellemeye çalışmamak için temizle
+        if '_id' in user_data:
+            del user_data['_id']
+            
+        users_col.update_one(
+            {"email": email},
+            {"$set": user_data}
+        )
+        return True
+    except Exception as e:
+        print(f"Kullanıcı güncelleme hatası: {e}")
+        return False
 
-# DÜZELTME 3: Fonksiyon adı web_app.py ile uyumlu hale getirildi
-def delete_user_chart(email, category_name, chart_id):
-    if email in USER_DATA_STORE:
-        saved = USER_DATA_STORE[email].get('saved', {})
-        if category_name in saved:
-            for chart in saved[category_name]:
-                if str(chart.get('id')) == str(chart_id):
-                    saved[category_name].remove(chart)
-                    save_archive_to_disk()
-                    return True, "Silindi"
-    return False, "Bulunamadı"
+def get_all_users():
+    """Admin paneli için tüm kullanıcıları listeler"""
+    try:
+        cursor = users_col.find({}, {"_id": 0, "saved": 0, "active_charts": 0}) # Büyük verileri çekme
+        return list(cursor)
+    except:
+        return []
 
 def delete_registered_user(email):
-    if email in REGISTERED_USERS:
-        del REGISTERED_USERS[email]
-        if email in USER_DATA_STORE: del USER_DATA_STORE[email]
-        save_archive_to_disk()
+    try:
+        users_col.delete_one({"email": email})
         return True
-    return False
-
-# --- Yükleme İşlemi ---
-load_archive_from_disk()
-
-# Demo Kullanıcı (İstersen kaldırabilirsin)
-if "demo@astro.com" not in REGISTERED_USERS:
-    register_user("Demo Kullanıcı", "demo@astro.com", "demo", "5550000000")
+    except:
+        return False
