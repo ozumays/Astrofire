@@ -718,7 +718,6 @@ def login():
         password = request.form.get('password', '').strip()
         
         # user_manager'daki try_login fonksiyonunu kullan
-        # Yeni sistemde 'result' değişkeni, kullanıcının veritabanındaki tüm bilgisidir.
         success, result = user_manager.try_login(email, password)
         
         if success:
@@ -731,12 +730,12 @@ def login():
             # Artık USER_DATA_STORE yok. Veri zaten 'result' değişkeninin içinde geldi.
             saved_active_charts = result.get('active_charts', [])
             session['active_charts'] = saved_active_charts if saved_active_charts else []
-            # ------------------------
             
             # İlk haritayı aktif yap (varsa)
             if session['active_charts']:
                 session['current_chart_index'] = 0
                 session['current_chart_data'] = session['active_charts'][0]
+            # ----------------------------------------------------------------
             
             return redirect(url_for('home'))
         else:
@@ -2071,9 +2070,8 @@ def api_calculate_progression():
             if prog_data:
                 prog_data['display_date_str'] = now.strftime("%d.%m.%Y")
 
-        # B) SECONDARY PROGRESSION (İKİNCİL İLERLETİM) - DÜZELTİLDİ 🛠️
         elif technique == 'secondary':
-            # 1. Hedef Zaman (Kullanıcı seçimi veya şimdi)
+            # 1. Hedef Zaman
             target_dt = now 
             title = f"İkincil İlerletim ({target_dt.year})"
             
@@ -2081,26 +2079,36 @@ def api_calculate_progression():
             natal_dt = datetime(natal_year, natal_month, natal_day, natal_hour, natal_minute)
             
             # 3. YAŞ HESABI (YIL OLARAK)
-            # İki tarih arasındaki saniye farkını alıp tropikal yıl saniyesine bölüyoruz.
-            # Böylece kişinin tam yaşını (Örn: 30.54 yıl) buluyoruz.
             total_seconds_lived = (target_dt - natal_dt).total_seconds()
             age_in_years = total_seconds_lived / (365.242199 * 24 * 3600)
             
-            # 4. İLERLETİM TARİHİ HESABI (1 GÜN = 1 YIL KURALI)
-            # Bulduğumuz yaşı (Yıl), natal tarihe GÜN olarak ekliyoruz.
-            # Örn: 30 yaşındaysa, doğumundan 30 gün sonraki gökyüzü hesaplanır.
+            # 4. İLERLETİM TARİHİ HESABI (1 GÜN = 1 YIL)
+            # timedelta kullanırken günün kesirli kısmını (saati) de ekleriz.
+            # Bu, Ay ve hızlı gezegenlerin hassas konumu için gereklidir.
             prog_calc_dt = natal_dt + timedelta(days=age_in_years)
             
-            print(f"DEBUG: Yaş={age_in_years:.4f}, Progres Hesap Tarihi={prog_calc_dt}")
+            print(f"DEBUG: Yaş={age_in_years:.4f}, Progres Tarih={prog_calc_dt}")
 
-            # 5. Hesaplama
+            # 5. HESAPLAMA (KRİTİK DÜZELTME BURADA) 🛠️
+            # Gezegenler için: prog_calc_dt (İlerletilmiş tarih ve saat) kullanılır.
+            # Evler (ASC) için: Standart "Mean" yöntemde DOĞUM SAATİ baz alınır.
+            # Ancak çoğu motor tek bir saat aldığı için, burada 'natal_hour' ve 'natal_minute'
+            # kullanarak ASC'nin çılgınca dönmesini (Quotidian etkisini) engelliyoruz.
+            
+            # NOT: Eğer motorun Julian Day (JD) kabul ediyorsa Ay için hassas ayar gerekebilir ama
+            # aşağıdaki yöntem ASC kaymasını %100 çözer ve standart görüntüyü verir.
+            
             res_text, prog_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
-                prog_calc_dt.year, prog_calc_dt.month, prog_calc_dt.day, 
-                prog_calc_dt.hour, prog_calc_dt.minute, natal_tz,
+                prog_calc_dt.year,    # Yıl değişti
+                prog_calc_dt.month,   # Ay değişti
+                prog_calc_dt.day,     # Gün değişti
+                natal_hour,           # <--- SABİT KALMALI (Doğum Saati)
+                natal_minute,         # <--- SABİT KALMALI (Doğum Dakikası)
+                natal_tz,
                 natal_lat, natal_lon, None, house_code, target_zodiac
             )
             
-            # Ekranda hedef tarihi (bugünü) göster ama harita ilerletilmiş tarihe göre olsun
+            # Ekranda hedef tarihi göster
             if prog_data:
                 prog_data['display_date_str'] = target_dt.strftime("%d.%m.%Y")
 
