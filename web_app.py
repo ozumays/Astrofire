@@ -43,7 +43,7 @@ except Exception as e:
     print(f"❌ MongoDB bağlantı hatası: {e}")
 
 app = Flask(__name__)
-app.secret_key = 'super_secret_astro_key_for_session' 
+app.secret_key = os.environ.get('SECRET_KEY') 
 app.jinja_env.add_extension('jinja2.ext.do')
 
 # ============================================================================
@@ -2946,3 +2946,4 @@ def logout():
 if __name__ == '__main__':
     # use_reloader=False eklemek bu çakışmayı önler
     app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+
