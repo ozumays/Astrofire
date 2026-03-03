@@ -18,9 +18,9 @@
         </div>
         
         {% for chart in active_charts %}
-            <a href="{{ url_for('set_active_chart', index=loop.index0) }}" 
+            <a href="javascript:void(0)" 
                class="chart-list-item {% if current_chart_data and chart.id == current_chart_data.id %}selected{% endif %}"
-               onclick="if(!bulkDeleteMode) { saveLastSelectedChart({{ loop.index0 }}); } else { event.preventDefault(); toggleChartSelection({{ loop.index0 }}); }"
+               onclick="if(!bulkDeleteMode) { loadChartQuick({{ loop.index0 }}); } else { event.preventDefault(); toggleChartSelection({{ loop.index0 }}); }"
                oncontextmenu="showContextMenu(event, {{ loop.index0 }}); return false;"
                data-chart-index="{{ loop.index0 }}">
                 
