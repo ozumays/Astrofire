@@ -16,34 +16,12 @@ from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 import pytz
 import swisseph as swe 
-from pymongo import MongoClient
-import certifi
 
 # Kendi modüllerin
-from astro_core import ASTRO_MOTOR_NESNESİ, get_relative_degree 
-import user_manager
-
-# ============================================================================
-# 🔌 MONGODB ATLAS BAĞLANTISI
-# ============================================================================
-MONGO_URI = "mongodb+srv://ozumays:26674424140@cluster0.8ptsdi0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-
-try:
-    # certifi.where() sayesinde SSL hatalarını (sertifika hataları) tamamen engelliyoruz
-    client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
-    
-    # Veritabanı ve Tablo (Koleksiyon) isimlerini belirliyoruz
-    db = client['AstrofireDB']
-    maps_col = db['user_maps']
-    
-    # Bağlantıyı test edelim
-    client.admin.command('ping')
-    print("✅ MongoDB Atlas bağlantısı başarıyla kuruldu!")
-except Exception as e:
-    print(f"❌ MongoDB bağlantı hatası: {e}")
+from astro_core import ASTRO_MOTOR_NESNESİ, get_relative_degree
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY') 
+app.secret_key = os.environ.get('SECRET_KEY')
 app.jinja_env.add_extension('jinja2.ext.do')
 
 # ============================================================================
@@ -72,6 +50,11 @@ ANALIZ_SORULARI = [
     "11. Ev: Baba ile ilişkisi zaman içinde nasıl devam etti? | Babası ne zaman vefat etti? | Hedeflerini gerçekleştirdi mi? | Gerçekleştiremediği hedefleri var mı? | Geleceğe nasıl baktı? | Arkadaş grupları var mıydı? | Gruplarla ilişkisi nasıldı? | Bulunduğu zamanın hızına yetişebildi mi? (Teknoloji, devrimler, yenilikler, fikir akımları…)",
     "12. Ev: Kişinin açığa çıkarmadığı gizli yetenekleri ne? | Kendinde kontrol edemediği bir negatif özellik veya yetenek var mı? | Rüya görüyor mu? | Uyku bozuklukları var mı? | Kadersel bir engeli olduğunu hiç düşünmüş mü? | Gizli düşmanları var mı? | Bilinçaltında çözülmemiş hangi konular var?"
 ]
+
+# ============================================================================
+# 🔢 SABİTLER
+# ============================================================================
+SECONDS_IN_YEAR = 365.242199 * 24 * 3600  # Bir tropik yıldaki saniye sayısı
 
 # ============================================================================
 # 🚀 EPHEMERIS KONTROLÜ
@@ -130,144 +113,37 @@ def save_json_data(filename, data):
         with open(filename, 'w', encoding='utf-8') as f: json.dump(data, f, ensure_ascii=False, indent=4)
     except: pass
 
-def get_current_user_email(): return session.get('logged_in_email')
-
-def get_user_display_name(email):
-    """Hata korumalı kullanıcı ismi çekme"""
-    try:
-        if not email: return "Misafir"
-        user_data = user_manager.get_user_data_by_email(email)
-        return user_data.get('name', 'Kullanıcı') if user_data else "Misafir"
-    except:
-        return "Misafir"
 
 # ============================================================================
-# 🛡️ GÜVENLİ CONTEXT YÜKLEYİCİ (TELEFON EKLENDİ)
+# 🛡️ GÜVENLİ CONTEXT YÜKLEYİCİ (KULLANICI GİRİŞİ KALDIRILDI)
 # ============================================================================
 def get_common_context():
-    email = get_current_user_email()
-    folder_list = ["Genel"]
-    user_img = None 
-    user_phone = "" # Varsayılan boş telefon
-
     # --- CHART_TYPE MANTIĞI ---
-    # Önce aktif haritaya bakıyoruz, eğer yoksa varsayılan 'natal' diyoruz.
     current_chart = session.get('current_chart_data')
     if current_chart and isinstance(current_chart, dict):
         chart_type = current_chart.get('type', 'natal')
     else:
         chart_type = 'natal'
-
-    # Eğer kullanıcı giriş yapmışsa verilerini topla
-    if email:
-        try:
-            # 1. Klasörleri al
-            folders = user_manager.get_user_folder_list(email)
-            if folders: folder_list = folders
-
-            # 2. Kullanıcı Verilerini Çek (Resim ve Telefon İçin)
-            user_data = user_manager.get_user_data_by_email(email)
-            
-            if user_data:
-                # A) Profil Resmi
-                if session.get('user_profile_image'):
-                    user_img = session['user_profile_image']
-                elif 'profile_image' in user_data:
-                    user_img = user_data['profile_image']
-                    session['user_profile_image'] = user_img
-                
-                # B) Telefon Numarası (İŞTE EKSİK OLAN KISIM BURASIYDI)
-                if 'phone' in user_data:
-                    user_phone = user_data['phone']
-
-        except Exception as e:
-            print(f"Context Yükleme Hatası: {e}")
-            folder_list = ["Genel"]
     
     # Destek linklerini yükle
     support_links = load_json_data(SUPPORT_LINKS_FILE)
 
     return {
-        'user_email': email, 
-        'is_logged_in': bool(email),
-        'display_name': get_user_display_name(email),
-        'user_profile_image': user_img,
-        'user_phone': user_phone,
+        'user_email': None, 
+        'is_logged_in': False,
+        'display_name': 'Kullanıcı',
+        'user_profile_image': None,
+        'user_phone': '',
         'chart_type': chart_type,
         'motor': ASTRO_MOTOR_NESNESİ,
         'active_charts': session.get('active_charts', []),
         'current_chart_data': session.get('current_chart_data'),
-        'user_folders': folder_list,
+        'user_folders': [],
         'support_links': support_links,
-        'is_admin': lambda: email in ADMIN_EMAILS,
+        'is_admin': lambda: False,
         'analiz_sorulari': ANALIZ_SORULARI
     }
 
-# ========================================================
-# 💾 YARDIMCI FONKSİYON: AKTİF HARİTALARI KAYDET
-# ========================================================
-def sync_active_charts_to_db():
-    """Session'daki aktif haritaları users.json dosyasına yazar (Hata Korumalı)."""
-    try:
-        if 'logged_in_email' in session:
-            email = session['logged_in_email']
-            user_data = user_manager.get_user_data_by_email(email)
-            
-            if user_data:
-                user_data['active_charts'] = session.get('active_charts', [])
-                user_manager.save_user_data(email, user_data)
-                print(f"💾 [SYNC] {email} veritabanına yazıldı.")
-    except Exception as e:
-        print(f"⚠️ Sync Hatası (Önemsiz): {e}")
-
-# ============================================================================
-# ☁️ MONGODB BULUT KAYIT FONKSİYONU
-# ============================================================================
-def harita_kaydet_buluta(kullanici_adi, harita_ismi, koordinatlar):
-    """
-    Kullanıcının haritasını MongoDB Atlas'a kaydeder.
-    
-    Args:
-        kullanici_adi (str): Kullanıcının email adresi
-        harita_ismi (str): Haritanın adı
-        koordinatlar (dict): Harita verileri (lat, lon, tarih, saat vb.)
-    
-    Returns:
-        str: Başarı mesajı
-    """
-    try:
-        yeni_veri = {
-            "kullanici": kullanici_adi,
-            "harita_adi": harita_ismi,
-            "koordinatlar": koordinatlar,
-            "tarih": datetime.now()
-        }
-        maps_col.insert_one(yeni_veri)
-        print(f"☁️ [BULUT] {harita_ismi} MongoDB'ye kaydedildi!")
-        return "Başarıyla kaydedildi!"
-    except Exception as e:
-        print(f"❌ [BULUT HATA] {e}")
-        return f"Hata: {e}"
-
-def haritalari_getir_buluttan(kullanici_adi):
-    """
-    Kullanıcının tüm haritalarını MongoDB Atlas'tan getirir.
-    
-    Args:
-        kullanici_adi (str): Kullanıcının email adresi
-    
-    Returns:
-        list: Kullanıcıya ait haritaların listesi
-    """
-    try:
-        # Sadece o kullanıcıya ait haritaları getirir (_id hariç)
-        sonuclar = maps_col.find({"kullanici": kullanici_adi}, {"_id": 0})
-        haritalar = list(sonuclar)
-        print(f"☁️ [BULUT] {len(haritalar)} harita getirildi: {kullanici_adi}")
-        return haritalar
-    except Exception as e:
-        print(f"❌ [BULUT GETİRME HATASI] {e}")
-        return []
 
 # ============================================================================
 # 🔮 TRANSİT TAHMİN MOTORU (DÜZELTİLMİŞ)
@@ -481,15 +357,9 @@ def admin_dashboard():
     if not session.get('admin_access'): 
         return redirect(url_for('admin_login_page'))
     
-    # 2. Veritabanını tazele (Yeni kayıtları görmek için kritik!)
-    user_manager.load_archive_from_disk()
-
-    # 3. Verileri topla
-    tum_kullanicilar = user_manager.get_all_users()
-    
-    # 4. Sayfaya gönder (users değişkeni ile)
+    # 2. Sayfaya gönder (kullanıcı sistemi kaldırıldı)
     return render_template('admin_dashboard.html', 
-                           users=tum_kullanicilar,  # <-- İŞTE BU SATIR KULLANICILARI GÖSTERİR
+                           users=[],  # Artık kullanıcı yok
                            public_charts=load_json_data(DATA_FILE), 
                            courses=load_json_data(COURSES_FILE), 
                            contact=load_json_data(CONTACT_FILE))
@@ -639,131 +509,10 @@ def admin_delete_consultation(id):
 
 @app.route('/admin/delete_user/<email>')
 def admin_delete_user(email):
+    # Kullanıcı sistemi kaldırıldı, bu route artık kullanılmıyor
     if not session.get('admin_access'): return redirect(url_for('admin_login_page'))
-    user_manager.delete_registered_user(email); return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('admin_dashboard'))
 
-@app.route('/update_profile', methods=['POST'])
-def update_profile():
-    # 1. GİRİŞ KONTROLÜ
-    if 'logged_in_email' not in session:
-        return redirect(url_for('login'))
-
-    email = session['logged_in_email']
-    user_data = user_manager.get_user_data_by_email(email)
-    
-    if not user_data:
-        return redirect(url_for('login'))
-
-    # ==========================================
-    # 2. METİNSEL VERİLERİ GÜNCELLE
-    # ==========================================
-    
-    # A) İsim Güncelleme
-    # HTML'de <input name="name"> olmalı
-    new_name = request.form.get('name')
-    if new_name and new_name.strip() != "":
-        user_data['name'] = new_name
-        session['display_name'] = new_name # Ekranın üstündeki ismi de hemen düzelt
-
-    # B) Telefon Güncelleme (YENİ EKLENDİ)
-    # HTML'de <input name="phone"> olmalı
-    new_phone = request.form.get('phone')
-    if new_phone:
-        user_data['phone'] = new_phone
-
-    # C) Şifre Güncelleme
-    # HTML'de <input name="password"> olmalı
-    # Sadece kutu doluysa şifreyi değiştirir (Boş bırakırsa eski şifre kalır)
-    new_password = request.form.get('password')
-    if new_password and new_password.strip() != "":
-        user_data['password'] = new_password
-
-    # D) Biyografi vb. (Varsa)
-    bio = request.form.get('bio')
-    if bio:
-        user_data['bio'] = bio
-
-    # ==========================================
-    # 3. RESİM GÜNCELLEME (ZATEN ÇALIŞIYOR)
-    # ==========================================
-    if 'profile_image' in request.files:
-        f = request.files['profile_image']
-        if f and f.filename != '':
-            filename = secure_filename(f.filename)
-            unique_name = f"user_{random.randint(1000,9999)}_{filename}"
-            
-            save_path = os.path.join(app.config.get('UPLOAD_FOLDER_PROFILES', 'static/uploads/profiles'))
-            os.makedirs(save_path, exist_ok=True)
-            
-            f.save(os.path.join(save_path, unique_name))
-            
-            user_data['profile_image'] = unique_name
-            session['user_profile_image'] = unique_name
-
-    # 4. KAYDET VE BİTİR
-    user_manager.save_user_data(email, user_data)
-    
-    # Sayfayı yenile ki kullanıcı değişikliği görsün
-    return redirect(request.referrer or url_for('home'))
-
-# ============================================================================
-# 🔑 EKSİK OLAN LOGIN ROTASI
-# ============================================================================
-# web_app.py içindeki login ve register fonksiyonlarını bununla değiştir:
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '').strip()
-        
-        # user_manager'daki try_login fonksiyonunu kullan
-        success, result = user_manager.try_login(email, password)
-        
-        if success:
-            # Giriş başarılı - Session'ı kur
-            session['logged_in'] = True
-            session['logged_in_email'] = email
-            session['display_name'] = result.get('name', 'Kullanıcı')
-            
-            # --- DÜZELTİLEN KISIM ---
-            # Artık USER_DATA_STORE yok. Veri zaten 'result' değişkeninin içinde geldi.
-            saved_active_charts = result.get('active_charts', [])
-            session['active_charts'] = saved_active_charts if saved_active_charts else []
-            
-            # İlk haritayı aktif yap (varsa)
-            if session['active_charts']:
-                session['current_chart_index'] = 0
-                session['current_chart_data'] = session['active_charts'][0]
-            # ----------------------------------------------------------------
-            
-            return redirect(url_for('home'))
-        else:
-            # Giriş başarısız - Hata mesajı göster
-            return render_template('login.html', error=result)
-
-    return render_template('login.html')
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        phone = request.form.get('phone', '') # Telefonu da alalım
-        
-        # user_manager ile kaydet
-        success, message = user_manager.register_user(name, email, password, phone)
-        
-        if success:
-            # Kayıt başarılıysa login sayfasına gönder ama hata mesajı yerine başarı mesajı verelim
-            # (login.html'de session['login_success'] varsa yeşil gösterir)
-            session['login_success'] = "Kayıt başarılı! Şimdi giriş yapabilirsin."
-            return redirect(url_for('login'))
-        else:
-             return render_template('login.html', register_error=message)
-             
-    return render_template('login.html')
     
 # ============================================================================
 # 🛰️ API ROTALARI (RETURN & GET DATA & ADMIN UPLOAD)
@@ -2273,6 +2022,44 @@ def api_search_database():
 def home():
     active_tab = request.args.get('tab', 'natal') 
     if 'active_charts' not in session: session['active_charts'] = []
+    
+    # İLK AÇILIŞTA OTOMATİK ASTRONOMİK TRANSİT HARİTA YÜKLE
+    if len(session['active_charts']) == 0 and request.method == 'GET':
+        try:
+            now = datetime.now()
+            # İstanbul koordinatları
+            lat, lon, tz = 41.0082, 28.9784, 3.0
+            
+            # Astronomik Transit harita hesapla
+            res_text, t_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
+                now.year, now.month, now.day, now.hour, now.minute, 
+                tz, lat, lon, None, 'P', 'Astronomik'
+            )
+            
+            if t_data:
+                t_data['map_type'] = 'transit'
+                transit_chart = {
+                    'name': f"Astronomik Transit ({now.day}.{now.month}.{now.year})", 
+                    'year': now.year, 'month': now.month, 'day': now.day, 
+                    'hour': now.hour, 'minute': now.minute, 
+                    'tz_offset': tz, 'lat': lat, 'lon': lon, 
+                    'location_name': 'İstanbul, Türkiye', 
+                    'zodiac_type': 'Astronomik',
+                    'house_system': 'Placidus', 
+                    'id': 1, 
+                    'type': 'transit',
+                    'map_type': 'transit'
+                }
+                
+                session['active_charts'] = [transit_chart]
+                session['current_chart_index'] = 0
+                session['last_chart'] = t_data
+                session['last_report'] = f"ASTRONOMİK TRANSİT\n\n" + res_text
+                session['current_chart_data'] = transit_chart
+                active_tab = 'aktif'  # Aktif listesine yönlendir
+        except Exception as e:
+            print(f"Otomatik transit yükleme hatası: {e}")
+    
     context = get_common_context()
     context['active_tab'] = active_tab
 
@@ -2350,7 +2137,6 @@ def home():
                         session['current_chart_index'] = 0
                         session['current_chart_data'] = new_chart
                     
-                    sync_active_charts_to_db()
                     session['last_report'] = res_text
                     session['last_chart'] = chart_data
                     active_tab = 'aktif'
@@ -2482,53 +2268,6 @@ def page_consultations(): context = get_common_context(); context.update({'consu
 @app.route('/iletisim')
 def page_contact(): context = get_common_context(); context.update({'contact': load_json_data(CONTACT_FILE), 'active_page': 'iletisim'}); return render_template('contact.html', **context)
 
-@app.route('/kayitli-haritalar')
-def kayitli_haritalar(): 
-    if not get_current_user_email(): return redirect(url_for('login'))
-    context = get_common_context()
-    saved_charts = user_manager.get_user_saved_charts(get_current_user_email())
-    context.update({'saved_charts': saved_charts, 'active_page': 'kayitli_haritalar'})
-    return render_template('kayitli_haritalar.html', **context)
-
-@app.route('/create_folder', methods=['POST'])
-def create_folder():
-    email = get_current_user_email()
-    if not email: return redirect(url_for('login'))
-    if request.form.get('folder_name'): user_manager.create_new_folder(email, request.form.get('folder_name'))
-    return redirect(url_for('kayitli_haritalar'))
-
-@app.route('/move_chart', methods=['POST'])
-def move_chart():
-    email = get_current_user_email()
-    if not email: return redirect(url_for('login'))
-    if request.form.get('chart_id') and request.form.get('old_folder') and request.form.get('new_folder'):
-        user_manager.move_chart_to_folder(email, request.form.get('chart_id'), request.form.get('old_folder'), request.form.get('new_folder'))
-    return redirect(url_for('kayitli_haritalar'))
-
-@app.route('/load_chart_to_active/<category>/<chart_id>')
-def load_chart_to_active(category, chart_id):
-    email = get_current_user_email()
-    if not email: return redirect(url_for('login'))
-    saved = user_manager.get_user_saved_charts(email)
-    sel = next((c for c in saved.get(category, []) if str(c.get('id')) == str(chart_id)), None)
-    if sel:
-        if 'active_charts' not in session: session['active_charts'] = []
-        house_code = ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(sel.get('house_system', 'Placidus'), 'P')
-        res, data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(sel['year'], sel['month'], sel['day'], sel['hour'], sel['minute'], float(sel['tz_offset']), float(sel['lat']), float(sel['lon']), None, house_code, sel.get('zodiac_type', 'Astronomik'))
-        if data:
-            new_chart = sel.copy(); new_chart['id'] = len(session.get('active_charts', [])) + 1; new_chart['type'] = 'natal'
-            current = session.get('active_charts', []); current.insert(0, new_chart)
-            session['active_charts'] = current; session['current_chart_index'] = 0; session['last_chart'] = data; session['last_report'] = res; session['current_chart_data'] = new_chart
-            return redirect(url_for('home', tab='aktif'))
-    return redirect(url_for('kayitli_haritalar'))
-
-@app.route('/delete_saved_chart/<category>/<chart_id>')
-def delete_saved_chart(category, chart_id):
-    email = get_current_user_email()
-    if not email: return redirect(url_for('login'))
-    if hasattr(user_manager, 'delete_user_chart'):
-        user_manager.delete_user_chart(email, category, chart_id)
-    return redirect(url_for('kayitli_haritalar'))
 
 @app.route('/set_active_time', methods=['POST'])
 def set_active_time():
@@ -2810,6 +2549,102 @@ def set_active_chart(index):
         session.modified = True
     return redirect(url_for('home', tab='aktif'))
 
+@app.route('/api/load_chart/<int:index>')
+def api_load_chart(index):
+    """AJAX ile harita yükle - sayfa yenilenmeden"""
+    try:
+        al = session.get('active_charts', [])
+        if not al or index < 0 or index >= len(al):
+            return jsonify({'success': False, 'error': 'Harita bulunamadı'})
+        
+        sel = al[index]
+        session['current_chart_index'] = index
+        session['current_chart_data'] = sel
+        
+        if sel.get('type') in ['synastry', 'composite'] or 'saved_data' in sel:
+            chart_data = sel.get('saved_data', {})
+            session['last_chart'] = chart_data
+            report_text = "Sinastri/Kompozit Harita"
+        else:
+            txt, data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
+                sel['year'], sel['month'], sel['day'], sel['hour'], sel['minute'], 
+                float(sel['tz_offset']), float(sel['lat']), float(sel['lon']), None, 
+                ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(sel.get('house_system'), 'P'), 
+                sel.get('zodiac_type', 'Astronomik')
+            )
+            chart_data = data
+            report_text = txt
+            session['last_chart'] = data
+            session['last_report'] = txt
+        
+        session.modified = True
+        
+        return jsonify({
+            'success': True,
+            'chart_data': chart_data,
+            'chart_info': sel
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+# ============================================================================
+# 🔮 DANIŞMANLIK PANELİ ROTALARI (Öneri 2)
+# ============================================================================
+
+@app.route('/danismanlik')
+def danismanlik_page():
+    # Ana sistemdeki motor nesnesinin adı ASTRO_MOTOR_NESNESİ olduğu için onu gönderiyoruz
+    active_charts = session.get('active_charts', [])
+    last_chart = session.get('last_chart', None)
+    
+    return render_template(
+        "danismanlik_layout.html", 
+        active_page="natal",
+        motor=ASTRO_MOTOR_NESNESİ,      # İsmi düzelttik
+        active_charts=active_charts,
+        last_chart=last_chart,
+        is_logged_in=True,
+        display_name=session.get('display_name', 'Kullanıcı'),
+        active_tab=request.args.get('tab', 'natal')
+    )
+
+# ============================================================================
+# 🔮 DANIŞMANLIK ÜST MENÜ SİSTEMİ (MODÜLER YAPI)
+# ============================================================================
+
+@app.route('/danismanlik/natal')
+def danismanlik_natal():
+    context = get_common_context() # Ana sistemdeki verileri çek (is_logged_in vb.)
+    return render_template("danismanlik_layout.html", 
+                           active_page="natal", 
+                           motor=ASTRO_MOTOR_NESNESİ,
+                           **context)
+
+@app.route('/danismanlik/ongoru')
+def danismanlik_ongoru():
+    context = get_common_context()
+    return render_template("danismanlik_layout.html", 
+                           active_page="ongoru", 
+                           motor=ASTRO_MOTOR_NESNESİ,
+                           **context)
+
+@app.route('/danismanlik/sinastri')
+def danismanlik_sinastri_analiz():
+    context = get_common_context()
+    # Sol menüdeki sinastri ile karışmaması için active_page'i farklı isimlendiriyoruz
+    return render_template("danismanlik_layout.html", 
+                           active_page="sinastri_analiz", 
+                           motor=ASTRO_MOTOR_NESNESİ,
+                           **context)
+
+@app.route('/danismanlik/reenkarnasyon')
+def danismanlik_reenkarnasyon_analiz():
+    context = get_common_context()
+    return render_template("danismanlik_layout.html", 
+                           active_page="reenkarnasyon", 
+                           motor=ASTRO_MOTOR_NESNESİ,
+                           **context)
+
 @app.route('/delete_active_chart/<int:index>')
 def delete_active_chart(index):
     active_charts = session.get('active_charts', [])
@@ -2821,11 +2656,6 @@ def delete_active_chart(index):
         # 2. Session'ı güncelle
         session['active_charts'] = active_charts
         session.modified = True 
-        
-        # --- KRİTİK EKLEME: VERİTABANINA KAYDET ---
-        # Bu satır sayesinde silme işlemi kalıcı olur.
-        sync_active_charts_to_db()
-        # ------------------------------------------
         
         # Eğer silinen harita aktif haritaysa veya liste kısaldıysa indeksleri düzelt
         current_index = session.get('current_chart_index', 0)
@@ -2870,9 +2700,6 @@ def bulk_delete_charts():
         session['active_charts'] = active_charts
         session.modified = True
         
-        # Veritabanına kaydet
-        sync_active_charts_to_db()
-        
         # Eğer liste boşaldıysa, session'ı temizle
         if len(active_charts) == 0:
             session.pop('last_chart', None)
@@ -2903,47 +2730,200 @@ def edit_active_chart(index):
         return redirect(url_for('home', tab='natal'))
     return redirect(url_for('home', tab='aktif'))
 
-@app.route('/edit_chart/<category>/<chart_id>')
-def edit_chart(category, chart_id):
-    if not get_current_user_email(): return redirect(url_for('login'))
-    saved = user_manager.get_user_saved_charts(get_current_user_email()); sel = next((c for c in saved.get(category, []) if str(c.get('id')) == str(chart_id)), None)
-    if sel: session['current_chart_data'] = {k: sel.get(k) for k in ['name','year','month','day','hour','minute','lat','lon','tz_offset','location_name','zodiac_type','house_system']}
-    return redirect(url_for('home', tab='natal'))
+# Route kaldırıldı - Kullanıcı sistemi artık yok
 
-@app.route('/save_active_chart/<int:index>')
-def save_active_chart(index):
-    if not get_current_user_email(): return redirect(url_for('login'))
-    active_charts = session.get('active_charts', [])
-    if 0 <= index < len(active_charts):
-        chart = active_charts[index]
-        if chart.get('type') != 'synastry':
-            try:
-                user_manager.save_chart_to_user_data(get_current_user_email(), chart, 'Genel')
-            except: pass
-    return redirect(url_for('home', tab='aktif'))
+# Route kaldırıldı - Kullanıcı sistemi artık yok
 
-@app.route('/save_chart', methods=['POST'])
-def save_chart():
-    if not get_current_user_email(): return redirect(url_for('login'))
-    try:
-        c = session.get('current_chart_data', {}).copy()
-        if c.get('type') == 'synastry': return redirect(url_for('home', tab='aktif'))
-        c['data'] = session.get('last_chart', {}); c['report_text'] = session.get('last_report', '')
-        user_manager.save_chart_to_user_data(get_current_user_email(), c, request.form.get('category_name', 'Genel'))
-    except: pass
-    return redirect(url_for('home', tab='aktif'))
+# Route kaldırıldı - Kullanıcı sistemi artık yok
 
 @app.route('/logout')
 def logout():
-    # Çıkış yapmadan önce aktif haritaları kaydet
-    sync_active_charts_to_db()
-    
     # Session'ı temizle
     session.clear()
-    
     return redirect(url_for('home'))
+
+# ============================================================================
+# 🔄 AJAX API: SAYFA YENİLEMESİZ HARİTA HESAPLAMA
+# ============================================================================
+
+@app.route('/api/calculate_natal', methods=['POST'])
+def api_calculate_natal():
+    """AJAX ile natal harita hesapla - sayfa yenilenmeden"""
+    try:
+        data = request.get_json()
+        
+        year = int(data.get('year'))
+        month = int(data.get('month'))
+        day = int(data.get('day'))
+        hour = int(data.get('hour'))
+        minute = int(data.get('minute'))
+        tz_offset = float(data.get('tz_offset', 0))
+        lat = float(data.get('lat', 0))
+        lon = float(data.get('lon', 0))
+        name = data.get('name')
+        location_name = data.get('location_name')
+        zodiac_type = data.get('zodiac_type', 'Astronomik')
+        house_system = data.get('house_system', 'Placidus')
+        
+        house_code = ASTRO_MOTOR_NESNESİ.HOUSE_SYSTEMS.get(house_system, 'P')
+        
+        # Harita hesapla
+        res_text, chart_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
+            year, month, day, hour, minute, tz_offset, lat, lon, 
+            None, house_code, zodiac_type
+        )
+        
+        if not chart_data:
+            return jsonify({'success': False, 'error': 'Harita hesaplanamadı'})
+        
+        chart_data['map_type'] = 'natal'
+        
+        # Düzenleme modu kontrolü
+        if session.get('edit_mode') and session.get('edit_index') is not None:
+            edit_index = session.get('edit_index')
+            active_charts = session.get('active_charts', [])
+            
+            if 0 <= edit_index < len(active_charts):
+                existing_id = active_charts[edit_index].get('id', edit_index + 1)
+                updated_chart = {
+                    'id': existing_id,
+                    'name': name,
+                    'year': year, 'month': month, 'day': day,
+                    'hour': hour, 'minute': minute,
+                    'tz_offset': tz_offset, 'lat': lat, 'lon': lon,
+                    'location_name': location_name,
+                    'zodiac_type': zodiac_type,
+                    'house_system': house_system,
+                    'type': 'natal',
+                    'map_type': 'natal'
+                }
+                
+                active_charts[edit_index] = updated_chart
+                session['active_charts'] = active_charts
+                session['current_chart_index'] = edit_index
+                session['current_chart_data'] = updated_chart
+            
+            session.pop('edit_mode', None)
+            session.pop('edit_index', None)
+        else:
+            # Yeni harita ekle
+            new_chart = {
+                'id': len(session.get('active_charts', [])) + 1,
+                'name': name,
+                'year': year, 'month': month, 'day': day,
+                'hour': hour, 'minute': minute,
+                'tz_offset': tz_offset, 'lat': lat, 'lon': lon,
+                'location_name': location_name,
+                'zodiac_type': zodiac_type,
+                'house_system': house_system,
+                'type': 'natal',
+                'map_type': 'natal'
+            }
+            
+            active_charts = session.get('active_charts', [])
+            active_charts.insert(0, new_chart)
+            session['active_charts'] = active_charts
+            session['current_chart_index'] = 0
+            session['current_chart_data'] = new_chart
+        
+        session['last_report'] = res_text
+        session['last_chart'] = chart_data
+        session.modified = True
+        
+        return jsonify({
+            'success': True,
+            'chart_data': chart_data,
+            'message': 'Harita başarıyla hesaplandı'
+        })
+        
+    except Exception as e:
+        print(f"API Natal Hatası: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/calculate_transit', methods=['POST'])
+def api_calculate_transit():
+    """AJAX ile transit harita hesapla - sayfa yenilenmeden"""
+    try:
+        data = request.get_json()
+        
+        year = int(data.get('year'))
+        month = int(data.get('month'))
+        day = int(data.get('day'))
+        hour = int(data.get('hour'))
+        minute = int(data.get('minute'))
+        tz_offset = float(data.get('tz_offset', 0))
+        lat = float(data.get('lat', 0))
+        lon = float(data.get('lon', 0))
+        location_name = data.get('location_name')
+        
+        raw_type = data.get('transit_type', 'Astronomik')
+        
+        # Drakonik düzeltmesi
+        if raw_type == 'Drakonik':
+            transit_type = 'Drakonik 28'
+        else:
+            transit_type = raw_type
+        
+        # Harita hesapla
+        res_text, chart_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
+            year, month, day, hour, minute, tz_offset, lat, lon,
+            None, 'P', transit_type
+        )
+        
+        if not chart_data:
+            return jsonify({'success': False, 'error': 'Transit hesaplanamadı'})
+        
+        chart_data['map_type'] = 'transit'
+        
+        transit_chart = {
+            'name': f"Transit ({day}.{month}.{year} {hour}:{minute})",
+            'year': year, 'month': month, 'day': day,
+            'hour': hour, 'minute': minute,
+            'tz_offset': tz_offset, 'lat': lat, 'lon': lon,
+            'location_name': location_name,
+            'zodiac_type': transit_type,
+            'house_system': 'Placidus',
+            'id': len(session.get('active_charts', [])) + 1,
+            'type': 'transit',
+            'map_type': 'transit'
+        }
+        
+        active_charts = session.get('active_charts', [])
+        active_charts.insert(0, transit_chart)
+        session['active_charts'] = active_charts
+        session['current_chart_index'] = 0
+        session['last_chart'] = chart_data
+        session['last_report'] = f"TRANSİT ({transit_type})\n\n{res_text}"
+        session['current_chart_data'] = transit_chart
+        session.modified = True
+        
+        return jsonify({
+            'success': True,
+            'chart_data': chart_data,
+            'message': 'Transit başarıyla hesaplandı'
+        })
+        
+    except Exception as e:
+        print(f"API Transit Hatası: {e}")
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/get_active_charts', methods=['GET'])
+def api_get_active_charts():
+    """Aktif haritalar listesini JSON olarak döndür"""
+    try:
+        active_charts = session.get('active_charts', [])
+        current_index = session.get('current_chart_index', 0)
+        
+        return jsonify({
+            'success': True,
+            'charts': active_charts,
+            'current_index': current_index
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == '__main__':
     # use_reloader=False eklemek bu çakışmayı önler
     app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
-
