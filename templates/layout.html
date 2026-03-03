@@ -84,6 +84,10 @@
         display: flex;
         align-items: center;
         height: 100%;
+        position: absolute;
+        left: 10px;
+        top: 0;
+        z-index: 21;
     }
 
     .logo-link {
@@ -105,7 +109,10 @@
         opacity: 0.9; 
     }
 
-    .main-nav { padding-top: 10px; }
+    .main-nav { 
+        padding-top: 10px; 
+        margin-left: 170px;
+    }
 
     .nav-link { 
         margin-left: 13px; 
@@ -134,60 +141,6 @@
         font-weight: 700; 
     }
 
-    /* Kullanıcı Dropdown Menü */
-    .user-dropdown-menu {
-        position: absolute;
-        top: 43px;
-        right: 0;
-        background: rgba(26, 26, 26, 0.90) !important;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 0px;
-        box-shadow: 0 15px 35px rgba(255, 255, 255, 0.2);
-        min-width: 200px;
-        z-index: 10000;
-        overflow: hidden;
-    }
-
-    .user-dropdown-menu a {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 12px 16px;
-        color: #ffffff;
-        text-decoration: none;
-        font-size: 13px;
-        transition: background 0.3s;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    .user-dropdown-menu a:last-child { border-bottom: none; }
-    .user-dropdown-menu a:hover {
-        background: rgba(228, 228, 228, 0.658);
-        color: #ffffff;
-    }
-    .user-dropdown-menu a i {
-        width: 18px;
-        text-align: center;
-        font-size: 14px;
-        color: #ffffffcc;
-    }
-
-    /* Premium Üyelik Butonu */
-    .premium-menu-item {
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.8), rgba(217, 119, 6, 0.8)) !important;
-        backdrop-filter: blur(4px);
-        color: white !important;
-        font-weight: bold;
-    }
-    .premium-menu-item:hover {
-        background: linear-gradient(135deg, #f59e0b, #d97706) !important;
-    }
-    .dropdown-divider {
-        height: 1px;
-        background: rgba(255, 255, 255, 0.1);
-        margin: 0;
-    }
 
     /* =========================================
        3. ANA İSKELET (LAYOUT & GRID)
@@ -312,12 +265,6 @@
         color: #ffffff; 
         background: rgb(196, 92, 7) !important; 
         box-shadow: 0 0 15px rgb(196, 92, 7);
-        
-        /* DÜZELTME: Sondaki fazladan virgül kaldırıldı */
-        box-shadow: 
-            0 0 1px rgb(230, 230, 230),    /* Keskin hat */
-            0 0 3px rgb(230, 230, 230),    /* Orta parlama */
-            0 0 7px rgba(255, 255, 255, 0.5),   /* Geniş yayılım */
     }
 
     .time-select {
@@ -339,10 +286,7 @@
         color: #fffffff6; 
         background: rgb(196, 92, 7) !important; 
         box-shadow: 0 0 15px rgb(196, 92, 7);
-        
-        /* DÜZELTME: Sondaki fazladan virgül kaldırıldı */
-        text-shadow: 
-            0 0 8px rgba(230, 230, 230, 0.884),    /* Keskin hat */
+        text-shadow: 0 0 8px rgba(230, 230, 230, 0.884);
     }
 
     /* 1. Kapsayıcı Form Düzenlemesi */
@@ -379,10 +323,7 @@
         color: #fffffff6; 
         background: rgb(196, 92, 7) !important; 
         box-shadow: 0 0 15px rgb(196, 92, 7);
-        
-        /* DÜZELTME: Sondaki fazladan virgül kaldırıldı */
-        text-shadow: 
-            0 0 8px rgba(230, 230, 230, 0.884),    /* Keskin hat */
+        text-shadow: 0 0 8px rgba(230, 230, 230, 0.884);
     }
 
     /* 3. GİT Butonu (Tam Ortalanmış Hali) */
@@ -1545,58 +1486,19 @@
         
         <nav class="main-nav">
             <a href="{{ url_for('page_data') }}" class="nav-link {% if active_page == 'data' %}active{% endif %}">DATA</a>
-            <a href="javascript:void(0)" onclick="openSelectionModal('planets', 'Öngörüler')" class="nav-link">Öngörüler</a>
             <a href="{{ url_for('home') }}" class="nav-link {% if not active_page %}active{% endif %}">Harita Aç</a>
-            <a href="{{ url_for('kayitli_haritalar') }}" class="nav-link {% if request.endpoint == 'kayitli_haritalar' %}active{% endif %}">Kayıtlı Haritalar</a>
             <a href="{{ url_for('page_education') }}" class="nav-link {% if active_page == 'egitimler' %}active{% endif %}">Eğitimler</a>
             <a href="{{ url_for('page_consultations') }}" class="nav-link {% if active_page == 'danismanliklar' %}active{% endif %}">Danışmanlıklar</a>
             <a href="{{ url_for('page_contact') }}" class="nav-link {% if active_page == 'iletisim' %}active{% endif %}">İletişim</a>
         </nav>
         
-        <div class="user-area" style="position:relative;">
-            {% if is_logged_in %} 
-                <div class="user-dropdown-trigger" onclick="toggleUserMenu(event)" style="display:flex; align-items:center; gap:8px; cursor:pointer; padding:5px 10px; border-radius:4px; transition:background 0.2s;">
-                    {% if user_profile_image %}
-                        <img src="{{ url_for('static', filename='uploads/profiles/' ~ user_profile_image) }}" alt="Profil" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:2px solid rgb(255, 255, 255)0.00011)0.00011);">
-                    {% else %}
-                        <div style="width:30px; height:30px; border-radius:50%; background:rgba(212, 208, 208, 0.87); display:flex; align-items:center; justify-content:center; border:2px solid rgb(255, 255, 255);">
-                            <i class="fas fa-user" style="color:#666; font-size:14px;"></i>
-                        </div>
-                    {% endif %}
-                    <span style="font-size:13px; font-weight:bold; color:#e7e7e7;">{{ display_name }}</span>
-                    <i class="fas fa-chevron-down" style="font-size:10px; color:#666;"></i>
-                </div>
-                
-                <div id="userDropdownMenu" class="user-dropdown-menu" style="display:none;">
-                    <a href="javascript:void(0)" onclick="openPremiumModal()" class="premium-menu-item">
-                        <i class="fas fa-crown"></i> Premium Ol
-                    </a>
-                    <a href="javascript:void(0)" onclick="openProfileModal()">
-                        <i class="fas fa-user-circle"></i> Hesabım
-                    </a>
-                    <a href="javascript:void(0)" onclick="openSupportModal()">
-                        <i class="fas fa-headset"></i> Destek
-                    </a>
-                    {% if is_admin and is_admin() %}
-                        <a href="{{ url_for('admin_dashboard') }}" style="color:#e67e22;">
-                            <i class="fas fa-cog"></i> Yönetim Paneli
-                        </a>
-                    {% endif %}
-                    <div class="dropdown-divider"></div>
-                    <a href="{{ url_for('logout') }}" style="color:#dc2626;">
-                        <i class="fas fa-sign-out-alt"></i> Çıkış Yap
-                    </a>
-                </div>
-            {% else %} 
-                <a href="{{ url_for('login') }}" class="btn-login" style="font-size:12px; font-weight:bold; color:#1565c0; text-decoration:none;">GİRİŞ YAP</a> 
-            {% endif %}
-        </div>
+        <!-- Giriş sistemi kaldırıldı -->
     </header>
 
     {% block content %}
 <div class="main-container">
 
-    <aside class="sidebar-left">
+<aside class="sidebar-left">
     
     {% if current_chart_data and (current_chart_data.type in ['natal', 'transit', 'progression', 'synastry', 'composite'] or 'progression' in current_chart_data.type or 'solar_arc' in current_chart_data.type or 'secondary' in current_chart_data.type) %}
     <div class="time-capsule-container">
@@ -1655,17 +1557,7 @@
 </aside>
 
     <main class="chart-content">
-        {% if not is_logged_in %}
-            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; width:100%; min-height: 500px;">
-                <div style="background:rgba(2, 2, 2, 0.692); padding:40px; border:1px solid #0000001c; box-shadow:0 10px 30px rgba(0,0,0,0.1); text-align:center; max-width:500px;">
-                    <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="AstroFire" style="width:300px; margin-bottom:20px;">
-                    <h2 style="color:#ffffff; margin-bottom:10px;">AstroFire'a Hoş Geldiniz</h2>
-                    <p style="color:#cacaca; margin-bottom:25px; line-height:1.6;">Lütfen giriş yapın.</p>
-                    <a href="{{ url_for('login') }}" class="btn-primary" style="text-decoration:none; padding:12px 25px;">Giriş Yap</a>
-                </div>
-            </div>
-        {% else %}
-            <div class="chart-scroll-container">
+        <div class="chart-scroll-container">
                 <div id="customTooltip" class="custom-tooltip"></div>
                 
                 <div class="chart-inner-wrapper"> 
@@ -1740,7 +1632,8 @@
                         {% endif %}
                     </div>
 
-                </div> </div> {% endif %}
+                </div>
+            </div>
     </main>
 
     <div class="right-sidebar-wrapper" id="rightSidebarWrapper">
@@ -1813,9 +1706,6 @@
 
     <!-- SİDEBAR SAĞ TIK MENÜSÜ -->
     <div id="sidebar-context-menu" class="transit-context-menu" style="width: 150px;">
-        <a id="context-save" class="transit-menu-item" href="#">
-            <i class="fas fa-save" style="color:#27ae60; width:20px;"></i> Arşive Kaydet
-        </a>
         <a id="context-edit" class="transit-menu-item" href="#" style="display:none;">
             <i class="fas fa-edit" style="color:#f39c12; width:20px;"></i> Düzenle
         </a>
@@ -3149,6 +3039,25 @@ function drawSynastryRingDetailed(planets, isOuter) {
     {% include 'synastry_module.html' ignore missing %}
     {% include 'progression_module.html' ignore missing %}
 
+<!-- ZERO-REFRESH POLICY: AJAX Handler Script -->
+<script src="{{ url_for('static', filename='ajax-handler.js') }}"></script>
+
+<script>
+// Aktif haritalar için hızlı yükleme fonksiyonu
+function loadChartQuick(index) {
+    fetch(`/set_active_chart/${index}`)
+    .then(r => {
+        if (r.ok) {
+            location.reload();
+        } else {
+            console.error('Harita yüklenemedi');
+        }
+    })
+    .catch(err => {
+        console.error('Bağlantı hatası:', err);
+    });
+}
+</script>
+
 </body>
 </html>
-
