@@ -331,26 +331,74 @@ class AstroHesaplamaMotoru:
             return "Çoklu Harita", result_data
 
         elif c_type == "Kompozit":
-            comp = {}
+            # --- GEZEGEN ORTA NOKTALARI ---
+            comp_planets = {}
             all_planets = list(d1['planets'].keys())
+            
             for p in all_planets:
                 if p in d2['planets']:
-                    deg1 = d1['planets'][p][0]; deg2 = d2['planets'][p][0]
+                    deg1 = d1['planets'][p][0]
+                    deg2 = d2['planets'][p][0]
                     
+                    # 3 harita varsa
                     if d3 and p in d3['planets']:
                         deg3 = d3['planets'][p][0]
                         x = (math.cos(math.radians(deg1)) + math.cos(math.radians(deg2)) + math.cos(math.radians(deg3)))
                         y = (math.sin(math.radians(deg1)) + math.sin(math.radians(deg2)) + math.sin(math.radians(deg3)))
                         mid = math.degrees(math.atan2(y, x)) % 360.0
                     else:
+                        # İki gezegen arasındaki en kısa orta nokta
                         diff = abs(deg1 - deg2)
-                        mid = ((deg1 + deg2 + 360)/2 if diff > 180 else (deg1+deg2)/2) % 360
+                        if diff > 180:
+                            mid = ((deg1 + deg2 + 360) / 2) % 360
+                        else:
+                            mid = (deg1 + deg2) / 2
                     
                     const, rel, fmt = get_relative_degree(mid, "Astronomik")
                     glyph = d1['planets'][p][1]
-                    comp[p] = (mid, glyph, rel, const, fmt, "", "")
+                    comp_planets[p] = (mid, glyph, rel, const, fmt, "", "")
             
-            return "Kompozit", {'type': 'single', 'planets': comp, 'cusps': {}, 'houses': {}}
+            # --- EV VE CUSP ORTA NOKTALARI ---
+            comp_cusps = {}
+            comp_houses = {}
+            
+            # d1'deki tüm cusps anahtarlarını al
+            for cusp_key in d1.get('cusps', {}).keys():
+                if cusp_key in d2.get('cusps', {}):
+                    deg1 = d1['cusps'][cusp_key]
+                    deg2 = d2['cusps'][cusp_key]
+                    
+                    # Orta nokta hesapla
+                    diff = abs(deg1 - deg2)
+                    if diff > 180:
+                        mid = ((deg1 + deg2 + 360) / 2) % 360
+                    else:
+                        mid = (deg1 + deg2) / 2
+                    
+                    comp_cusps[cusp_key] = mid
+                    comp_houses[cusp_key] = mid
+            
+            # --- EV NUMARALARINI GÜNCELLE ---
+            for planet_name in comp_planets:
+                p_lon = comp_planets[planet_name][0]
+                house_num = self.get_house_of_point(p_lon, comp_houses)
+                
+                # Tuple'ı listeye çevir, güncelle, tekrar tuple yap
+                temp_list = list(comp_planets[planet_name])
+                temp_list[6] = f"{house_num}. Ev"
+                comp_planets[planet_name] = tuple(temp_list)
+            
+            # --- BOUNDARIES EKLE ---
+            comp_boundaries = d1.get('boundaries', [])
+            
+            return "Kompozit", {
+                'type': 'composite',
+                'planets': comp_planets,
+                'cusps': comp_cusps,
+                'houses': comp_houses,
+                'fixed_stars': {},
+                'boundaries': comp_boundaries
+            }
         
         return "Hata", None
 
