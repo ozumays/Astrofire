@@ -1,0 +1,267 @@
+/**
+ * ========================================
+ * ZERO-REFRESH POLICY - TOAST & LOADING STYLES
+ * ========================================
+ */
+
+/* ============================================
+   TOAST BİLDİRİMLERİ (Sağ Üst Köşe)
+   ============================================ */
+.ajax-toast {
+    position: fixed;
+    top: 70px;
+    right: -400px; /* Başlangıçta ekran dışında */
+    background: rgba(26, 26, 26, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 0px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    z-index: 999999;
+    min-width: 250px;
+    max-width: 400px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: right 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Görünür Durum */
+.ajax-toast-show {
+    right: 20px;
+}
+
+/* İkon Stilleri */
+.ajax-toast i {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+/* Başarı Bildirimi */
+.ajax-toast-success {
+    border-left: 4px solid #27ae60;
+}
+.ajax-toast-success i {
+    color: #27ae60;
+}
+
+/* Hata Bildirimi */
+.ajax-toast-error {
+    border-left: 4px solid #c0392b;
+}
+.ajax-toast-error i {
+    color: #c0392b;
+}
+
+/* Bilgi Bildirimi */
+.ajax-toast-info {
+    border-left: 4px solid #3498db;
+}
+.ajax-toast-info i {
+    color: #3498db;
+}
+
+/* ============================================
+   LOADING OVERLAY (Tam Ekran)
+   ============================================ */
+.ajax-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 999998;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.ajax-loading-overlay.active {
+    display: flex;
+}
+
+.ajax-loading-content {
+    background: rgba(26, 26, 26, 0.95);
+    padding: 30px 40px;
+    border-radius: 0px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    text-align: center;
+    color: white;
+}
+
+.ajax-loading-spinner {
+    font-size: 40px;
+    color: #3498db;
+    animation: ajax-spin 1s linear infinite;
+}
+
+@keyframes ajax-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.ajax-loading-text {
+    margin-top: 15px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* ============================================
+   BUTON LOADING STATE
+   ============================================ */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: ajax-spin 0.6s linear infinite;
+}
+
+/* ============================================
+   FORM VALIDATION STATES (AJAX için)
+   ============================================ */
+.ajax-form-validating input,
+.ajax-form-validating select {
+    border-color: #f39c12 !important;
+    background: rgba(243, 156, 18, 0.05) !important;
+}
+
+.ajax-form-success input,
+.ajax-form-success select {
+    border-color: #27ae60 !important;
+    background: rgba(39, 174, 96, 0.05) !important;
+}
+
+.ajax-form-error input,
+.ajax-form-error select {
+    border-color: #c0392b !important;
+    background: rgba(192, 57, 43, 0.05) !important;
+}
+
+/* ============================================
+   PROGRESS BAR (Uzun işlemler için)
+   ============================================ */
+.ajax-progress-bar {
+    position: fixed;
+    top: 50px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: 999999;
+    display: none;
+}
+
+.ajax-progress-bar.active {
+    display: block;
+}
+
+.ajax-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2ecc71);
+    width: 0%;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+}
+
+/* ============================================
+   SKELETON LOADER (İçerik yüklenirken)
+   ============================================ */
+.ajax-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: ajax-skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: 4px;
+    min-height: 20px;
+}
+
+@keyframes ajax-skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ============================================
+   FADE IN ANIMATION (Yeni içerik için)
+   ============================================ */
+.ajax-fade-in {
+    animation: ajax-fade-in 0.4s ease-in-out;
+}
+
+@keyframes ajax-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   PULSE ANIMATION (Güncellenen elementler için)
+   ============================================ */
+.ajax-pulse {
+    animation: ajax-pulse 0.6s ease-in-out;
+}
+
+@keyframes ajax-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(52, 152, 219, 0);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 20px rgba(52, 152, 219, 0.3);
+    }
+}
+
+/* ============================================
+   DISABLED STATE (İşlem sırasında)
+   ============================================ */
+.ajax-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 768px) {
+    .ajax-toast {
+        right: -100%;
+        left: auto;
+        min-width: 90%;
+        max-width: 90%;
+    }
+    
+    .ajax-toast-show {
+        right: 5%;
+    }
+    
+    .ajax-loading-content {
+        padding: 20px 30px;
+    }
+}
