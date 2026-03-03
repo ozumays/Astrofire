@@ -62,7 +62,7 @@
     }
 
    /* =========================================
-       2. HEADER VE NAVİGASYON (GÜNCEL)
+       2. HEADER VE NAVİGASYON (FİNAL)
        ========================================= */
     .main-header { 
         position: fixed;
@@ -74,9 +74,9 @@
         border-bottom: 1px solid hsla(0, 0%, 100%, 0.116);
         display: flex; 
         align-items: center; 
-        justify-content: center; /* Menüyü tam ortaya toplar */
+        justify-content: center; /* Menü tam merkezde */
         padding: 0 10px;
-        z-index: 100; /* Z-index artırıldı */
+        z-index: 1000;
         box-shadow: 0 4px 30px hsla(0, 0%, 0%, 0.1);
     }
 
@@ -84,41 +84,36 @@
         display: flex;
         align-items: center;
         height: 100%;
-        position: absolute; /* Header akışından bağımsız yapar */
-        left: 15px; /* Sol köşeye sabitler */
+        position: absolute;
+        left: 10px; /* İlk kodundaki gibi */
         top: 0;
-        z-index: 101;
-    }
-
-    .logo-link {
-        display: flex;
-        align-items: center;
-        text-decoration: none;
+        z-index: 1001;
     }
 
     .logo-svg-main {
-        height: 40px; /* Biraz küçültüldü ki daha zarif dursun */
+        height: 50px; /* İlk kodundaki orijinal boyutu */
         width: auto; 
         display: block;
         object-fit: contain;
         filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        transition: opacity 0.3s ease;
     }
 
     .main-nav { 
-        padding-top: 0; /* Yukarıdaki boşluk sıfırlandı */
-        margin-left: 0 !important; /* Ortalamayı bozan margin silindi */
+        padding-top: 0; 
+        margin-left: 0 !important; /* Ortalamayı bozmaması için sıfırlandı */
         display: flex;
-        gap: 20px; /* Linkler arası pürüzsüz boşluk */
+        gap: 20px;
     }
 
     .nav-link { 
+        margin-left: 0 !important;
         text-decoration: none; 
         color: #ffffff; 
         font-size: 12px; 
         font-weight: 500; 
         transition: all 0.3s; 
         opacity: 0.8;
-        margin-left: 0 !important; /* Gereksiz boşluklar kaldırıldı */
     }
     
     .nav-link:hover { 
@@ -3059,3 +3054,4 @@ function loadChartQuick(index) {
 
 </body>
 </html>
+
