@@ -61,8 +61,8 @@
         color: #1e293b;
     }
 
-    /* =========================================
-       2. HEADER VE NAVİGASYON (Üst Menü)
+   /* =========================================
+       2. HEADER VE NAVİGASYON (GÜNCEL)
        ========================================= */
     .main-header { 
         position: fixed;
@@ -74,9 +74,9 @@
         border-bottom: 1px solid hsla(0, 0%, 100%, 0.116);
         display: flex; 
         align-items: center; 
-        justify-content: space-between; 
+        justify-content: center; /* Menüyü tam ortaya toplar */
         padding: 0 10px;
-        z-index: 20;
+        z-index: 100; /* Z-index artırıldı */
         box-shadow: 0 4px 30px hsla(0, 0%, 0%, 0.1);
     }
 
@@ -84,10 +84,10 @@
         display: flex;
         align-items: center;
         height: 100%;
-        position: absolute;
-        left: 10px;
+        position: absolute; /* Header akışından bağımsız yapar */
+        left: 15px; /* Sol köşeye sabitler */
         top: 0;
-        z-index: 21;
+        z-index: 101;
     }
 
     .logo-link {
@@ -97,32 +97,30 @@
     }
 
     .logo-svg-main {
-        height: 50px; 
+        height: 40px; /* Biraz küçültüldü ki daha zarif dursun */
         width: auto; 
         display: block;
         object-fit: contain;
         filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-        transition: opacity 0.3s ease;
-    }
-
-    .logo-svg-main:hover {
-        opacity: 0.9; 
     }
 
     .main-nav { 
-        padding-top: 10px; 
-        margin-left: 300px;
+        padding-top: 0; /* Yukarıdaki boşluk sıfırlandı */
+        margin-left: 0 !important; /* Ortalamayı bozan margin silindi */
+        display: flex;
+        gap: 20px; /* Linkler arası pürüzsüz boşluk */
     }
 
     .nav-link { 
-        margin-left: 13px; 
         text-decoration: none; 
         color: #ffffff; 
         font-size: 12px; 
         font-weight: 500; 
         transition: all 0.3s; 
         opacity: 0.8;
+        margin-left: 0 !important; /* Gereksiz boşluklar kaldırıldı */
     }
+    
     .nav-link:hover { 
         opacity: 1; color: #ffffff;
         border-bottom: 2px solid #ffffff;
@@ -3061,4 +3059,3 @@ function loadChartQuick(index) {
 
 </body>
 </html>
-
