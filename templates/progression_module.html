@@ -353,6 +353,14 @@
                     <label class="prog-options-label">İLERLETİM TEKNİĞİ</label>
                     <div style="display:flex; flex-direction:column; gap:2px;">
                         <label class="prog-radio-item">
+                        <input type="radio" name="prog_technique" value="donum_noktasi_kader" onchange="updateDateInputLabel()" style="display:none;"> 
+                    <span><b>Dönüm Noktası - Kader</b> (Her Yıl +1°)</span>
+                        </label>
+                        <label class="prog-radio-item">
+                            <input type="radio" name="prog_technique" value="donum_noktasi_karma" onchange="updateDateInputLabel()" style="display:none;"> 
+                    <span><b>Dönüm Noktası - Karma</b> (Her Yıl -1°)</span>
+                        </label>
+                        <label class="prog-radio-item">
                             <input type="radio" name="prog_technique" value="secondary" checked onchange="updateDateInputLabel()" style="display:none;"> 
                             <span><b>İkincil İlerletim</b> (Secondary - 1 Gün=1 Yıl)</span>
                         </label>
