@@ -2746,12 +2746,22 @@ def logout():
 # 🔄 AJAX API: SAYFA YENİLEMESİZ HARİTA HESAPLAMA
 # ============================================================================
 
+# ============================================================================
+# 🔄 AJAX API: SAYFA YENİLEMESİZ HARİTA HESAPLAMA (GÜNCELLENDİ)
+# ============================================================================
+
 @app.route('/api/calculate_natal', methods=['POST'])
 def api_calculate_natal():
     """AJAX ile natal harita hesapla - sayfa yenilenmeden"""
     try:
-        data = request.get_json()
-        
+        # 1. GÜVENLİK ZIRHI: silent=True ile Flask'ın HTML hata sayfası atmasını engelliyoruz
+        data = request.get_json(silent=True)
+        if data is None:
+            data = request.form # JSON başarısız olursa standart Form verisini dene
+
+        if not data or 'year' not in data:
+            return jsonify({'success': False, 'error': 'Frontend veri gönderemedi veya format hatalı.'})
+
         year = int(data.get('year'))
         month = int(data.get('month'))
         day = int(data.get('day'))
@@ -2760,8 +2770,8 @@ def api_calculate_natal():
         tz_offset = float(data.get('tz_offset', 0))
         lat = float(data.get('lat', 0))
         lon = float(data.get('lon', 0))
-        name = data.get('name')
-        location_name = data.get('location_name')
+        name = data.get('name', 'Bilinmeyen')
+        location_name = data.get('location_name', '')
         zodiac_type = data.get('zodiac_type', 'Astronomik')
         house_system = data.get('house_system', 'Placidus')
         
@@ -2774,7 +2784,7 @@ def api_calculate_natal():
         )
         
         if not chart_data:
-            return jsonify({'success': False, 'error': 'Harita hesaplanamadı'})
+            return jsonify({'success': False, 'error': 'Harita motoru sonuç üretemedi.'})
         
         chart_data['map_type'] = 'natal'
         
@@ -2838,14 +2848,22 @@ def api_calculate_natal():
         
     except Exception as e:
         print(f"API Natal Hatası: {e}")
+        import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)})
+
 
 @app.route('/api/calculate_transit', methods=['POST'])
 def api_calculate_transit():
     """AJAX ile transit harita hesapla - sayfa yenilenmeden"""
     try:
-        data = request.get_json()
+        # 1. GÜVENLİK ZIRHI:
+        data = request.get_json(silent=True)
+        if data is None:
+            data = request.form
+
+        if not data or 'year' not in data:
+            return jsonify({'success': False, 'error': 'Frontend veri gönderemedi veya format hatalı.'})
         
         year = int(data.get('year'))
         month = int(data.get('month'))
@@ -2855,7 +2873,7 @@ def api_calculate_transit():
         tz_offset = float(data.get('tz_offset', 0))
         lat = float(data.get('lat', 0))
         lon = float(data.get('lon', 0))
-        location_name = data.get('location_name')
+        location_name = data.get('location_name', '')
         
         raw_type = data.get('transit_type', 'Astronomik')
         
@@ -2906,6 +2924,7 @@ def api_calculate_transit():
         
     except Exception as e:
         print(f"API Transit Hatası: {e}")
+        import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)})
 
