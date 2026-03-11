@@ -215,7 +215,8 @@ class AstroHesaplamaMotoru:
                     calc_res, flg = swe.calc_ut(jd_ut, swe_id, PLANET_FLAG)
                     tropical_deg = calc_res[0] % 360.0; speed = calc_res[3]
                     abs_degree = (tropical_deg + shift_delta) % 360.0
-                except: pass
+                except Exception as e:
+                    print(f"HATA LOGU - {isim} hesaplanamadı. Sebep: {e}", flush=True)
 
             const, rel_deg, rel_fmt = get_relative_degree(abs_degree, zodiak_type)
             is_retro = speed < 0 if isim not in ["Güneş", "Ay", "Kuzey Düğümü"] else False
@@ -594,6 +595,7 @@ class AstroHesaplamaMotoru:
 # Global Nesne
 ASTRO_MOTOR_NESNESİ = AstroHesaplamaMotoru()
 __all__ = ['ASTRO_MOTOR_NESNESİ', 'get_relative_degree']
+
 
 
 
