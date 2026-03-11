@@ -49,6 +49,9 @@ PLANET_IDS_MAP = {
     "Satürn": (swe.SATURN, '♄'), "Uranüs": (swe.URANUS, '⛢'),
     "Neptün": (swe.NEPTUNE, '♆'), "Plüton": (swe.PLUTO, '♇'),
     "Kuzey Düğümü": (swe.MEAN_NODE, '☊')
+    "Eris": (136199, '⯰'),     
+    "Makemake": (136472, '⯱'), 
+    "Haumea": (136108, '⯲')
 }
 
 ASTEROID_IDS_MAP = {
@@ -586,3 +589,4 @@ class AstroHesaplamaMotoru:
 # Global Nesne
 ASTRO_MOTOR_NESNESİ = AstroHesaplamaMotoru()
 __all__ = ['ASTRO_MOTOR_NESNESİ', 'get_relative_degree']
+
