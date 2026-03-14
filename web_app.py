@@ -320,25 +320,27 @@ def find_annual_celestial_events(year):
 # 🔐 YÖNETİCİ PANELİ ROTALARI
 # ============================================================================
 
-@app.route('/yonetim', methods=['GET'])
+@app.route('/yonetim', methods=['GET', 'POST'])
 def admin_login_page():
-    """Admin giriş sayfası"""
+    """Admin giriş sayfası ve Giriş Kontrolü"""
+    # Zaten giriş yapmışsa direkt panele at
     if session.get('admin_access'):
         return redirect(url_for('admin_dashboard'))
+        
+    # Kullanıcı form doldurup 'Giriş' butonuna bastıysa:
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        if email in ADMIN_EMAILS and password == ADMIN_PASSWORD:
+            session['admin_access'] = True
+            session['logged_in_email'] = email
+            return redirect(url_for('admin_dashboard'))
+        else:
+            return render_template('admin_login.html', error='Yanlış e-posta veya şifre!')
+            
+    # Sadece sayfayı açmak istediyse (GET):
     return render_template('admin_login.html')
-
-@app.route('/yonetim/giris', methods=['POST'])
-def admin_login():
-    """Admin girişi"""
-    email = request.form.get('email')
-    password = request.form.get('password')
-    
-    if email in ADMIN_EMAILS and password == ADMIN_PASSWORD:
-        session['admin_access'] = True
-        session['logged_in_email'] = email
-        return redirect(url_for('admin_dashboard'))
-    else:
-        return render_template('admin_login.html', error='Yanlış e-posta veya şifre!')
 
 @app.route('/yonetim/panel')
 def admin_dashboard():
