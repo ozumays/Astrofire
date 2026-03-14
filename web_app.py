@@ -320,197 +320,278 @@ def find_annual_celestial_events(year):
 # 🔐 YÖNETİCİ PANELİ ROTALARI
 # ============================================================================
 
-@app.route('/yonetim', methods=['GET', 'POST'])
+@app.route('/yonetim', methods=['GET'])
 def admin_login_page():
-    # Zaten giriş yapmışsa direkt panele at
-    if session.get('admin_access') == True:
+    """Admin giriş sayfası"""
+    if session.get('admin_access'):
         return redirect(url_for('admin_dashboard'))
-
-    if request.method == 'POST':
-        # Formdan gelenleri al, boşlukları temizle ve email'i küçült
-        form_email = request.form.get('email', '').strip().lower()
-        form_password = request.form.get('password', '').strip()
-        
-        # --- HATA AYIKLAMA (DEBUG) MESAJI ---
-        # Bu mesajı ekrana basacağız ki sunucu ne görüyor anlayalım.
-        beklenen_email = ADMIN_EMAILS[0]
-        debug_info = f" (Sunucuya Gelen: '{form_email}' | '{form_password}') vs (Beklenen: '{beklenen_email}' | '{ADMIN_PASSWORD}')"
-
-        # 1. Email Kontrolü
-        if form_email in ADMIN_EMAILS:
-            # 2. Şifre Kontrolü
-            if form_password == ADMIN_PASSWORD:
-                session['admin_access'] = True
-                return redirect(url_for('admin_dashboard'))
-            else:
-                # Şifre yanlışsa ekranda ne beklediğini gösterelim
-                return render_template('admin_login.html', error=f"Şifre Hatalı! {debug_info}")
-        else:
-            # Email yanlışsa ekranda ne beklediğini gösterelim
-            return render_template('admin_login.html', error=f"Email Listede Yok! {debug_info}")
-
     return render_template('admin_login.html')
 
-@app.route('/yonetim/dashboard')
+@app.route('/yonetim/giris', methods=['POST'])
+def admin_login():
+    """Admin girişi"""
+    email = request.form.get('email')
+    password = request.form.get('password')
+    
+    if email in ADMIN_EMAILS and password == ADMIN_PASSWORD:
+        session['admin_access'] = True
+        session['logged_in_email'] = email
+        return redirect(url_for('admin_dashboard'))
+    else:
+        return render_template('admin_login.html', error='Yanlış e-posta veya şifre!')
+
+@app.route('/yonetim/panel')
 def admin_dashboard():
-    # 1. Giriş yapılmamışsa at
-    if not session.get('admin_access'): 
+    """Admin dashboard"""
+    if not session.get('admin_access'):
         return redirect(url_for('admin_login_page'))
     
-    # 2. Sayfaya gönder (kullanıcı sistemi kaldırıldı)
-    return render_template('admin_dashboard.html', 
-                           users=[],  # Artık kullanıcı yok
-                           public_charts=load_json_data(DATA_FILE), 
-                           courses=load_json_data(COURSES_FILE), 
-                           contact=load_json_data(CONTACT_FILE))
-@app.route('/yonetim/logout')
+    context = {
+        'public_charts': load_json_data(DATA_FILE),
+        'courses': load_json_data(COURSES_FILE),
+        'contact': load_json_data(CONTACT_FILE),
+        'users': []  # Kullanıcı sistemi kaldırıldı
+    }
+    return render_template('admin_dashboard.html', **context)
+
+@app.route('/admin_logout')
 def admin_logout():
+    """Admin çıkışı"""
     session.pop('admin_access', None)
-    return redirect(url_for('admin_login_page'))
+    session.pop('logged_in_email', None)
+    return redirect(url_for('home'))
 
-@app.route('/admin/update_contact', methods=['POST'])
-def admin_update_contact():
-    if not session.get('admin_access'): return redirect(url_for('admin_login_page'))
-    cd = load_json_data(CONTACT_FILE); 
-    if not isinstance(cd, dict): cd = {}
-    cd.update({k: request.form.get(k) for k in ['bio','phone','email','instagram','youtube','website']})
-    if 'photo' in request.files:
-        f = request.files['photo']
-        if f and f.filename != '': 
-            fn = secure_filename(f.filename); un = f"profile_{random.randint(1000,9999)}_{fn}"; f.save(os.path.join(app.config['UPLOAD_FOLDER_CONTACT'], un)); cd['photo'] = un
-    save_json_data(CONTACT_FILE, cd)
-    return redirect(url_for('admin_dashboard'))
+# ============================================================================
+# 🗑️ SİLME ROTALARı
+# ============================================================================
 
-@app.route('/admin/add_chart', methods=['POST'])
-def admin_add_chart():
-    if not session.get('admin_access'): return redirect(url_for('admin_login_page'))
-    try:
-        name = request.form.get('name'); category_input = request.form.get('category', 'Genel')
-        bio = request.form.get('bio', ''); location_name = request.form.get('location_name', '')
-        day = int(request.form.get('day')); month = int(request.form.get('month')); year = int(request.form.get('year'))
-        hour = int(request.form.get('hour')); minute = int(request.form.get('minute')); lat = float(request.form.get('lat')); lon = float(request.form.get('lon')); tz = float(request.form.get('tz'))
-        image_filename = ""
-        if 'chart_image' in request.files:
-            f = request.files['chart_image']
-            if f and f.filename != '': fn = secure_filename(f.filename); un = f"chart_{random.randint(10000,99999)}_{fn}"; f.save(os.path.join(app.config['UPLOAD_FOLDER_CHARTS'], un)); image_filename = un
-        bio_images = []
-        for i in range(1, 4):
-            key = f'bio_image_{i}'
-            if key in request.files:
-                f = request.files[key]
-                if f and f.filename != '': fn = secure_filename(f.filename); un = f"bio_{random.randint(1000,9999)}_{fn}"; f.save(os.path.join(app.config['UPLOAD_FOLDER_CHARTS'], un)); bio_images.append(un)
-                else: bio_images.append("")
-            else: bio_images.append("")
-        _, calc_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(year, month, day, hour, minute, tz, lat, lon, None, 'P', 'Astronomik')
-        asc_sign = "Bilinmeyen"; sun_sign = "Bilinmeyen"
-        if calc_data:
-            asc_deg = calc_data['cusps']['ASC']; asc_sign, _, _ = get_relative_degree(asc_deg, 'Astronomik')
-            sun_deg = calc_data['planets']['Güneş'][0]; sun_sign, _, _ = get_relative_degree(sun_deg, 'Astronomik')
-            if asc_sign in ["Yılancı", "Ophiuchus"]: asc_sign = "Akrep"
-            if sun_sign in ["Yılancı", "Ophiuchus"]: sun_sign = "Akrep"
-        
-        # --- CEVAPLARI İŞLE ---
-        raw_answers = request.form.get('answers_bulk', '')
-        answers_list = re.split(r'\n\s*\n', raw_answers.strip()) if raw_answers else []
-
-        new_c = {"id": random.randint(10000, 99999), "name": name, "category": category_input, "asc_sign": asc_sign, "sun_sign": sun_sign, "bio": bio, "image": image_filename, "bio_images": bio_images, "year": year, "month": month, "day": day, "hour": hour, "minute": minute, "lat": lat, "lon": lon, "tz": tz, "location_name": location_name, "answers": answers_list}
-        charts = load_json_data(DATA_FILE); charts.append(new_c); save_json_data(DATA_FILE, charts)
-    except Exception as e: print(f"Hata: {e}")
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/admin/edit_chart/<int:id>', methods=['POST'])
-def admin_edit_chart(id):
-    if not session.get('admin_access'): return redirect(url_for('admin_login_page'))
-    try:
-        charts = load_json_data(DATA_FILE); target = next((c for c in charts if c['id'] == id), None)
-        if target:
-            target.update({k: request.form.get(k) for k in ['name','category','bio','location_name']})
-            target.update({k: int(request.form.get(k)) for k in ['day','month','year','hour','minute']})
-            target.update({k: float(request.form.get(k)) for k in ['lat','lon','tz']})
-            
-            # CEVAPLARI GÜNCELLE
-            raw_answers = request.form.get('answers_bulk', '')
-            if raw_answers:
-                target['answers'] = re.split(r'\n\s*\n', raw_answers.strip())
-
-            if 'chart_image' in request.files:
-                f = request.files['chart_image']
-                if f and f.filename != '': fn = secure_filename(f.filename); un = f"chart_{random.randint(10000,99999)}_{fn}"; f.save(os.path.join(app.config['UPLOAD_FOLDER_CHARTS'], un)); target['image'] = un 
-            current_bio_imgs = target.get('bio_images', ["", "", ""])
-            while len(current_bio_imgs) < 3: current_bio_imgs.append("")
-            for i in range(3):
-                key = f'bio_image_{i+1}'
-                if key in request.files:
-                    f = request.files[key]
-                    if f and f.filename != '': fn = secure_filename(f.filename); un = f"bio_{random.randint(1000,9999)}_{fn}"; f.save(os.path.join(app.config['UPLOAD_FOLDER_CHARTS'], un)); current_bio_imgs[i] = un
-            target['bio_images'] = current_bio_imgs
-            _, calc_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(target['year'], target['month'], target['day'], target['hour'], target['minute'], target['tz'], target['lat'], target['lon'], None, 'P', 'Astronomik')
-            if calc_data:
-                asc_deg = calc_data['cusps']['ASC']; new_asc, _, _ = get_relative_degree(asc_deg, 'Astronomik')
-                sun_deg = calc_data['planets']['Güneş'][0]; new_sun, _, _ = get_relative_degree(sun_deg, 'Astronomik')
-                target['asc_sign'] = new_asc; target['sun_sign'] = new_sun
-            save_json_data(DATA_FILE, charts)
-    except Exception as e: print(f"Edit Hatası: {e}")
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/admin/add_course', methods=['POST'])
-def admin_add_course():
-    if not session.get('admin_access'): return redirect(url_for('admin_login_page'))
-    img = "default_course.jpg"
-    if 'course_image' in request.files:
-        f = request.files['course_image']
-        if f and f.filename != '': fn = secure_filename(f.filename); un = f"{random.randint(1000,9999)}_{fn}"; f.save(os.path.join(app.config['UPLOAD_FOLDER_COURSES'], un)); img = un
-    courses = load_json_data(COURSES_FILE); courses.append({"id": random.randint(10000, 99999), "title": request.form.get('title'), "date": request.form.get('date'), "description": request.form.get('description'), "link": request.form.get('link', '#'), "image": img}); save_json_data(COURSES_FILE, courses)
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/admin/delete_course/<int:id>')
-def admin_delete_course(id):
-    if not session.get('admin_access'): return redirect(url_for('admin_login_page'))
-    courses = [c for c in load_json_data(COURSES_FILE) if c['id'] != id]; save_json_data(COURSES_FILE, courses)
-    return redirect(url_for('admin_dashboard'))
-
-@app.route('/admin/add_consultation', methods=['POST'])
-def admin_add_consultation():
-    if not session.get('admin_access'): return redirect(url_for('admin_login_page'))
+@app.route('/admin/delete_chart/<int:chart_id>')
+def admin_delete_chart(chart_id):
+    """Harita silme"""
+    if not session.get('admin_access'):
+        return redirect(url_for('admin_login_page'))
     
-    # Resimleri işle
-    images = []
-    for i in range(1, 4):
-        key = f'consultation_image_{i}'
-        if key in request.files:
-            f = request.files[key]
-            if f and f.filename != '':
-                fn = secure_filename(f.filename)
-                un = f"consultation_{random.randint(1000,9999)}_{fn}"
-                f.save(os.path.join(app.config['UPLOAD_FOLDER_COURSES'], un))
-                images.append(un)
-            else:
-                images.append("")
-        else:
-            images.append("")
+    try:
+        charts = load_json_data(DATA_FILE)
+        charts = [c for c in charts if c.get('id') != chart_id]
+        save_json_data(DATA_FILE, charts)
+    except Exception as e:
+        print(f"Harita silme hatası: {e}")
     
-    consultations = load_json_data(CONSULTATIONS_FILE)
-    consultations.append({
-        "id": random.randint(10000, 99999),
-        "title": request.form.get('title'),
-        "price": request.form.get('price'),
-        "description": request.form.get('description'),
-        "images": images
-    })
-    save_json_data(CONSULTATIONS_FILE, consultations)
     return redirect(url_for('admin_dashboard'))
 
-@app.route('/admin/delete_consultation/<int:id>')
-def admin_delete_consultation(id):
-    if not session.get('admin_access'): return redirect(url_for('admin_login_page'))
-    consultations = [c for c in load_json_data(CONSULTATIONS_FILE) if c['id'] != id]
-    save_json_data(CONSULTATIONS_FILE, consultations)
+@app.route('/admin/delete_course/<int:course_id>')
+def admin_delete_course(course_id):
+    """Eğitim silme"""
+    if not session.get('admin_access'):
+        return redirect(url_for('admin_login_page'))
+    
+    try:
+        courses = load_json_data(COURSES_FILE)
+        courses = [c for c in courses if c.get('id') != course_id]
+        save_json_data(COURSES_FILE, courses)
+    except Exception as e:
+        print(f"Eğitim silme hatası: {e}")
+    
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/delete_user/<email>')
 def admin_delete_user(email):
-    # Kullanıcı sistemi kaldırıldı, bu route artık kullanılmıyor
-    if not session.get('admin_access'): return redirect(url_for('admin_login_page'))
+    """Kullanıcı silme (Artık kullanılmıyor)"""
+    if not session.get('admin_access'):
+        return redirect(url_for('admin_login_page'))
+    
+    # Kullanıcı sistemi kaldırıldığı için sadece yönlendirme yapıyoruz
+    return redirect(url_for('admin_dashboard'))
+
+# ============================================================================
+# 📝 EKLEME/DÜZENLEME ROTALARI
+# ============================================================================
+
+@app.route('/admin/add_chart', methods=['POST'])
+def admin_add_chart():
+    """Yeni harita ekleme"""
+    if not session.get('admin_access'):
+        return redirect(url_for('admin_login_page'))
+    
+    try:
+        charts = load_json_data(DATA_FILE)
+        
+        # Form verilerini al
+        name = request.form.get('name')
+        category = request.form.get('category', 'Genel')
+        day = int(request.form.get('day'))
+        month = int(request.form.get('month'))
+        year = int(request.form.get('year'))
+        hour = int(request.form.get('hour'))
+        minute = int(request.form.get('minute'))
+        lat = float(request.form.get('lat'))
+        lon = float(request.form.get('lon'))
+        tz = float(request.form.get('tz'))
+        location_name = request.form.get('location_name', '')
+        bio = request.form.get('bio', '')
+        
+        # Harita hesapla
+        _, chart_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
+            year, month, day, hour, minute, tz, lat, lon, None, 'P', 'Astronomik'
+        )
+        
+        asc_sign = "Bilinmeyen"
+        sun_sign = "Bilinmeyen"
+        if chart_data:
+            asc_sign, _, _ = get_relative_degree(chart_data['cusps']['ASC'], 'Astronomik')
+            sun_sign, _, _ = get_relative_degree(chart_data['planets']['Güneş'][0], 'Astronomik')
+        
+        # Resim yükleme
+        image_filename = ""
+        if 'chart_image' in request.files:
+            file = request.files['chart_image']
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                image_filename = f"{random.randint(1000,9999)}_{filename}"
+                file.save(os.path.join(UPLOAD_FOLDER_CHARTS, image_filename))
+        
+        # Yeni harita objesi
+        new_chart = {
+            'id': max([c.get('id', 0) for c in charts] + [0]) + 1,
+            'name': name,
+            'category': category,
+            'asc_sign': asc_sign,
+            'sun_sign': sun_sign,
+            'bio': bio,
+            'image': image_filename,
+            'year': year,
+            'month': month,
+            'day': day,
+            'hour': hour,
+            'minute': minute,
+            'lat': lat,
+            'lon': lon,
+            'tz': tz,
+            'location_name': location_name
+        }
+        
+        charts.append(new_chart)
+        save_json_data(DATA_FILE, charts)
+        
+    except Exception as e:
+        print(f"Harita ekleme hatası: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/edit_chart/<int:chart_id>', methods=['POST'])
+def admin_edit_chart(chart_id):
+    """Harita düzenleme"""
+    if not session.get('admin_access'):
+        return redirect(url_for('admin_login_page'))
+    
+    try:
+        charts = load_json_data(DATA_FILE)
+        chart = next((c for c in charts if c.get('id') == chart_id), None)
+        
+        if chart:
+            # Form verilerini al
+            chart['name'] = request.form.get('name', chart['name'])
+            chart['category'] = request.form.get('category', chart.get('category', 'Genel'))
+            chart['day'] = int(request.form.get('day', chart['day']))
+            chart['month'] = int(request.form.get('month', chart['month']))
+            chart['year'] = int(request.form.get('year', chart['year']))
+            chart['hour'] = int(request.form.get('hour', chart['hour']))
+            chart['minute'] = int(request.form.get('minute', chart['minute']))
+            chart['lat'] = float(request.form.get('lat', chart['lat']))
+            chart['lon'] = float(request.form.get('lon', chart['lon']))
+            chart['tz'] = float(request.form.get('tz', chart['tz']))
+            chart['location_name'] = request.form.get('location_name', chart.get('location_name', ''))
+            chart['bio'] = request.form.get('bio', chart.get('bio', ''))
+            
+            # Haritayı yeniden hesapla
+            _, chart_data = ASTRO_MOTOR_NESNESİ.calculate_chart_data(
+                chart['year'], chart['month'], chart['day'], chart['hour'], chart['minute'],
+                chart['tz'], chart['lat'], chart['lon'], None, 'P', 'Astronomik'
+            )
+            
+            if chart_data:
+                asc_sign, _, _ = get_relative_degree(chart_data['cusps']['ASC'], 'Astronomik')
+                sun_sign, _, _ = get_relative_degree(chart_data['planets']['Güneş'][0], 'Astronomik')
+                chart['asc_sign'] = asc_sign
+                chart['sun_sign'] = sun_sign
+            
+            # Resim güncelleme
+            if 'chart_image' in request.files:
+                file = request.files['chart_image']
+                if file and file.filename:
+                    filename = secure_filename(file.filename)
+                    image_filename = f"{random.randint(1000,9999)}_{filename}"
+                    file.save(os.path.join(UPLOAD_FOLDER_CHARTS, image_filename))
+                    chart['image'] = image_filename
+            
+            save_json_data(DATA_FILE, charts)
+        
+    except Exception as e:
+        print(f"Harita düzenleme hatası: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/add_course', methods=['POST'])
+def admin_add_course():
+    """Yeni eğitim ekleme"""
+    if not session.get('admin_access'):
+        return redirect(url_for('admin_login_page'))
+    
+    try:
+        courses = load_json_data(COURSES_FILE)
+        
+        title = request.form.get('title')
+        date = request.form.get('date')
+        link = request.form.get('link', '')
+        description = request.form.get('description', '')
+        
+        # Resim yükleme
+        image_filename = ""
+        if 'course_image' in request.files:
+            file = request.files['course_image']
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                image_filename = f"{random.randint(1000,9999)}_{filename}"
+                file.save(os.path.join(UPLOAD_FOLDER_COURSES, image_filename))
+        
+        new_course = {
+            'id': max([c.get('id', 0) for c in courses] + [0]) + 1,
+            'title': title,
+            'date': date,
+            'link': link,
+            'description': description,
+            'image': image_filename
+        }
+        
+        courses.append(new_course)
+        save_json_data(COURSES_FILE, courses)
+        
+    except Exception as e:
+        print(f"Eğitim ekleme hatası: {e}")
+    
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/update_contact', methods=['POST'])
+def admin_update_contact():
+    """İletişim bilgilerini güncelleme"""
+    if not session.get('admin_access'):
+        return redirect(url_for('admin_login_page'))
+    
+    try:
+        contact = {
+            'email': request.form.get('email', ''),
+            'phone': request.form.get('phone', ''),
+            'bio': request.form.get('bio', '')
+        }
+        save_json_data(CONTACT_FILE, contact)
+    except Exception as e:
+        print(f"İletişim güncelleme hatası: {e}")
+    
     return redirect(url_for('admin_dashboard'))
 
     
